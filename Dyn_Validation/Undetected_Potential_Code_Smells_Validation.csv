@@ -1,0 +1,7 @@
+,Undetected potential code smells,,,Undetected accessible potential code smells,,,Undetected potential code smells to check,,
+Code Smell,DynAMICS,Paprika,aDoctor,DynAMICS,Paprika,aDoctor,DynAMICS,Paprika,aDoctor
+DW,37,N/A,8,37,N/A,8,27,N/A,8
+HAS,494,424,N/A,447,376,N/A,79,77,N/A
+HMU,512,800,N/A,352,569,N/A,83,87,N/A
+IOD,114,121,N/A,109,116,N/A,41,53,N/A
+NLMR,16,1379,1074,16,1350,1028,16,90,88

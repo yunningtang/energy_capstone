@@ -1,0 +1,3 @@
+instrumentation/instrumentation_FDROID/be.humanoids.webthingify_2.apk,be.humanoids.webthingify,be.humanoids.webthingify.WebthingService.java,onCreate
+instrumentation/instrumentation_FDROID/com.redirectapps.tvkill_24.apk,com.redirectapps.tvkill,com.redirectapps.tvkill.TransmitService.java,onCreate
+instrumentation/instrumentation_FDROID/com.tomatodev.timerdroid_1412312.apk,com.tomatodev.timerdroid,com.tomatodev.timerdroid.service.TimerService.java,startTimer

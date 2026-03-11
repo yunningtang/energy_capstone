@@ -1,0 +1,39 @@
+aDoctor,,
+Class,Code Smell ?,Comments
+com.angrydoughnuts.android.alarmclock.AlarmNotificationService$AlarmTriggerReceiver,Yes,the wakelock is released in onDestroy() method
+com.dosse.bwentrain.androidPlayer.PlayerController$1,No,the wakelock is released at the end of onReceive() method
+com.github.ashutoshgngwr.noice.MediaPlayerService$c,Yes,the wakelock could be released in onDestroy() method
+com.redirectapps.tvkill.TransmitService,Yes,the wakelock could be released in onDestroy() method
+com.rfo.basic.Run$Interpreter,Yes,the wakelock could be released in onDestroy() method
+com.suyashsrijan.forcedoze.ForceDozeService$DozeReceiver,No,the wakelock is released in the onReceive() method
+com.urbandroid.dontkillmyapp.service.BenchmarkService,Yes,the wakelock is released in onDestroy() method
+re.jcg.playmusicexporter.fragments.MusicTrackListFragment,No,acquire and release in the same method
+DynAMICS,,
+Class,Code Smell ?,Comments
+com.prangesoftwaresolutions.audioanchor.receivers.MediaButtonIntentReceiver,No,5 minutes Lock
+com.google.android.accessibility.talkback.eventprocessor.ProcessorVolumeStream,No,acquire and release done in the same method following each other
+com.gtp.showapicturetoyourfriend.receiverpictureactivity,No,acquire and release done in the same method following each other
+re.jcg.playmusicexporter.fragments.MusicTrackListFragment,No,acquire and release in the same method
+re.jcg.playmusicexporter.services.ExportAllService,No,acquire and release in the same method
+com.asksven.betterbatterystats.Wakelock,No,an extended wakelock class that provide the acquire and release methods
+com.chen.deskclock.AlarmAlertWakeLock,No,an extended wakelock class that provide the acquire and release methods
+com.prangesoftwaresolutions.audioanchor.helpers.LockManager,No,an extended wakelock class that provide the acquire and release methods
+com.xabber.android.data.connection.WakeLockManager,No,an extended wakelock class that provide the acquire and release methods
+com.dkanada.gramophone.service.MusicService,No,onDestroy and Temporary
+com.github.ashutoshgngwr.noice.MediaPlayerService$c,Yes,release could be done in onDestroy() method
+com.github.sryze.wirebug.DebugStatusService,Yes,release could be done in onDestroy() method
+com.github.yeriomin.smsscheduler.WakefulBroadcastReceiver,No,release done in completeWakefulIntent() method. Dealing with a list of wakelock could leave some wakelock not released
+com.angryburg.uapp.utils.AwooNotificationService,Yes,release done in onDestroy() method
+com.angrydoughnuts.android.alarmclock.AlarmNotificationService$AlarmTriggerReceiver,No,release done when starting AlarmNotificationService()
+ch.blinkenlights.android.vanilla.PlaybackService,Yes,the release could be done in onDestroy() method
+ar.rulosoft.mimanganu.services.AutomaticUpdateTask,No,the release is done before ending the task (onPostExecute() and onCancelled())
+com.dosse.bwentrain.androidPlayer.PlayerController$1,No,the wakelock is released at the end of onReceive() method
+com.suyashsrijan.forcedoze.ForceDozeService$DozeReceiver,No,the wakelock is released in the onReceive() method
+com.dosse.dozeoff.DozeKiller,No,to do the release the apply() method must be called twice
+com.kabouzeid.gramophone.service.MusicService,Yes,wakelock could be released in onDestroy() method
+com.maxfour.music.service.MusicService,Yes,wakelock could be released in onDestroy() method
+com.rfo.basic.Run$Interpreter,Yes,wakelock could be released in onDestroy() method
+com.kabouzeid.gramophone.service.MediaButtonIntentReceiver,No,wakelock released at the end of handleMessage() method
+com.chen.deskclock.alarms.AlarmStateManager,No,wakelock released at the end of onReceive() method
+com.internalpositioning.find3.find3app.AlarmReceiverLife,No,wakelock released at the end of onReceive() method
+com.knirirr.beecount.CountingActivity,No,wakelock released in onPause() method

@@ -1,0 +1,160 @@
+DynAMICS,,
+Class,Code Smell ?,Comments
+a2dp.Vol.ManageData$ExportDataAsXmlTask,No,onPostExecute() does display dialogs and Toasts 
+ar.rulosoft.mimanganu.componentes.LoginDialog$AsyncLogin,No,no blocking operations in asyncTask
+ar.rulosoft.mimanganu.MangaFragment$DeleteImages,No,no blocking operations in asyncTask
+ar.rulosoft.mimanganu.MangaFragment$MarkSelectedAsRead,No,no blocking operations in asyncTask
+ar.rulosoft.mimanganu.MangaFragment$ResetChapters,No,no blocking operations in asyncTask
+au.com.wallaceit.reddinator.activity.AccountActivity$LoadUserDetailsTask,Yes,duplicated
+au.com.wallaceit.reddinator.activity.AccountActivity$LoadUserDetailsTask,Yes,"onPostExecute, showUserDetailsDialog() is too long with loops, Json data and try catch clauses "
+au.com.wallaceit.reddinator.activity.AccountActivity$RefreshUserInfoTask,No,no blocking operations in asyncTask
+au.com.wallaceit.reddinator.tasks.ComposeMessageTask,No,no blocking operations in asyncTask
+au.com.wallaceit.reddinator.tasks.SavePostTask,No,no blocking operations in asyncTask
+au.com.wallaceit.reddinator.tasks.SyncUserDataTask,Yes,duplicated
+au.com.wallaceit.reddinator.tasks.SyncUserDataTask,Yes,"onPostExecute, initiateLogin() method"
+au.com.wallaceit.reddinator.tasks.VoteTask,Yes,it depends on onVoteComplete() method
+be.brunoparmentier.openbikesharing.app.activities.BikeNetworksListActivity$JSONDownloadTask,No,no blocking operations in asyncTask
+be.brunoparmentier.openbikesharing.app.activities.StationsListActivity$JSONDownloadTask,No,no blocking operations in asyncTask
+com.akdev.nofbeventscraper.FbPageScraper,No,no blocking operations in asyncTask
+com.akdev.nofbeventscraper.FbRedirectionResolver,No,no blocking operations in asyncTask
+com.anddevw.getchromium.GetChromium$DownloadTask,No,no blocking operations in asyncTask
+com.appmindlab.nano.DisplayDBEntry$p0,No,no blocking operations in asyncTask
+com.appmindlab.nano.MainActivity$b0,No,no blocking operations in asyncTask
+com.appmindlab.nano.MainActivity$u,No,no blocking operations in asyncTask
+com.appmindlab.nano.MainActivity$v,No,no blocking operations in asyncTask
+com.appmindlab.nano.MainActivity$v,Yes,onPostExecute() could be too long because of the loop
+com.appmindlab.nano.MainActivity$y,Yes,Animation operations in onPostExecute() methods
+com.asksven.betterbatterystats.GraphActivity$LoadSerieData,No,no blocking operations in asyncTask
+com.asksven.betterbatterystats.GraphActivity$LoadSerieData,No,no onProgressUpdate() method found + duplicated
+com.cityzen.cityzen.Network.CreatePoiTask,No,no blocking operations in asyncTask
+com.cityzen.cityzen.oauth.OAuthComponent$PostAuthorizationTask,No,no blocking operations in asyncTask
+com.dkanada.openapk.activities.MainActivity$getInstalledApps,Yes,onPostExecute() is too long because of setNavigationDrawer() method
+com.ds.avare.place.DatabaseDestination$DataBaseTask,Yes,it depends on found() in onPostExecute()
+com.ds.avare.webinfc.WebAppPlanInterface$SearchTask,No,no blocking operations in asyncTask
+com.fabienli.dokuwiki.db.PageUpdateHtml,No,onPreExecute
+com.fabienli.dokuwiki.usecase.StaticPagesDisplay,No,no blocking operations in asyncTask
+com.faltenreich.diaguard.feature.log.LogFetchDataTask,No,no blocking operations in asyncTask
+com.forrestguice.suntimeswidget.map.WorldMapTask,No,no blocking operations in asyncTask
+com.forrestguice.suntimeswidget.settings.WidgetTimezones$TimeZonesLoadTask,No,no blocking operations in asyncTask
+com.futurice.android.reservator.model.AddressBook$PrefetchEntriesTask,No ,no blocking operations in asyncTask
+com.geecko.QuickLyric.tasks.Id3Writer,No,no blocking operations in asyncTask
+com.geecko.QuickLyric.tasks.WriteToDatabaseTask,No,no blocking operations in asyncTask
+com.github.doomsdayrs.apps.shosetsu.backend.async.ChapterLoader,Yes,it depends on ChapterLoaderAction() methods
+com.github.doomsdayrs.apps.shosetsu.ui.migration.async.Transfer,No,no blocking operations in asyncTask
+com.github.doomsdayrs.apps.shosetsu.ui.settings.subFragments.backup.async.RestoreProcess,No,no blocking operations in asyncTask
+com.github.yeriomin.yalpstore.task.CheckShellTask,No,duplicated
+com.github.yeriomin.yalpstore.task.CheckShellTask,No,no blocking operations in asyncTask
+com.github.yeriomin.yalpstore.task.PatchTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.CheckLoginTask,No,no blocking operations in asyncTask
+com.github.yeriomin.yalpstore.task.playstore.DownloadLinkTask,No,no blocking operations in asyncTask
+com.javiersantos.whatsappbetaupdater.utils.UtilsAsync$DownloadFile,No,no blocking operations in asyncTask
+com.kabouzeid.gramophone.dialogs.DonationsDialog$SkuDetailsLoadAsyncTask,No,no blocking operations in asyncTask
+com.kabouzeid.gramophone.ui.fragments.player.card.CardPlayerFragment$2,No,no blocking operations in asyncTask
+com.kanedias.vanilla.coverfetch.CoverShowActivity$ArtworkFetcher,No,no blocking operations in asyncTask
+com.keylesspalace.tusky.SavedTootActivity$a,Yes,it depends on what is done in addAll() of onPostExecute()
+com.liato.bankdroid.appwidget.AutoRefreshService$DataRetrieverTask,No,no blocking operations in asyncTask
+com.liato.bankdroid.DataRetrieverTask,No,no blocking operations in asyncTask
+com.maxfour.music.misc.DialogAsyncTask,No,no blocking operations in asyncTask
+com.maxfour.music.ui.fragments.mainactivity.folders.FoldersFragment$ListSongsAsyncTask,No,no blocking operations in asyncTask
+com.maxfour.music.ui.fragments.player.card.CardPlayerFragment$2,No,no blocking operations in asyncTask
+com.mschlauch.comfortreader.BroadcastReceiverOpeninFileManager$1,No,onPostExecute() is empty
+com.nicolasbrailo.vlcfreemote.vlc_connector.http_utils.XmlMogrifier,No,no blocking operations in asyncTask
+com.perflyst.twire.chat.ChatManager,Yes,duplicated
+com.perflyst.twire.chat.ChatManager,Yes,it depends on the methods called in the onProgressUpdate() like getGlobalCustomEmotes()
+com.perflyst.twire.tasks.GetStreamsCountTask,No,no blocking operations in asyncTask
+com.perflyst.twire.tasks.GetTwitchEmotesTask,No,no blocking operations in asyncTask
+com.perflyst.twire.tasks.GetTwitchUserFollows,Yes,it depends on the size of data added to the database
+com.pindroid.fragment.AddBookmarkFragment$GetTagSuggestionsTask,No,no blocking operations in asyncTask
+com.poupa.attestationdeplacement.tasks.GeneratePdfTask,No,no blocking operations in asyncTask
+com.rfo.basic.Format$Background,No,no blocking operations in asyncTask
+com.sahdeepsingh.Bop.Activities.SplashScreen$a,Yes,onPostExecute
+com.sentienhq.launcher.result.Result$AsyncSetImage,No,no blocking operations in asyncTask
+com.spisoft.quicknote.browser.SearchAsyncTask,No,no blocking operations in asyncTask
+com.spisoft.quicknote.utils.PinView$1,No,no blocking operations in asyncTask
+com.tistory.deque.previewmaker.kotlin.customview.CustomPreviewCanvas$SaveCanvasAsyncTask,No,no blocking operations in asyncTask
+com.vlille.checker.ui.fragment.StationsListFragment$StationsAsyncTask,No,no blocking operations in asyncTask
+com.vlille.checker.ui.osm.overlay.window.BubbleInfoWindow$SingleStationAsyncTask,No,no blocking operations in asyncTask
+cz.martykan.forecastie.AlarmReceiver$GetCityNameTask,No,no blocking operations in asyncTask
+de.clemensbartz.android.launcher.tasks.LoadDockTask,No,no blocking operations in asyncTask
+de.csicar.mensaplan.kitcard.ReadCardTask,No,no blocking operations in asyncTask
+de.perflyst.untis.utils.connectivity.UntisRequest,Yes,it depends on the size  and contents of responses (JSON) in onProgressUpdate()
+eu.pretix.pretixdroid.ui.SearchActivity$SearchTask,No,no blocking operations in asyncTask
+Paprika,,
+Class,Code Smell ?,Comments
+a2dp.Vol.ManageData$ExportDataAsXmlTask,No,onPreExecute
+a2dp.Vol.ManageData$ExportLocationTask,No,onPreExecute
+app.librenews.io.librenews.controllers.FlashRetreiver$1JSONAsyncTask,No,onPreExecute
+ar.rulosoft.mimanganu.componentes.MangaFolderSelect$AddAllMangaInDirectoryTask,No,onPreExecute
+ar.rulosoft.mimanganu.servers.ServerBase$CreateGroupByMangaNotificationsTask,No,onPreExecute
+ch.blinkenlights.android.vanilla.AudioPickerActivity$b,No,onPostExecute
+com.akdev.nofbeventscraper.FbEventScraper,No,onPreExecute
+com.akdev.nofbeventscraper.FbPageScraper,No,onPreExecute
+com.appmindlab.nano.DisplayDBEntry$q0,No,onPostExecute
+com.appmindlab.nano.MainActivity$c0,No,onPreExecute
+com.appmindlab.nano.MainActivity$v,Yes,onPostExecute() could be too long because of the loop
+com.appmindlab.nano.MainActivity$v,No,onProgressUpdate
+com.appmindlab.nano.MainActivity$y,Yes,Animation operations in onPostExecute() methods
+com.appmindlab.nano.MainActivity$z,No,onPreExecute
+com.appmindlab.nano.MainActivity$z,No,onProgressUpdate
+com.aptasystems.dicewarepasswordgenerator.MainActivity$2,No,onPostExecute
+com.aptasystems.dicewarepasswordgenerator.MainActivity$4,No,onPostExecute
+com.chen.deskclock.ringtone.RingtonePickerActivity$2,Yes,onPostExecute
+com.ds.avare.place.DatabaseDestination$DataBaseTask,Yes,it depends on found() in onPostExecute()
+com.elsdoerfer.android.autostarts.LoadTask,Yes ,onProgressUpdate (take a long time)
+com.fabienli.dokuwiki.db.PageUpdateHtml,No,onPreExecute
+com.faltenreich.diaguard.feature.export.job.csv.CsvExport,No,onProgressUpdate
+com.farmerbb.taskbar.activity.SelectAppActivity$a,Yes,onPostExecute  (lot of addview)
+com.forrestguice.suntimeswidget.LightMapView$LightMapTask,No,onPreExecute
+com.github.doomsdayrs.apps.shosetsu.ui.catalogue.async.CataloguePageLoader,No,onPreExecute
+com.github.doomsdayrs.apps.shosetsu.ui.migration.async.Transfer,No,onPreExecute
+com.github.doomsdayrs.apps.shosetsu.ui.reader.async.ChapterViewLoader,No,onPreExecute
+com.github.yeriomin.yalpstore.SearchActivityAbstract$CheckPackageIdTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.DownloadTask,Yes,"onPostExecute (Manager, Ruunner, lot of things)"
+com.github.yeriomin.yalpstore.task.DownloadTask,No,onPreExecute
+com.github.yeriomin.yalpstore.task.DownloadTask,No,onProgressUpdate
+com.github.yeriomin.yalpstore.task.ExodusCsrfTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.ExodusSearchTask,No,onPreExecute
+com.github.yeriomin.yalpstore.task.ExodusSubmitTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.PatchTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.DownloadLinkTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.PlayStoreTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.ReviewAddTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.ReviewLoadTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.SearchTask,No,onPreExecute
+com.github.yeriomin.yalpstore.task.playstore.WishlistUpdateTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.playstore.WishlistUpdateTask,No,onPostExecute
+com.github.yeriomin.yalpstore.task.SystemRemountTask,No,onPreExecute
+com.google.android.accessibility.talkback.labeling.LabelClientRequest,No,onPostExecute
+com.iven.lfflfeedreader.mainact.SplashActivity$AsyncLoadXMLFeed,Yes,startListActivity
+com.james.status.utils.tasks.CanvasRenderTask,No,onPostExecute (Canvas bitmap render)
+com.jstappdev.dbclf.ClassifierActivity$InferenceTask,No,onPreExecute
+com.kabouzeid.gramophone.App$LoadOwnedPurchasesFromGoogleAsyncTask,No,onPreExecute
+com.kabouzeid.gramophone.ui.fragments.mainactivity.folders.FoldersFragment$ArrayListPathsAsyncTask,No,onPreExecute
+com.launcher.silverfish.common.Utils$1,No,onPostExecute
+com.maxfour.music.misc.DialogAsyncTask,No,no blocking operations in asyncTask
+com.maxfour.music.ui.fragments.player.card.CardPlayerFragment$3,No,onPreExecute
+com.mschlauch.comfortreader.NoteActivity$1,No,Set Text
+com.phikal.regex.Activities.Settings.WordOptionFragment$WordInserter,No,onPreExecute
+com.philliphsu.clock2.data.AsyncDatabaseTableUpdateHandler$InsertAsyncTask,No,onPostExecute
+com.pi.attestation.tools.CertificateGenerator,No,onPreExecute
+com.pi.attestation.tools.CertificateGenerator,No,Loading Dialog
+com.pindroid.fragment.AddBookmarkFragment$GetTitleTask,No,onPreExecute
+com.poupa.attestationdeplacement.tasks.GeneratePdfTask,No,onPreExecute
+com.quaap.bookymcbookface.ReaderActivity$LoaderTask,No,onPreExecute
+com.rfo.basic.Basic$Loader,No,onProgressUpdate
+com.sahdeepsingh.Bop.Activities.SplashScreen$a,Yes,onPostExecute
+com.sentienhq.launcher.loader.LoadPojos,No,onPostExecute
+com.sentienhq.launcher.shortcut.SaveAllOreoShortcutsAsync,No,onPostExecute
+com.sentienhq.launcher.shortcut.SaveSingleOreoShortcutAsync,No,onProgressUpdate
+com.tortel.syslog.dialog.RunningDialog,No,onProgressUpdate
+com.ulicae.cinelog.network.task.NetworkTask,No,Populate
+com.vlille.checker.ui.async.SetStationsInfoAsyncTask,No,onPostExecute
+com.wrmndfzzy.atomize.MainActivity$3,No,onPreExecute
+cz.martykan.forecastie.activities.MainActivity$ProvideCityNameTask,No,onPreExecute
+de.arnefeil.bewegungsmelder.tools.EventDownloader,No,onPreExecute
+de.clemensbartz.android.launcher.tasks.ShowWidgetListAsPopupMenuTask,No,Few Widgets iteration
+de.devmil.paperlaunch.view.utils.IntentSelector$SearchTask,No,onPreExecute
+de.eknoes.inofficialgolem.ArticleFragment$loadArticleTask,Yes,Long Operation (Web loading)
+eu.pretix.pretixdroid.ui.SearchActivity$CheckTask,No,onPreExecute
+me.echeung.cdflabs.utils.data.LabDataFetcher,No,JSON Deserial
+tk.superl2.xwifi.MainActivity$a,No,Popup

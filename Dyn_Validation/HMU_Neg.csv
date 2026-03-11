@@ -1,0 +1,181 @@
+DynAMICS,,
+Class,Code Smell ?,Comments
+click.dummer.textthing.FontManager,Yes,Few Puts (Fonts)
+com.adguard.android.contentblocker.commons.concurrent.DispatcherThreadPool,Yes,Few Puts (Tasks)
+com.akdev.nofbeventscraper.DocumentReceiver,Yes,Few Puts (form)
+com.ds.avare.content.ContentProviderHelper,No,Lots of Puts
+com.ds.avare.place.Boundaries,No,Lots of Puts (polygons)
+com.eletac.tronwallet.wallet.VoteActivity,No,Lots of Puts (votes)
+com.emacberry.uuid0xfd6fscan.ScannerService,No,Lots of Puts (scan)
+com.emacberry.uuid0xfd6fscan.ui.main.PlaceholderFragment,No,Lots of Puts (scan)
+com.fabienli.dokuwiki.WikiCacheUiOrchestrator,Yes,Few Puts (.css files)
+com.faltenreich.diaguard.shared.data.database.DatabaseHelper,No,Lots of Puts (Database)
+com.forrestguice.suntimeswidget.cards.CardViewHolder,Yes,Predetermined size
+com.google.android.accessibility.talkback.contextmenu.LanguageMenuProcessor,Yes,Few Puts (Locales)
+com.google.android.accessibility.talkback.eventprocessor.ProcessorScrollPosition,Yes,Few Puts (Events)
+com.google.android.accessibility.talkback.labeling.LabelSeparator,Yes,Few Puts (Labels)
+com.google.android.accessibility.talkback.tutorial.TutorialLessonPage,No,Lots of Puts (JSON)
+com.indieweb.indigenous.pixelfed.PixelfedAuth$3,Yes,Predetermined size
+com.kabouzeid.gramophone.adapter.MusicLibraryPagerAdapter,No,Lots of Puts (Cache)
+com.lithium.leona.openstud.activities.ClassroomTimetableActivity,No,Lots of Puts (Time key)
+com.llamacorp.equate.unit.updater.CoinpaprikaParser,Yes,Few Puts (Crypto symbol)
+com.lloydtorres.stately.issues.IssueDecisionActivity,Yes,Predetermined size
+com.nathaniel.motus.umlclasseditor.view.ClassEditorFragment,Yes,Few Puts (Attributes)
+com.perflyst.twire.tasks.ConstructChatMessageTask,No,Lots of Puts (Words occurences)
+com.polar.nextcloudservices.NextcloudSSOAPI,Yes,Predetermined size
+com.quaap.launchtime.CrashReportActivity,Yes,Predetermined size
+com.redblaster.hsl.main.bookmarks.BookmarksAddNewSetCustoms,Yes,Predetermined size
+com.ruesga.rview.fragments.ChangeDetailsFragment,Yes,Predetermined size
+com.ruesga.rview.widget.ScoreLabelsView,Yes,Few Puts
+com.vocifery.daytripper.service.ResponderService,Yes,Predetermined size
+com.wolas.awesomewallpaper.Animator,Yes,Predetermined size
+com.xabber.android.data.extension.chat_markers.BackpressureMessageReader,No,Lots of Puts (messages)
+com.xabber.android.data.extension.privatestorage.XabberOptionsPrivateData,No,Lots of Puts
+com.xabber.android.ui.fragment.ChatFragment,No,Lots of Puts
+de.jkliemann.parkendd.SlotListAdapter,Yes,Predetermined size
+io.github.lonamiwebs.stringlate.activities.export.Exporter$3,Yes,Few Puts (exporters)
+io.github.lonamiwebs.stringlate.classes.repos.RepoHandler,Yes,Few Puts (template)
+miccah.mpvremote.LibraryActivity,Yes,Predetermined size
+net.nitroshare.android.transfer.Transfer,Yes,Predetermined size
+pl.librus.client.ui.attendances.AttendanceFragment,Yes,Few Puts (attendance)
+at.jclehner.rxdroid.PerThreadInstance,Yes,Few Puts (class args)
+ca.cmetcalfe.xposed.flatconnectivityicons.Main,Yes,Predetermined size
+com.abhijitvalluri.android.fitnotifications.appchoices.store.AppSelectionsStore,No,Lots of Puts
+com.appmindlab.nano.DisplayDBEntry,Yes,Few Puts (perms)
+com.appmindlab.nano.MainActivity,Yes,Few Puts (perms)
+com.bernaferrari.sdkmonitor.MainActivity,No,No HashMap (Kotlin)
+com.coste.syncorg.util.MultiMap,No,Lots of Puts
+com.ctemplar.app.fdroid.security.PGPCryptor,No,Lots of Puts
+com.darshancomputing.BatteryIndicatorPro.AlarmsFragment,Yes,Few Puts (channels)
+com.faltenreich.diaguard.feature.category.CategoryComparatorFactory,No,Lots of Puts (Cache)
+com.forrestguice.suntimeswidget.settings.AppSettings,Yes,Few Puts (perms)
+com.geecko.QuickLyric.adapter.LocalAdapter,No,Lots of Puts (artists)
+com.google.android.accessibility.talkback.controller.CursorControllerApp,Yes,Few Puts (Remembered nodes)
+com.google.android.accessibility.talkback.focusmanagement.FocusManagerInternal,Yes,Few Puts (Remembered nodes)
+com.google.android.accessibility.talkback.focusmanagement.interpreter.ScreenState,Yes,Few Puts (windows)
+com.indieweb.indigenous.push.PushNotificationActivity$3,Yes,Few Puts (params)
+com.jellyshack.block6.util.SimpleSMSMessage,No,Lots of Puts
+com.liato.bankdroid.BankEditActivity,Yes,Few Puts (form)
+com.liato.bankdroid.banking.BankFactory,Yes,Few Puts (properties)
+com.liato.bankdroid.banking.banks.sebkort.SEBKortBase,No,Lots of Puts
+com.lithium.leona.openstud.helpers.ClientHelper,Yes,Few Puts (exams done)
+com.llamacorp.equate.unit.updater.FloatRateParser,No,Lots of Puts (Json)
+com.lloydtorres.stately.helpers.network.NSStringRequest,Yes,Few Puts (params)
+com.lloydtorres.stately.nation.OverviewSubFragment,No,Lots of Puts
+com.mikifus.padland.Models.PadGroupModel,No,Lots of Puts
+com.mikifus.padland.PadLandDataActivity$PadlistDb,No,Lots of Puts (db data)
+com.murrayc.galaxyzoo.app.QuestionLinearLayout,Yes,Few Puts (max height encountered)
+com.nishantboro.splititeasy.BalancesTabFragment,No,Lots of Puts
+com.perflyst.twire.chat.ChatManager,Yes,Few Puts (badges per user)
+com.rareventure.gps2.database.cachecreator.GpsTrailerCacheCreator,Yes,HashMap No used
+com.rohitsuratekar.NCBSinfo.viewmodels.LandingViewModel$CheckUpdates,No,Possibly lots of puts (trip map)
+com.ruesga.rview.fragments.ChangeDetailsFragment$e,No,Lots of puts for comments
+com.ruesga.rview.fragments.ChangeDetailsFragment$ListModel,No,Lots of puts for comments
+com.tuyafeng.watt.apps.AppMenuFragment,No,No HashMap (Kotlin)
+com.xabber.android.ui.preferences.AccountHistorySettingsFragment,No,Lots of puts (sources)
+de.clemensbartz.android.launcher.adapters.DrawerListAdapter,No,Lots of puts (indexes)
+de.devmil.paperlaunch.utils.SerializableHashMap,No,"Special case, an HashMap within a specialized HashMap"
+eu.pretix.pretixdroid.ui.QuestionDialogHelper,Yes,"Few puts (Views, labels)"
+ar.rulosoft.mimanganu.services.AutomaticUpdateTask,Yes,Few Puts (hosts)
+com.dkanada.gramophone.adapter.MusicLibraryPagerAdapter,No,Lots of Puts (Cache)
+com.github.gotify.messages.provider.MessageStateHolder,No,Lots of Puts (state per app)
+com.liato.bankdroid.banking.banks.swedbank.AbstractSwedbank,No,Lots of Puts
+com.rfo.basic.Run,Yes,Predetermined size
+com.ruesga.rview.fragments.EditorFragment,No,Lots of Puts (Files)
+org.ligi.scr.ListActivity,Yes,Few puts (Rooms)
+Paprika,,
+Class,Code Smell ?,Comments
+amirz.dngprocessor.parser.CFAPattern,Yes,Predetermined size
+app.weatheroverview.utils.WeatherCodeUtils$2,Yes,Predetermined size
+au.com.wallaceit.reddinator.core.RedditData,Yes,Predetermined size
+ca.rmen.android.scrumchatter.provider.MemberCursorWrapper,No,Lots of Puts
+com.adam.aslfms.util.enums.NetworkOptions,Yes,Few Puts (options)
+com.aptasystems.dicewarepasswordgenerator.Diceware,No,Lots of Puts (words)
+com.asksven.betterbatterystats.data.ReferenceStore,No,Lots of Puts
+com.blogspot.developersu.ns_usbloader.service.TinfoilNET,No,Lots of Puts (urls)
+com.cityzen.cityzen.Utils.RecyclerView.CategoryColoringUtil,Yes,Predetermined size
+com.confinement.diconfinement.FileUtils,No,Lots of Puts (words)
+com.darshancomputing.BatteryIndicatorPro.AlarmsFragment,Yes,Few Puts (channels)
+com.dkanada.chip.core.instructions.Instruction_0x8000,Yes,Predetermined size
+com.ds.avare.utils.RateLimitedBackgroundQueue,No,Lots of Puts
+com.emacberry.uuid0xfd6fscan.ui.main.PlaceholderFragment,Yes,Few Puts (sections)
+com.forrestguice.suntimeswidget.cards.CardAdapter,No,Lots of Puts
+com.forrestguice.suntimeswidget.cards.CardViewHolder,Yes,Predetermined size
+com.forrestguice.suntimeswidget.layouts.MoonLayout,Yes,Predetermined size
+com.forrestguice.suntimeswidget.settings.colors.SimpleColorPickerFragment,Yes,Predetermined size
+com.geecko.QuickLyric.adapter.LocalAdapter,No,Lots of Puts (artists)
+com.github.yeriomin.yalpstore.fragment.details.Permissions$1,Yes,Few Puts (permissions)
+com.github.yeriomin.yalpstore.model.App,Yes,No additions
+com.github.yeriomin.yalpstore.model.LoginInfoDao,Yes,Predetermined size
+com.github.yeriomin.yalpstore.task.CheckShellTask,Yes,Few Puts (Commands)
+com.indieweb.indigenous.pleroma.PleromaAuth$3,Yes,Predetermined size
+com.indieweb.indigenous.users.AuthActivity,Yes,Predetermined size
+com.indieweb.indigenous.util.HTTPRequest$6,Yes,Predetermined size
+com.james.status.data.IconStyleData,No,Lots of Puts (bitmap)
+com.liato.bankdroid.BankEditActivity,Yes,Few Puts (form)
+com.liato.bankdroid.banking.banks.AkeliusSpar,No,Lots of Puts (accounts)
+com.liato.bankdroid.banking.banks.lansforsakringar.Lansforsakringar,No,Lots of Puts (accounts)
+com.liato.bankdroid.provider.BankTransactionsProvider,Yes,Predetermined size
+com.lloydtorres.stately.report.ReportActivity,Yes,Predetermined size
+com.murrayc.galaxyzoo.app.provider.ItemsContentProvider,Yes,Predetermined size
+com.perflyst.twire.tasks.ConstructChatMessageTask,No,Lots of Puts (emotes)
+com.pindroid.dashclock.PinDroidExtension,No,Lots of Puts (accounts)
+com.quaap.launchtime.components.Theme$BuiltinTheme,Yes,Few Puts (themes)
+com.quaap.primary.base.data.AppData,No,Lots of Puts (users)
+com.rareventure.gps2.database.cachecreator.GpsTrailerCacheCreator,Yes,HashMap No used
+com.rfo.basic.Run$2,Yes,Predetermined size
+com.sentienhq.launcher.IconsHandler,Yes,Few Puts (packages)
+com.truchsess.send2car.PlaceFragment,No,Put all
+com.xabber.android.data.extension.blocking.BlockingManager,No,Lots of Puts (accounts)
+com.xabber.android.data.extension.chat_markers.BackpressureMessageReader,No,Lots of Puts (contacts)
+com.xabber.android.data.extension.otr.OTRManager,No,Lots of Puts (accounts)
+com.xabber.android.data.VcardMaps,Yes,Predetermined size
+ar.rulosoft.mimanganu.services.AutomaticUpdateTask,Yes,Few Puts (hosts)
+at.jclehner.rxdroid.preferences.TimePeriodPreference$TimePeriod,No,Lots of Puts (Cache)
+com.abhijitvalluri.android.fitnotifications.database.AppSelectionDbHelper,Yes,Predetermined size
+com.cityzen.cityzen.Utils.MapUtils.PoiCategoryFilter.FilterCategory,Yes,Predetermined size
+com.dkanada.chip.core.instructions.Instruction_0x0000,Yes,Predetermined size
+com.ds.avare.place.Boundaries,No,Lots of Puts (polygons)
+com.futurice.android.reservator.common.CacheMap,No,Lots of Puts (Cache)
+com.github.cythara.Sampler,No,Lots of Puts (Notes)
+com.github.gotify.client.model.Message,No,Lots of Puts (Items)
+com.github.gotify.messages.provider.MessageStateHolder,No,Lots of Puts (state per app)
+com.github.yeriomin.yalpstore.bugreport.BugReportMessageBuilder,Yes,Predetermined size
+com.github.yeriomin.yalpstore.task.playstore.DeliveryDataTask,No,No HashMap (Kotlin)
+com.github.yeriomin.yalpstore.task.playstore.UserProfileTask,No,No HashMap (Kotlin)
+com.health.openscale.core.bluetooth.BluetoothDebug,Yes,Predetermined size
+com.indieweb.indigenous.indieweb.microsub.manage.ManageFeedsActivity$3,Yes,Predetermined size (headers)
+com.indieweb.indigenous.util.HTTPRequest$3,Yes,Predetermined size (headers)
+com.james.status.data.preference.IconPreferenceData,Yes,Few puts (style icones)
+com.liato.bankdroid.banking.banks.coop.Coop,Yes,Few puts (months)
+com.lloydtorres.stately.helpers.network.NSStringRequest,Yes,Few Puts (params)
+com.nicobrailo.pianoli.PianoCanvas,Yes,Few puts (pointer to key)
+com.perflyst.twire.fragments.ChangelogDialogFragment$2,Yes,Predetermined size
+com.phpsysinfo.xml.PSIHostData,No,"Lots of Puts (fans, status)"
+com.prangesoftwaresolutions.audioanchor.models.Directory$Type,No,Lots of Puts
+com.quaap.launchtime.components.IconsHandler,Yes,Few puts (icon Packs)
+com.rfo.basic.Run$Interpreter,No,Lots of Puts
+com.ruesga.rview.misc.Formatter,No,Lots of Puts
+com.samebits.beacon.locator.ui.adapter.TrackedBeaconAdapter,Yes,Few puts (Actions)
+com.spisoft.quicknote.databases.KeywordsHelper,No,Lots of Puts (DB)
+com.xabber.android.ui.preferences.PhraseEditorFragment,No,Lots of puts (sources)
+de.bahnhoefe.deutschlands.bahnhofsfotos.util.BitmapCache,No,Lots of puts (Cache)
+de.jkliemann.parkendd.ForecastActivity,No,Lots of puts (dateMap)
+de.jkliemann.parkendd.Parser,No,Lots of puts (dateMap)
+miccah.mpvremote.MainActivity,Yes,Predetermined size
+org.ligi.fahrplan.FahrplanFragment,Yes,Few puts (Colors)
+org.ligi.fahrplan.MyApp,Yes,Few puts (Rooms)
+org.ligi.gobandroid_hd.ui.GoActivity,No,No HashMap (Kotlin)
+tk.superl2.xwifi.MainActivity,No,No HashMap (Kotlin)
+net.nitroshare.android.transfer.Transfer,Yes,Predetermined size
+com.xabber.android.data.xaccount.XabberAccountManager,No,Lots of Puts
+org.ligi.gobandroid_hd.ui.SGFLoadActivity,No,No HashMap (Kotlin)
+com.appmindlab.nano.DisplayDBEntry,Yes,Few Puts (perms)
+com.launcher.silverfish.launcher.appdrawer.TabFragmentHandler,Yes,Few puts (some apps)
+,,
+,,
+,,
+,,
+,,
+,,
+,0,

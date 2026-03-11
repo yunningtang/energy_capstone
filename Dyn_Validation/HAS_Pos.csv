@@ -1,0 +1,61 @@
+DynAMICS,,
+Class,Code Smell ?,Comments
+app.librenews.io.librenews.controllers.FlashRetreiver$1JSONAsyncTask.java,Yes,330 ms
+axp.tool.apkextractor.MainActivity$Loader.java,Yes,330 ms
+com.github.yeriomin.yalpstore.DetailsActivity$GetAndRedrawDetailsTask.java,Yes,185ms
+com.github.yeriomin.yalpstore.task.playstore.CheckCredentialsTask.java,Yes,238ms
+com.github.yeriomin.yalpstore.task.playstore.ForegroundUpdatableAppsTask.java,Yes,207ms
+com.github.yeriomin.yalpstore.task.playstore.PlayStoreTask.java,Yes,238ms
+com.github.yeriomin.yalpstore.task.playstore.UpdatableAppsTask.java,Yes,207ms
+com.github.yeriomin.yalpstore.task.TaskWithProgress.java,Yes,238ms
+com.mschlauch.comfortreader.FullscreenActivity$7.java,Yes,106ms
+com.quaap.launchtime.MainActivity$StartupTask.java,Yes,447ms
+de.arnefeil.bewegungsmelder.tools.EventLoader.java,Yes,210ms
+Paprika,,
+Class,Code Smell ?,Comments
+ar.rulosoft.mimanganu.DetailsFragment$LoadDetailsTask,Yes,fetching data and doing animations in the onPostexecute()
+ar.rulosoft.mimanganu.MangaFragment$DeleteImages,Yes,it depends on what is done in createNotificationWithProgressbar() method
+ar.rulosoft.mimanganu.SearchResultsFragment$PerformSearchTask,No,no blocking operation in onPostExecute() and onPreExecute()
+ar.rulosoft.mimanganu.ServerFilteredNavigationFragment$LoadLastTask,No,no blocking operation in onPostExecute()
+ar.rulosoft.mimanganu.services.AutomaticUpdateTask,Yes,fetching and updating data in onProgressUpdate()
+au.com.wallaceit.reddinator.activity.CommentsContextDialogActivity$CommentsContextLoader,Yes,it depends on what is done in executeJavascriptInWebview() method of onPostExecute()
+au.com.wallaceit.reddinator.activity.MainActivity$FeedLoader,No,no blocking operation in onPostExecute()
+au.com.wallaceit.reddinator.tasks.SyncUserDataTask,Yes,it depends on initiateLogin() method in onPostExecute()
+au.com.wallaceit.reddinator.tasks.WidgetVoteTask,Yes,it depends on initiateLogin() method in onPostExecute()
+be.brunoparmentier.wifikeyshare.ui.activities.WifiListActivity$WifiListTask,Yes,nested loops in setSavedKeysToWifiNetworks()
+click.dummer.rickapp.RickActivity$RecordAudio,No,no blocking operations in onProgressUpdate() method
+com.asksven.betterbatterystats.RawStatsActivity$LoadStatData,No,no blocking operations in onPreExecute() and onPostExecute() methods
+com.developerfromjokela.motioneyeclient.ui.adapters.HttpCamerasAdapter$DownloadImageFromInternet,No,no blocking operations in onPreExecute() and onPostExecute() methods
+com.ds.avare.place.Area$DataBaseAreaTask,Yes,nested loops that instanciate a new AsyncTask with same operations.
+com.ds.avare.shapes.TileMap$1,Yes,nested loops and computing coordinates
+com.ds.avare.views.LocationView$ClosestAirportTask,No,no blocking operations in onPostExecute()
+com.fabienli.dokuwiki.usecase.WikiSynchronizer,No,no blocking operations in onProgressUpdate() and onPostExecute() methods
+com.forrestguice.suntimeswidget.calendar.task.SuntimesCalendarTaskBase,No,no blocking operations in onPreExecute() and onPostExecute() methods
+com.geecko.QuickLyric.tasks.Id3Writer,No,no blocking operations in onPreExecute() and onPostExecute() methods
+com.geecko.QuickLyric.tasks.IdDecoder,Yes,it sounds that startRefreshAnimation() method does contains animations 
+com.geecko.QuickLyric.tasks.SearchTask,No,no blocking operations in onPostExecute()
+com.grarak.kerneladiutor.activities.MainActivity$CheckingTask,No,no blocking operations in onProgressUpdate() and onPostExecute() methods
+com.javiersantos.whatsappbetaupdater.asyncs.NotifyVersion,No,no blocking operations in onPostExecute()
+com.javiersantos.whatsappbetaupdater.utils.UtilsAsync$DownloadFile,No,"no blocking operations in onPreExecute(), onProgressUpdate() and onPostExecute() methods"
+com.kabouzeid.gramophone.ui.fragments.player.flat.FlatPlayerFragment$2,No,no blocking operations
+com.kabouzeid.gramophone.ui.fragments.player.flat.FlatPlayerFragment$3,No,no blocking operations
+com.kanedias.vanilla.coverfetch.CoverShowActivity$ArtworkFetcher,No,no blocking operations in the asyncTask
+com.liato.bankdroid.appwidget.AutoRefreshService$DataRetrieverTask,No,no blocking operations in the asyncTask
+com.liato.bankdroid.DataRetrieverTask,No,no blocking operations in the asyncTask
+com.markusborg.ui.GhostingActivity$GhostingTask,Yes,it depends on the play() method in onProgressUpdate() but overall no blocking operations in onPostExecute() method
+com.nicolasbrailo.vlcfreemote.vlc_connector.http_utils.Wget,Yes,It depends on what is done in Callback() methods 
+com.notecrypt.utils.CryptoLoad,No,no blocking operations in onPreExecute() and onPostExecute() methods
+com.notecrypt.utils.CryptoSave,Yes,It depends on the asyncComplete() method of AsyncDelegate()
+com.perflyst.twire.tasks.HandlerUserLoginTask,No,no blocking operations in the asyncTask
+com.pindroid.fragment.AddBookmarkFragment$GetTagSuggestionsTask,No,no blocking operations in the asyncTask
+com.sentienhq.launcher.result.Result$AsyncSetImage,No,no blocking operations in onPostExecute()
+com.tananaev.logcat.MainActivity$ReaderTask,No,no blocking operations in onProgressUpdate()
+de.clemensbartz.android.launcher.tasks.LoadSharedPreferencesDAOTask,No,no blocking operations in onPostExecute()
+de.clemensbartz.android.launcher.tasks.ShowWidgetListAsPopupMenuTask,No,no blocking operations in the asyncTask
+de.eknoes.inofficialgolem.updater.GolemFetcher,No,no blocking operations in the asyncTask
+de.perflyst.untis.utils.connectivity.UntisRequest,Yes,it depends on what is done in onResponseReceived() method + the size of onProgressUpdate()'s argument is not known untill the execution
+de.perflyst.untis.utils.timetable.TimetableSetup,Yes,it depends on freeze() method in onPreExecute()
+fr.witchdoctors.c4ffein.oosfirmwareextractor.AsyncUnzip,No,no blocking operations in the asyncTask
+in.andres.kandroid.kanboard.KanboardAPI$KanboardAsync,Yes,"onPostExecute() is too long with several loops, if-else conditions and try catch clauses"
+me.echeung.cdflabs.utils.data.LabDataFetcher,No,no blocking operations in asyncTask
+org.ligi.gobandroid_hd.ui.sgf_listing.GoProblemsRenaming,No,no blocking operations in asyncTask

@@ -1,0 +1,167 @@
+DynAMICS,,
+Class,Code Smell ?,Comments
+ar.rulosoft.mimanganu.servers.ServerBase,Yes,"Server Instances, small set"
+ar.rulosoft.mimanganu.utils.HtmlUnescape$1,Yes,Predetermined size
+at.jclehner.rxdroid.db.Database,No,Database Cache
+ca.rmen.android.scrumchatter.provider.MeetingCursorWrapper,Yes,Few Puts (Scrumchattter Columns)
+ca.rmen.android.scrumchatter.provider.MeetingMemberCursorWrapper,No,Database Column Indexes
+ca.rmen.android.scrumchatter.provider.MemberCursorWrapper,No,Database Column Indexes
+ch.abertschi.adfree.model.AdDetectableFactory,No,Big List
+com.adam.aslfms.UserCredsListActivity,Yes,Preferences Map little
+com.adam.aslfms.util.enums.AdvancedOptionsWhen,Yes,Options HashMap limited
+com.angryburg.uapp.utils.ParcelableMap,No,Extension of map
+com.asksven.betterbatterystats.data.ReferenceStore,No,Cache Refs
+com.cityzen.cityzen.Utils.MapUtils.PoiCategoryFilter.QueryPois$1,Yes,Limited Tags
+com.cityzen.cityzen.Utils.MapUtils.Search.nominatimparser.Request$GetPlaces,Yes,Few Puts (tags)
+com.coste.syncorg.orgdata.OrgFileParser,Yes,Few Puts (Todos)
+com.dkanada.chip.core.CPU,Yes,Predetermined size
+com.dkanada.chip.core.instructions.Instruction_0xE000,Yes,Predetermined size
+com.dkanada.chip.core.instructions.Instruction_0xF000,Yes,Predetermined size
+com.dosse.bwentrain.androidPlayer.MainActivity,Yes,Predetermined size
+com.ds.avare.adsb.TfrCache,No,Cache Refs
+com.forrestguice.suntimeswidget.calculator.SuntimesMoonData,Yes,Number of moon phases
+com.gianlu.pretendyourexyzzy.api.models.CahConfig,Yes,Small set of configs
+com.github.yeriomin.smsscheduler.view.BuilderSpinner,Yes,Not used
+com.github.yeriomin.smsscheduler.view.ContactsTask,Yes,Predetermined size
+com.github.yeriomin.yalpstore.AppListActivity,No,App List
+com.github.yeriomin.yalpstore.bugreport.BugReportDeviceInfoBuilder,Yes,Predetermined size
+com.github.yeriomin.yalpstore.bugreport.BugReportMessageBuilder,Yes,Predetermined size
+com.github.yeriomin.yalpstore.model.App,No,Can't know
+com.github.yeriomin.yalpstore.model.EventDao,Yes,Predetermined size
+com.github.yeriomin.yalpstore.task.AppListValidityCheckTask,Yes,Few puts (Installed Apps)
+com.github.yeriomin.yalpstore.task.InstalledAppsTask,No,App List
+com.indieweb.indigenous.post.Base,Yes,Few puts (Headers)
+com.indieweb.indigenous.util.HTTPRequest$3,Yes,Predetermined size
+com.jairaj.janglegmail.motioneye.activities.AddCamActivity,Yes,Few puts (pair)
+com.jairaj.janglegmail.motioneye.activities.HelpFAQActivity,No,No HashMap (Kotlin)
+com.kaliturin.blacklist.utils.Settings,Yes,Predetermined size
+com.liato.bankdroid.banking.banks.coop.Coop,Yes,Few puts (months)
+com.llamacorp.equate.SISuffixHelper,Yes,Predetermined size
+com.mikifus.padland.PadLandDataActivity,Yes,Predetermined size
+com.movim.movim.MainActivity,Yes,Few puts (notifs)
+com.nicobrailo.pianoli.PianoCanvas,No,Lots of puts
+com.prangesoftwaresolutions.audioanchor.dialogs.FileDialog,No,Lots of puts
+com.quaap.launchtime.apps.Badger,No,Can't know
+com.quaap.launchtime.components.Categories,Yes,Predetermined size
+com.quaap.launchtime.components.IconsHandler,Yes,Few puts (icon Packs)
+com.quaap.launchtime.FeedbackActivity,Yes,Predetermined size
+com.quaap.launchtime.MainActivity,Yes,Few puts (icon sheet)
+com.quaap.primary.base.component.HorzItemList,No,Lots of puts
+com.ringdroid.SongMetadataReader,No,Lots of puts
+com.sentienhq.launcher.DataHandler,Yes,Predetermined size
+com.simplemobiletools.contacts.fragments.ContactsFragment,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.fragments.RecentsFragment,No,No HashMap (Kotlin)
+com.simplemobiletools.draw.activities.MainActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.draw.activities.SettingsActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.gallery.fragments.PhotoFragment,No,Can't see
+com.spisoft.quicknote.browser.NoteAdapter,Yes,Few Put (Texts)
+com.spisoft.quicknote.databases.CacheManager,No,Lots of puts
+com.thesis.yatta.commander.Commander,Yes,Few puts (Commands)
+com.todobom.opennotescanner.ImageProcessor,Yes,Few puts (QR Code scanned)
+com.tomatodev.timerdroid.persistence.CategoriesProvider,Yes,Predetermined size
+com.tomatodev.timerdroid.persistence.TimersProvider,Yes,Predetermined size
+com.tomatodev.timerdroid.persistence.WidgetProvider,Yes,Predetermined size
+com.xabber.android.data.account.AccountManager,No,Lots of puts
+com.xabber.android.data.Application,Yes,Few puts (Listeners)
+com.xabber.android.data.extension.avatar.AvatarManager,No,Lots of puts
+com.xabber.android.data.extension.mam.NextMamManager,No,Lots of puts (messages)
+com.xabber.android.data.extension.vcard.VCardManager,No,Can't know
+com.xabber.android.data.notification.MessageNotificationManager,Yes,Few puts (Actions)
+com.xabber.android.data.xaccount.XabberAccountManager,No,Can't know
+com.yubico.yubioath.ui.main.CredentialFragment,No,No HashMap (Kotlin)
+com.zzzmode.appopsx.ui.core.LangHelper,Yes,Predetermined size
+cz.martykan.forecastie.activities.MainActivity,No,Init limited
+de.hskl.contacts.Helper.DBHelper,Yes,Predetermined size
+org.ligi.fahrplan.FahrplanFragment,Yes,Few puts (Lectures)
+org.ligi.gobandroid_hd.ui.sgf_listing.SGFFileSystemListActivity,No,No HashMap (Kotlin)
+tk.superl2.xwifi.MainActivity,No,No HashMap (Kotlin)
+com.liato.bankdroid.banking.banks.ica.ICA,Yes,Predetermined size
+com.mrbimc.selinux.MainActivity,No,No HashMap (Kotlin)
+com.xabber.android.data.push.PushManager,No,Can't know
+org.ligi.gobandroid_hd.ui.GoSoundManager,No,Can't know
+Paprika,,
+Class,Code Smell ?,Comments
+at.jclehner.rxdroid.db.Database,No,Database Cache
+at.jclehner.rxdroid.util.DateTime,No,Lot of Timestamps
+com.coste.syncorg.orgdata.OrgFileParser,No,lot of puts (init)
+com.coste.syncorg.orgdata.OrgFileParser,Yes,Few Puts (Todos)
+com.coste.syncorg.orgdata.OrgNodePayload,Yes,Properties HashMap
+com.coste.syncorg.orgdata.OrgNodeTimeDate,Yes,Predetermined size
+com.faltenreich.diaguard.feature.category.CategoryComparatorFactory,No,Lots of puts (cache)
+com.faltenreich.diaguard.feature.food.edit.NutrientInputLayout,Yes,Few puts (Nutrients)
+com.physphil.android.unitconverterultimate.util.Conversions,Yes,Few puts (Conversions)
+cz.hernik.kaku.helper.HiraganaTable,Yes,Predetermined size
+io.github.lonamiwebs.stringlate.classes.repos.RepoSettings,Yes,Predetermined size
+io.github.lonamiwebs.stringlate.classes.resources.Resources,No,Lot of puts (content)
+io.github.lonamiwebs.stringlate.classes.sources.GitSource,No,Lot of puts (content)
+me.sheimi.android.utils.CodeGuesser,Yes,Predetermined size
+me.sheimi.sgit.database.RepoDbManager,Yes,Few Puts (observers)
+org.joda.time.chrono.ZonedChronology,Yes,Predetermined size
+org.joda.time.field.UnsupportedDateTimeField,No,Cache
+org.joda.time.field.UnsupportedDurationField,No,Cache
+org.joda.time.format.DateTimeFormatterBuilder$TimeZoneId,No,Cache
+org.joda.time.PeriodType,No,Cache
+org.joda.time.tz.DefaultNameProvider,No,Cache
+org.joda.time.tz.ZoneInfoCompiler,No,Cache
+com.simplemobiletools.camera.activities.MainActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.camera.activities.SettingsActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.activities.EditContactActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.activities.InsertOrEditContactActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.activities.MainActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.activities.SelectContactActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.activities.SettingsActivity,No,No HashMap (Kotlin)
+com.simplemobiletools.contacts.activities.ViewContactActivity,No,No HashMap (Kotlin)
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,0,

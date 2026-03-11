@@ -1,0 +1,53 @@
+aDoctor,,
+Class,Code Smell ?,Comments
+com.rareventure.android.IntentTimer,No,acquire and release implemented in seperate methods
+ar.rulosoft.mimanganu.services.DownloadPoolService,No,acquire and release in the same method
+ca.rmen.android.networkmonitor.app.service.NetMonService,No,acquire and release in the same method
+com.dosse.bwentrain.androidPlayer.PlayerController,No,acquire and release in the same method
+com.gtp.showapicturetoyourfriend.receiverpictureactivity,No,acquire and release in the same method
+com.android.switchaccess.SwitchAccessService,No,acquire and release in the same method (following each other)
+com.asksven.betterbatterystats.Wakelock,No,an extended wakelock class
+com.chen.deskclock.data.TimerModel,Yes,"an extended wakelock class is used, so it depends on what is done in the extended methods"
+ac.robinson.util.UIUtilities,No,no wakelock operation in the class
+at.tacticaldevc.panictrigger.TriggerActivity,No,no wakelock operation in the class
+ca.farrelltonsolar.classic.MonitorApplication,No,no wakelock operation in the class
+ca.farrelltonsolar.classic.UDPListener,No,no wakelock operation in the class
+ch.deletescape.lawnchair.dragndrop.DragController,No,no wakelock operation in the class
+com.android.launcher3.LauncherAppState,No,no wakelock operation in the class
+com.biglybt.core.util.AESemaphore,No,no wakelock operation in the class
+com.biglybt.core.util.AESemaphoreOld,No,no wakelock operation in the class
+com.bric.audio.SourceDataLine,No,no wakelock operation in the class
+com.bric.audio.TargetDataLine,No,no wakelock operation in the class
+com.ds.avare.content.DataSource,No,no wakelock operation in the class
+com.google.android.apps.nexuslauncher.CustomDrawableFactory,No,no wakelock operation in the class
+com.hoho.android.usbserial.driver.UsbSerialPort,No,no wakelock operation in the class
+com.jstappdev.dbclf.CameraActivity,No,no wakelock operation in the class
+com.oriondev.moneywallet.storage.database.DataContentProvider,No,no wakelock operation in the class
+com.oriondev.moneywallet.storage.database.SyncContentProvider,No,no wakelock operation in the class
+com.thibaudperso.sonycamera.timelapse.control.connection.StateMachineConnection,No,no wakelock operation in the class
+org.kde.kdeconnect.BackgroundService,No,no wakelock operation in the class
+org.kde.kdeconnect.Plugins.RemoteKeyboardPlugin.RemoteKeyboardService,No,no wakelock operation in the class
+re.jcg.playmusicexporter.services.ExportAllService,No,no wakelock operation in the class
+com.tomer.alwayson.services.MainService,Yes,some wakelocks could be released in onDestroy() method
+com.prangesoftwaresolutions.audioanchor.helpers.LockManager,No,the class manages the wakelock operations
+com.github.yeriomin.smsscheduler.WakefulBroadcastReceiver,No,the release is done in the completeWakefulIntent() method
+com.sshdaemon.MainActivity,No,the release is done in the startStopClicked() method
+com.dosse.dozeoff.DozeKiller,Yes,"the release may not be executed. The apply() method must be called two times to get the release, but we are not sure of that. "
+ch.blinkenlights.android.vanilla.PlaybackService,Yes,the wakelock coud be released in onDestroy() method
+com.github.sryze.wirebug.DebugStatusService,Yes,the wakelock coud be released in onDestroy() method
+ar.rulosoft.mimanganu.services.AutomaticUpdateTask,No,the wakelock is released before ending the AsynckTask
+com.chen.deskclock.AlarmInitReceiver,No,the wakelock is released before finishing the braodcast receiver
+com.poupa.vinylmusicplayer.service.MediaButtonIntentReceiver,No,the wakelock is released in handleMessage() method
+be.ppareit.swiftp.FsService,Yes,the wakelock is released in onDestroy() method
+ca.rmen.android.networkmonitor.app.service.scheduler.ExecutorServiceScheduler,Yes,the wakelock is released in onDestroy() method
+com.angryburg.uapp.utils.AwooNotificationService,Yes,the wakelock is released in onDestroy() method
+com.app.missednotificationsreminder.ApplicationTestRunner,Yes,the wakelock is released in onDestroy() method
+com.knirirr.beecount.CountingActivity,No,the wakelock is released in onPause() method
+com.tomer.poke.notifier.plus.MainService,No,the wakelock is released in onStop() method
+eu.siacs.conversations.http.HttpUploadConnection,No,the wakelock is released in the finally block
+eu.siacs.conversations.services.XmppConnectionService,No,the wakelock is released in the finally block
+DynAMICS,,
+Class,Code Smell ?,Comments
+be.humanoids.webthingify.WebthingService,Yes,the wakelock is released in onDestroy() method
+com.redirectapps.tvkill.TransmitService,Yes,the wakelock is released in onDestroy() method
+com.tomatodev.timerdroid.service.TimerService,Yes,"the wakelock is released in deleteTimer() method, and it depends when it will be called"

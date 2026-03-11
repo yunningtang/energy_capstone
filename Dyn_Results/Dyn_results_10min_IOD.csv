@@ -1,0 +1,16 @@
+instrumentation/instrumentation_FDROID/click.dummer.have_radiosion_28.apk,click.dummer.have_radiosion,click.dummer.have_radiosion.GrrrVisualizer.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.chen.deskclock_5.apk,com.chen.deskclock,com.chen.deskclock.timer.TimerCircleView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.geecko.QuickLyric_131.apk,com.geecko.QuickLyric,com.geecko.QuickLyric.view.FadeInNetworkImageView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.geecko.QuickLyric_131.apk,com.geecko.QuickLyric,com.geecko.QuickLyric.view.BubblePopImageView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.github.cythara_28.apk,com.github.cythara,com.github.cythara.TunerView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.holokenmod_21.apk,com.holokenmod,com.holokenmod.GridCell.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.holokenmod_21.apk,com.holokenmod,com.holokenmod.GridView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.rfo.basic_500.apk,com.rfo.basic,com.rfo.basic.GR$DrawView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.ridgelineapps.resdicegame_16.apk,com.ridgelineapps.resdicegame,com.ridgelineapps.resdicegame.GameView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.simplemobiletools.draw_39.apk,com.simplemobiletools.draw,com.simplemobiletools.draw.views.MyCanvas.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/com.ultramegatech.ey_36.apk,com.ultramegatech.ey,com.ultramegatech.ey.widget.PeriodicTableView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/cz.harvie.northdog_3.apk,cz.harvie.northdog,cz.harvie.northdog.MainActivity$SampleView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/org.ligi.gobandroid_hd_259.apk,org.ligi.gobandroid_hd,org.ligi.gobandroid_hd.ui.GoBoardView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/org.ligi.gobandroid_hd_259.apk,org.ligi.gobandroid_hd,org.ligi.gobandroid_hd.ui.PreviewView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/org.secuso.privacyfriendlyruler_3.apk,org.secuso.privacyfriendlyruler,org.secuso.privacyfriendlyruler.RulerView.java,onDraw,0,0,0,0
+instrumentation/instrumentation_FDROID/wsdfhjxc.taponium_2.apk,wsdfhjxc.taponium,wsdfhjxc.taponium.engine.ApplicationView.java,onDraw,0,0,0,0

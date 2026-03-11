@@ -1,0 +1,7 @@
+,Code smells detected by the tools                ,,,Accessible code smells detected by tools,,,Code smells to check,,
+Code Smell,DynAMICS,Paprika,aDoctor,DynAMICS,Paprika,aDoctor,DynAMICS,Paprika,aDoctor
+DW,3,N/A,95,3,N/A,89,3,N/A,46
+HAS,15,109,N/A,11,89,N/A,11,46,N/A
+HMU,324,573,N/A,247,43,N/A,73,30,N/A
+IOD,16,18,N/A,16,17,N/A,16,17,N/A
+NLMR,2004,1017,2999,1958,893,2902,92,87,93
