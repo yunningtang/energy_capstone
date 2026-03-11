@@ -7,11 +7,11 @@ from sqlalchemy import text
 
 from config import get_settings
 from database import engine, init_db
-from models import AnalysisCreateRequest, HealthResponse, ResultResponse, TaskResponse
+from models import HealthResponse, ResultDetailResponse, TaskCreateRequest, TaskResponse
 from task_manager import TaskManager
 
 settings = get_settings()
-app = FastAPI(title="EcoCode API", version="0.1.0")
+app = FastAPI(title="EcoCode API", version="0.2.0")
 task_manager = TaskManager()
 
 allowed_origins = [
@@ -30,23 +30,23 @@ app.add_middleware(
 )
 
 
+# ── Background worker ─────────────────────────────────────────
+
 async def _background_worker() -> None:
-    """Poll for queued tasks and process them in the background."""
-    from task_manager import STATUS_FAILED
     while True:
         task = None
         try:
-            task = task_manager.dequeue_task()
+            task = task_manager.dequeue_pending()
             if not task:
                 await asyncio.sleep(2)
                 continue
+            print(f"[worker] processing task {task.id}")
             await task_manager.process_task(task.id)
+            print(f"[worker] task {task.id} done")
         except Exception as exc:
             if task:
                 try:
-                    task_manager.update_task_status(
-                        task.id, STATUS_FAILED, progress=100, error_message=str(exc),
-                    )
+                    task_manager._set_task_status(task.id, "Failed")
                 except Exception:
                     pass
             print(f"[worker] error: {exc}")
@@ -59,8 +59,10 @@ def on_startup() -> None:
     asyncio.get_event_loop().create_task(_background_worker())
 
 
+# ── Health ─────────────────────────────────────────────────────
+
 @app.get("/")
-def read_root() -> dict[str, str]:
+def read_root():
     return {"message": "EcoCode API is running"}
 
 
@@ -76,89 +78,86 @@ async def health_check():
     return {
         "api_status": "healthy",
         "db_status": db_status,
-        "ollama_status": {
-            "active_provider": task_manager.llm_provider,
-            "requested_provider": task_manager.primary_provider,
-            "provider_health": llm_status,
-        },
+        "llm_status": llm_status,
     }
 
 
+# ── Tasks ──────────────────────────────────────────────────────
+
 @app.post("/api/tasks", response_model=TaskResponse)
-def create_task(payload: AnalysisCreateRequest):
+def create_task_from_url(payload: TaskCreateRequest):
     task = task_manager.create_task(
+        description=payload.description,
         source_type=payload.source_type,
-        source_name=payload.source_name,
-        source_value=payload.source_value,
-        smell_types=payload.smell_types,
+        source_url=payload.source_url,
     )
-    return _serialize_task(task)
+    return _task_dict(task)
+
+
+@app.post("/api/tasks/upload", response_model=TaskResponse)
+async def create_task_upload(
+    description: str = Form(""),
+    files: list[UploadFile] = File(...),
+):
+    task = task_manager.create_task(
+        description=description,
+        source_type="uploaded",
+    )
+    file_pairs: list[tuple[str, str]] = []
+    for f in files:
+        content = (await f.read()).decode("utf-8", errors="ignore")
+        file_pairs.append((f.filename or "unknown.java", content))
+    task_manager.save_uploaded_files(task, file_pairs)
+    return _task_dict(task)
 
 
 @app.get("/api/tasks", response_model=list[TaskResponse])
-def list_tasks() -> list[dict[str, Any]]:
-    tasks = task_manager.list_tasks()
-    return [_serialize_task(t) for t in tasks]
+def list_tasks(status: str | None = None):
+    tasks = task_manager.list_tasks(status_filter=status)
+    return [_task_dict(t) for t in tasks]
 
 
 @app.get("/api/tasks/{task_id}", response_model=TaskResponse)
-def get_task(task_id: str):
+def get_task(task_id: int):
     task = task_manager.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    return _serialize_task(task)
+    return _task_dict(task)
 
 
-@app.get("/api/results/{task_id}", response_model=ResultResponse)
-def get_result(task_id: str):
-    result = task_manager.get_result(task_id)
-    if not result:
-        raise HTTPException(status_code=404, detail="Result not found")
+# ── Results ────────────────────────────────────────────────────
+
+@app.get("/api/tasks/{task_id}/results", response_model=list[ResultDetailResponse])
+def get_results(task_id: int):
+    rows = task_manager.get_results(task_id)
+    return [_result_dict(r) for r in rows]
+
+
+# ── Serializers ────────────────────────────────────────────────
+
+def _task_dict(t) -> dict[str, Any]:
     return {
-        "task_id": result.task_id,
-        "summary": result.summary,
-        "findings": result.findings,
-        "llm_suggestions": result.llm_suggestions,
-        "processing_time_ms": result.processing_time_ms,
+        "id": t.id,
+        "description": t.description,
+        "source_type": t.source_type,
+        "source_url": t.source_url,
+        "download_folder_name": t.download_folder_name,
+        "status": t.status,
+        "created_at": t.created_at,
+        "updated_at": t.updated_at,
     }
 
 
-@app.post("/api/upload-analyze", response_model=TaskResponse)
-async def upload_and_analyze(
-    file: UploadFile = File(...),
-    smell_types: str = Form("DW,HMU,HAS,IOD,NLMR"),
-):
-    content = (await file.read()).decode("utf-8", errors="ignore")
-    task = task_manager.create_task(
-        source_type="file",
-        source_name=file.filename or "uploaded_file.java",
-        source_value=content,
-        smell_types=[x.strip() for x in smell_types.split(",") if x.strip()],
-    )
-    return _serialize_task(task)
-
-
-@app.post("/api/analyze", response_model=TaskResponse)
-def analyze_compat(payload: dict[str, Any]):
-    # Compatibility endpoint for form-style frontend submissions.
-    source_type = payload.get("source_type", "url")
-    source_name = payload.get("source_name") or "input"
-    source_value = payload.get("source_value") or payload.get("githubUrl") or payload.get("urlInput")
-    if not source_value:
-        raise HTTPException(status_code=400, detail="source_value is required")
-    smell_types = payload.get("smell_types") or ["DW", "HMU", "HAS", "IOD", "NLMR"]
-    task = task_manager.create_task(source_type, source_name, str(source_value), smell_types)
-    return _serialize_task(task)
-
-
-def _serialize_task(task) -> dict[str, Any]:
+def _result_dict(r) -> dict[str, Any]:
     return {
-        "id": task.id,
-        "source_type": task.source_type,
-        "source_name": task.source_name,
-        "status": task.status,
-        "progress": task.progress,
-        "created_at": task.created_at,
-        "completed_at": task.completed_at,
-        "error_message": task.error_message,
+        "id": r.id,
+        "task_id": r.task_id,
+        "folder_name": r.folder_name,
+        "file_name": r.file_name,
+        "status": r.status,
+        "dw": r.dw,
+        "hmu": r.hmu,
+        "has": r.has,
+        "iod": r.iod,
+        "nlmr": r.nlmr,
     }

@@ -1,51 +1,40 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
-TaskStatus = Literal["QUEUED", "IN_PROGRESS", "FINISHED", "FAILED"]
-Severity = Literal["critical", "major", "minor"]
-
-
-class AnalysisCreateRequest(BaseModel):
-    source_type: Literal["url", "file", "snippet"] = "url"
-    source_name: str = ""
-    source_value: str = Field(..., min_length=1)
-    smell_types: list[str] = Field(default_factory=lambda: ["DW", "HMU", "HAS", "IOD", "NLMR"])
+class TaskCreateRequest(BaseModel):
+    description: str = ""
+    source_type: Literal["repo", "uploaded"] = "repo"
+    source_url: str | None = None
 
 
 class TaskResponse(BaseModel):
-    id: str
+    id: int
+    description: str
     source_type: str
-    source_name: str
-    status: TaskStatus
-    progress: int
+    source_url: str | None
+    download_folder_name: str
+    status: str
     created_at: datetime
-    completed_at: datetime | None
-    error_message: str | None
+    updated_at: datetime
 
 
-class Finding(BaseModel):
-    smell_type: str
-    has_smell: bool
-    confidence: int
-    severity: Severity
-    explanation: str
-    suggestion: str | None = None
-    location: dict[str, Any] = Field(default_factory=dict)
-    refactored_code: str | None = None
-
-
-class ResultResponse(BaseModel):
-    task_id: str
-    summary: dict[str, Any]
-    findings: list[Finding]
-    llm_suggestions: str | None
-    processing_time_ms: int
+class ResultDetailResponse(BaseModel):
+    id: int
+    task_id: int
+    folder_name: str
+    file_name: str
+    status: str
+    dw: str
+    hmu: str
+    has: str
+    iod: str
+    nlmr: str
 
 
 class HealthResponse(BaseModel):
     api_status: str
     db_status: str
-    ollama_status: dict[str, Any]
+    llm_status: dict

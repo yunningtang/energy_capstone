@@ -6,152 +6,144 @@ import httpx
 
 from config import get_settings
 
+PATTERN_DESCRIPTIONS = {
+    "DW": (
+        "Durable Wakelock — acquiring a WakeLock (e.g. wakeLock.acquire()) without "
+        "a corresponding release (wakeLock.release()), which prevents the device "
+        "from entering sleep mode and drains the battery."
+    ),
+    "HMU": (
+        "HashMap Usage — using java.util.HashMap for small collections on Android "
+        "where ArrayMap or SparseArray would be more memory-efficient and reduce "
+        "garbage-collection pressure."
+    ),
+    "HAS": (
+        "Heavy AsyncTask/Start — performing heavy or blocking operations (e.g. "
+        "Thread.sleep, network I/O, large computation) inside UI-thread callbacks "
+        "such as onPostExecute, onPreExecute, or onProgressUpdate."
+    ),
+    "IOD": (
+        "Init OnDraw — allocating objects (new Paint(), new Rect(), etc.) inside "
+        "View.onDraw(), which is called every frame and causes excessive garbage "
+        "collection and UI jank."
+    ),
+    "NLMR": (
+        "No Low Memory Resolver — an Activity or Service that does not override "
+        "onLowMemory() or onTrimMemory() to release caches and non-critical "
+        "resources when the system is low on memory."
+    ),
+}
+
+
+def build_smell_prompt(code: str, pattern: str) -> str:
+    description = PATTERN_DESCRIPTIONS.get(pattern, f"{pattern} energy anti-pattern")
+    return (
+        f"You are a system expert and we want to spot {{{pattern}}} issue "
+        f"in the following code.\n\n"
+        f"Pattern description: [{pattern}] pattern means {description}\n\n"
+        f"Expected output: Please answer with y/n if the code contains "
+        f"[{pattern} issue] with the reason of having this issue.\n\n"
+        f"Here is the code:\n\n{code}\n\n"
+        'Return ONLY a JSON object with keys: "answer" ("Yes" or "No"), '
+        '"reason" (string explaining why).'
+    )
+
+
+def _safe_json(content: str) -> dict[str, Any]:
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", content, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+        lower = content.lower()
+        if "yes" in lower:
+            return {"answer": "Yes", "reason": content}
+        return {"answer": "No", "reason": content}
+
 
 class LLMService:
     async def health_check(self) -> dict[str, Any]:
         raise NotImplementedError
 
-    async def analyze_smell(
-        self, code: str, smell_type: str, few_shot_examples: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def check_pattern(self, code: str, pattern: str) -> dict[str, Any]:
+        """Return {"answer": "Yes"/"No", "reason": "..."}."""
         raise NotImplementedError
 
 
-class OllamaService:
+class OllamaService(LLMService):
     def __init__(self):
-        settings = get_settings()
-        self.base_url = settings.ollama_base_url.rstrip("/")
-        self.model = settings.ollama_model
+        s = get_settings()
+        self.base_url = s.ollama_base_url.rstrip("/")
+        self.model = s.ollama_model
 
     async def health_check(self) -> dict[str, Any]:
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{self.base_url}/api/tags")
-            response.raise_for_status()
-            payload = response.json()
-            return {
-                "status": "healthy",
-                "models": [m.get("name", "") for m in payload.get("models", [])],
-            }
+            async with httpx.AsyncClient(timeout=10.0) as c:
+                r = await c.get(f"{self.base_url}/api/tags")
+            r.raise_for_status()
+            return {"status": "healthy", "provider": "ollama"}
         except Exception as exc:
-            return {"status": "unhealthy", "error": str(exc)}
+            return {"status": "unhealthy", "provider": "ollama", "error": str(exc)}
 
-    async def analyze_smell(
-        self, code: str, smell_type: str, few_shot_examples: list[dict[str, Any]]
-    ) -> dict[str, Any]:
-        prompt = self._build_prompt(code=code, smell_type=smell_type, examples=few_shot_examples)
+    async def check_pattern(self, code: str, pattern: str) -> dict[str, Any]:
+        prompt = build_smell_prompt(code, pattern)
         body = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
             "format": "json",
-            "options": {
-                "temperature": 0.2,
-                "top_p": 0.9,
-                "num_predict": 700,
-            },
+            "options": {"temperature": 0.2, "num_predict": 500},
         }
         try:
-            async with httpx.AsyncClient(timeout=90.0) as client:
-                response = await client.post(f"{self.base_url}/api/generate", json=body)
-            response.raise_for_status()
-            raw = response.json().get("response", "{}")
-            return self._safe_json(raw)
+            async with httpx.AsyncClient(timeout=90.0) as c:
+                r = await c.post(f"{self.base_url}/api/generate", json=body)
+            r.raise_for_status()
+            raw = r.json().get("response", "{}")
+            return _safe_json(raw)
         except Exception as exc:
-            return {
-                "has_smell": False,
-                "confidence": 0,
-                "smell_type": smell_type,
-                "severity": "minor",
-                "explanation": f"LLM request failed: {exc}",
-            }
-
-    def _safe_json(self, content: str) -> dict[str, Any]:
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            match = re.search(r"\{.*\}", content, re.DOTALL)
-            if not match:
-                return {"has_smell": False, "confidence": 0, "severity": "minor", "explanation": content}
-            return json.loads(match.group())
-
-    def _build_prompt(self, code: str, smell_type: str, examples: list[dict[str, Any]]) -> str:
-        parts = [
-            "You are an Android energy optimization expert.",
-            f"Analyze code for smell type: {smell_type}.",
-            "Use strict JSON response only.",
-        ]
-        if examples:
-            parts.append("Examples:")
-            for idx, ex in enumerate(examples, start=1):
-                parts.append(
-                    "\n".join(
-                        [
-                            f"Example {idx}",
-                            f"Label: {ex.get('label', 'unknown')}",
-                            f"Code:\n{ex.get('code', '')}",
-                            f"Issue: {ex.get('issue', '')}",
-                            f"Fix: {ex.get('fix', '')}",
-                        ]
-                    )
-                )
-        parts.append("Code to analyze:")
-        parts.append(code)
-        parts.append(
-            (
-                'Return JSON with keys: has_smell(bool), confidence(int 0-100), smell_type(str), '
-                'severity("critical"|"major"|"minor"), explanation(str), '
-                'location(object with line/method), suggestion(str), refactored_code(str).'
-            )
-        )
-        return "\n\n".join(parts)
+            return {"answer": "No", "reason": f"LLM error: {exc}"}
 
 
 class OpenAIService(LLMService):
     def __init__(self):
-        settings = get_settings()
-        self.api_key = settings.openai_api_key or ""
-        self.model = settings.openai_model
+        s = get_settings()
+        self.api_key = s.openai_api_key or ""
+        self.model = s.openai_model
         self.base_url = "https://api.openai.com/v1"
 
     async def health_check(self) -> dict[str, Any]:
         if not self.api_key:
-            return {"status": "unhealthy", "error": "OPENAI_API_KEY is missing"}
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+            return {"status": "unhealthy", "provider": "openai", "error": "No API key"}
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{self.base_url}/models", headers=headers)
-            response.raise_for_status()
-            models = response.json().get("data", [])
-            model_ids = [m.get("id", "") for m in models]
-            return {
-                "status": "healthy",
-                "provider": "openai",
-                "configured_model": self.model,
-                "model_available": self.model in model_ids,
-            }
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            async with httpx.AsyncClient(timeout=10.0) as c:
+                r = await c.get(f"{self.base_url}/models", headers=headers)
+            r.raise_for_status()
+            return {"status": "healthy", "provider": "openai", "model": self.model}
         except Exception as exc:
             return {"status": "unhealthy", "provider": "openai", "error": str(exc)}
 
-    async def analyze_smell(
-        self, code: str, smell_type: str, few_shot_examples: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    async def check_pattern(self, code: str, pattern: str) -> dict[str, Any]:
         if not self.api_key:
-            return {
-                "has_smell": False,
-                "confidence": 0,
-                "smell_type": smell_type,
-                "severity": "minor",
-                "explanation": "OPENAI_API_KEY is missing.",
-            }
-        prompt = self._build_prompt(code=code, smell_type=smell_type, examples=few_shot_examples)
-        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+            return {"answer": "No", "reason": "OPENAI_API_KEY not set"}
+        prompt = build_smell_prompt(code, pattern)
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
         body = {
             "model": self.model,
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are an Android energy optimization expert. Return strict JSON only.",
+                    "content": (
+                        "You are an Android energy optimization expert. "
+                        "Return strict JSON only."
+                    ),
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -159,81 +151,25 @@ class OpenAIService(LLMService):
             "temperature": 0.2,
         }
         try:
-            async with httpx.AsyncClient(timeout=90.0) as client:
-                response = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=body,
+            async with httpx.AsyncClient(timeout=90.0) as c:
+                r = await c.post(
+                    f"{self.base_url}/chat/completions", headers=headers, json=body,
                 )
-            response.raise_for_status()
+            r.raise_for_status()
             raw = (
-                response.json()
+                r.json()
                 .get("choices", [{}])[0]
                 .get("message", {})
                 .get("content", "{}")
             )
-            return self._safe_json(raw)
+            return _safe_json(raw)
         except Exception as exc:
-            return {
-                "has_smell": False,
-                "confidence": 0,
-                "smell_type": smell_type,
-                "severity": "minor",
-                "explanation": f"OpenAI request failed: {exc}",
-            }
-
-    def _safe_json(self, content: str) -> dict[str, Any]:
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            match = re.search(r"\{.*\}", content, re.DOTALL)
-            if not match:
-                return {
-                    "has_smell": False,
-                    "confidence": 0,
-                    "severity": "minor",
-                    "explanation": content,
-                }
-            return json.loads(match.group())
-
-    def _build_prompt(self, code: str, smell_type: str, examples: list[dict[str, Any]]) -> str:
-        parts = [
-            "Analyze Android code smell and provide practical fix advice in natural language.",
-            f"Smell type to detect: {smell_type}",
-            "Use strict JSON response only.",
-        ]
-        if examples:
-            parts.append("Examples:")
-            for idx, ex in enumerate(examples, start=1):
-                parts.append(
-                    "\n".join(
-                        [
-                            f"Example {idx}",
-                            f"Label: {ex.get('label', 'unknown')}",
-                            f"Code:\n{ex.get('code', '')}",
-                            f"Issue: {ex.get('issue', '')}",
-                            f"Fix: {ex.get('fix', '')}",
-                        ]
-                    )
-                )
-        parts.append("Code to analyze:")
-        parts.append(code)
-        parts.append(
-            (
-                'Return JSON with keys: has_smell(bool), confidence(int 0-100), smell_type(str), '
-                'severity("critical"|"major"|"minor"), explanation(str, natural language), '
-                'location(object with line/method), suggestion(str, natural language), '
-                "refactored_code(str)."
-            )
-        )
-        return "\n\n".join(parts)
+            return {"answer": "No", "reason": f"OpenAI error: {exc}"}
 
 
 def create_llm_service() -> tuple[LLMService, str]:
-    settings = get_settings()
-    provider = (settings.llm_provider or "openai").strip().lower()
-    if provider == "openai":
-        if settings.openai_api_key:
-            return OpenAIService(), "openai"
-        return OllamaService(), "ollama"
+    s = get_settings()
+    provider = (s.llm_provider or "openai").strip().lower()
+    if provider == "openai" and s.openai_api_key:
+        return OpenAIService(), "openai"
     return OllamaService(), "ollama"

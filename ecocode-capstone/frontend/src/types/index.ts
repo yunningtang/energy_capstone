@@ -1,45 +1,29 @@
-export type SourceType = "url" | "file" | "snippet";
-export type TaskStatus = "QUEUED" | "IN_PROGRESS" | "FINISHED" | "FAILED";
-
-export interface AnalysisTask {
-  id: string;
-  source_type: SourceType;
-  source_name: string;
-  status: TaskStatus;
-  progress: number;
+export interface Task {
+  id: number;
+  description: string;
+  source_type: "repo" | "uploaded";
+  source_url: string | null;
+  download_folder_name: string;
+  status: string;
   created_at: string;
-  completed_at: string | null;
-  error_message: string | null;
+  updated_at: string;
 }
 
-export interface Finding {
-  smell_type: string;
-  has_smell: boolean;
-  confidence: number;
-  severity: "critical" | "major" | "minor";
-  explanation: string;
-  suggestion?: string | null;
-  location?: Record<string, unknown>;
-  refactored_code?: string | null;
+export interface ResultDetail {
+  id: number;
+  task_id: number;
+  folder_name: string;
+  file_name: string;
+  status: string;
+  dw: string;
+  hmu: string;
+  has: string;
+  iod: string;
+  nlmr: string;
 }
 
-export interface AnalysisResult {
-  task_id: string;
-  summary: {
-    total_findings: number;
-    smell_hits: number;
-    critical_count: number;
-    major_count: number;
-    minor_count: number;
-  };
-  findings: Finding[];
-  llm_suggestions: string | null;
-  processing_time_ms: number;
-}
-
-export interface TaskCreatePayload {
-  source_type: SourceType;
-  source_name: string;
-  source_value: string;
-  smell_types: string[];
+export interface HealthInfo {
+  api_status: string;
+  db_status: string;
+  llm_status: Record<string, unknown>;
 }

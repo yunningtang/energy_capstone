@@ -1,222 +1,240 @@
-import time
-from datetime import datetime
+import io
+import os
+import shutil
+import subprocess
+import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
+import httpx
 from sqlalchemy import select
 
 from config import get_settings
-from database import AnalysisResult, AnalysisTask, get_db_session
-from llm_service import OllamaService, create_llm_service
-from utils import fallback_detect_smell, load_few_shot_examples, new_task_id
+from database import ResultDetail, Task, get_db_session
+from llm_service import create_llm_service
 
-
-STATUS_QUEUED = "QUEUED"
-STATUS_IN_PROGRESS = "IN_PROGRESS"
-STATUS_FINISHED = "FINISHED"
-STATUS_FAILED = "FAILED"
+PATTERNS = ["DW", "HMU", "HAS", "IOD", "NLMR"]
+JAVA_EXTENSIONS = {".java"}
 
 
 class TaskManager:
     def __init__(self):
-        settings = get_settings()
         self.llm, self.llm_provider = create_llm_service()
-        self.fallback_llm = OllamaService() if self.llm_provider != "ollama" else None
-        # Keep compatibility with existing health endpoint naming.
-        self.ollama = self.llm
-        self.primary_provider = (settings.llm_provider or "openai").strip().lower()
-        self.few_shot_dir = (
-            Path(__file__).resolve().parent.parent / "data" / "few-shot-examples"
-        )
+        settings = get_settings()
+        self.files_root = Path(settings.temp_repo_dir).resolve()
+        self.files_root.mkdir(parents=True, exist_ok=True)
+
+    # ── Task CRUD ──────────────────────────────────────────────
 
     def create_task(
         self,
+        description: str,
         source_type: str,
-        source_name: str,
-        source_value: str,
-        smell_types: list[str],
-    ) -> AnalysisTask:
-        task_id = new_task_id()
+        source_url: str | None = None,
+    ) -> Task:
         with get_db_session() as db:
-            task = AnalysisTask(
-                id=task_id,
+            task = Task(
+                description=description,
                 source_type=source_type,
-                source_name=source_name or "unnamed_input",
-                source_value=source_value,
-                selected_smells=smell_types,
-                status=STATUS_QUEUED,
-                progress=0,
+                source_url=source_url,
+                status="Pending",
             )
             db.add(task)
             db.commit()
             db.refresh(task)
+            folder = f"Task_{task.id}_Downloaded_Files"
+            task.download_folder_name = folder
+            db.commit()
+            db.refresh(task)
             return task
 
-    def list_tasks(self, limit: int = 50) -> list[AnalysisTask]:
+    def list_tasks(self, status_filter: str | None = None) -> list[Task]:
         with get_db_session() as db:
-            stmt = select(AnalysisTask).order_by(AnalysisTask.created_at.desc()).limit(limit)
+            stmt = select(Task).order_by(Task.created_at.desc())
+            if status_filter and status_filter != "All":
+                stmt = stmt.where(Task.status == status_filter)
             return list(db.scalars(stmt))
 
-    def get_task(self, task_id: str) -> AnalysisTask | None:
+    def get_task(self, task_id: int) -> Task | None:
         with get_db_session() as db:
-            return db.get(AnalysisTask, task_id)
+            return db.get(Task, task_id)
 
-    def get_result(self, task_id: str) -> AnalysisResult | None:
-        with get_db_session() as db:
-            stmt = select(AnalysisResult).where(AnalysisResult.task_id == task_id)
-            return db.scalars(stmt).first()
-
-    def dequeue_task(self) -> AnalysisTask | None:
+    def get_results(self, task_id: int) -> list[ResultDetail]:
         with get_db_session() as db:
             stmt = (
-                select(AnalysisTask)
-                .where(AnalysisTask.status == STATUS_QUEUED)
-                .order_by(AnalysisTask.created_at.asc())
+                select(ResultDetail)
+                .where(ResultDetail.task_id == task_id)
+                .order_by(ResultDetail.id)
+            )
+            return list(db.scalars(stmt))
+
+    def dequeue_pending(self) -> Task | None:
+        with get_db_session() as db:
+            stmt = (
+                select(Task)
+                .where(Task.status == "Pending")
+                .order_by(Task.created_at.asc())
                 .limit(1)
             )
             task = db.scalars(stmt).first()
             if not task:
                 return None
-            task.status = STATUS_IN_PROGRESS
-            task.progress = 10
+            task.status = "In-Progress"
             db.commit()
             db.refresh(task)
             return task
 
-    def update_task_status(
-        self,
-        task_id: str,
-        status: str,
-        progress: int | None = None,
-        error_message: str | None = None,
+    # ── File ingestion ─────────────────────────────────────────
+
+    def save_uploaded_files(
+        self, task: Task, files: list[tuple[str, str]]
     ) -> None:
+        """files = [(filename, content), ...]"""
+        folder = self.files_root / task.download_folder_name
+        folder.mkdir(parents=True, exist_ok=True)
         with get_db_session() as db:
-            task = db.get(AnalysisTask, task_id)
-            if not task:
-                return
-            task.status = status
-            if progress is not None:
-                task.progress = progress
-            task.error_message = error_message
-            if status in (STATUS_FINISHED, STATUS_FAILED):
-                task.completed_at = datetime.utcnow()
+            for name, content in files:
+                fpath = folder / name
+                fpath.write_text(content, encoding="utf-8")
+                db.add(
+                    ResultDetail(
+                        task_id=task.id,
+                        folder_name=task.download_folder_name,
+                        file_name=name,
+                        file_content=content,
+                        status="Pending",
+                    )
+                )
             db.commit()
 
-    async def process_task(self, task_id: str) -> None:
+    async def download_repo(self, task: Task) -> None:
+        url = task.source_url or ""
+        folder = self.files_root / task.download_folder_name
+        folder.mkdir(parents=True, exist_ok=True)
+
+        try:
+            await self._clone_repo(url, folder)
+        except Exception:
+            await self._download_zip(url, folder)
+
+        java_files = self._collect_java_files(folder)
         with get_db_session() as db:
-            task = db.get(AnalysisTask, task_id)
+            for fpath in java_files:
+                rel = fpath.relative_to(folder)
+                content = fpath.read_text(encoding="utf-8", errors="ignore")
+                db.add(
+                    ResultDetail(
+                        task_id=task.id,
+                        folder_name=task.download_folder_name,
+                        file_name=str(rel),
+                        file_content=content,
+                        status="Pending",
+                    )
+                )
+            db.commit()
+
+    async def _clone_repo(self, url: str, dest: Path) -> None:
+        proc = subprocess.run(
+            ["git", "clone", "--depth", "1", url, str(dest / "_repo")],
+            capture_output=True,
+            timeout=120,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(proc.stderr.decode(errors="ignore"))
+
+    async def _download_zip(self, url: str, dest: Path) -> None:
+        parts = url.rstrip("/").split("/")
+        if "github.com" in url and len(parts) >= 5:
+            owner, repo = parts[-2], parts[-1]
+            zip_url = f"https://github.com/{owner}/{repo}/archive/refs/heads/main.zip"
+        else:
+            zip_url = url
+
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as c:
+            r = await c.get(zip_url)
+            r.raise_for_status()
+        with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+            zf.extractall(dest / "_repo")
+
+    def _collect_java_files(self, folder: Path) -> list[Path]:
+        results: list[Path] = []
+        for root, _, filenames in os.walk(folder):
+            for fn in filenames:
+                if Path(fn).suffix in JAVA_EXTENSIONS:
+                    results.append(Path(root) / fn)
+        return results
+
+    # ── Task processing ────────────────────────────────────────
+
+    async def process_task(self, task_id: int) -> None:
+        with get_db_session() as db:
+            task = db.get(Task, task_id)
             if not task:
                 return
             source_type = task.source_type
-            source_value = task.source_value
-            selected_smells = task.selected_smells or ["DW", "HMU", "HAS", "IOD", "NLMR"]
+            source_url = task.source_url
 
-        self.update_task_status(task_id, STATUS_IN_PROGRESS, progress=30)
+        if source_type == "repo":
+            t = self.get_task(task_id)
+            if t:
+                await self.download_repo(t)
 
-        start = time.time()
-        code_payload = self._build_code_payload(source_type, source_value)
-        findings = await self._analyze_code(code_payload, selected_smells)
-        summary = {
-            "total_findings": len(findings),
-            "smell_hits": len([f for f in findings if f.get("has_smell")]),
-            "critical_count": len([f for f in findings if f.get("severity") == "critical"]),
-            "major_count": len([f for f in findings if f.get("severity") == "major"]),
-            "minor_count": len([f for f in findings if f.get("severity") == "minor"]),
-        }
-        elapsed = int((time.time() - start) * 1000)
+        results = self.get_results(task_id)
+        if not results:
+            self._set_task_status(task_id, "Done")
+            return
 
-        self.update_task_status(task_id, STATUS_IN_PROGRESS, progress=90)
+        for rd in results:
+            await self._process_file(rd.id, rd.file_content or "")
 
+        self._set_task_status(task_id, "Done")
+        self._cleanup_folder(task_id)
+
+    async def _process_file(self, result_id: int, code: str) -> None:
+        self._update_result_status(result_id, "Analyzing")
+
+        for pattern in PATTERNS:
+            try:
+                resp = await self.llm.check_pattern(code, pattern)
+                answer_raw = str(resp.get("answer", "No")).strip().lower()
+                answer = "Yes" if answer_raw in ("yes", "y", "true") else "No"
+            except Exception:
+                answer = "No"
+            self._update_result_pattern(result_id, pattern, answer)
+
+        self._update_result_status(result_id, "Done")
+
+    # ── Helpers ────────────────────────────────────────────────
+
+    def _set_task_status(self, task_id: int, status: str) -> None:
         with get_db_session() as db:
-            existing = db.scalars(
-                select(AnalysisResult).where(AnalysisResult.task_id == task_id)
-            ).first()
-            if existing:
-                existing.summary = summary
-                existing.findings = findings
-                existing.processing_time_ms = elapsed
-            else:
-                db.add(
-                    AnalysisResult(
-                        task_id=task_id,
-                        summary=summary,
-                        findings=findings,
-                        llm_suggestions=self._compose_suggestion(findings),
-                        processing_time_ms=elapsed,
-                    )
-                )
-            db.commit()
+            task = db.get(Task, task_id)
+            if task:
+                task.status = status
+                db.commit()
 
-        self.update_task_status(task_id, STATUS_FINISHED, progress=100)
+    def _update_result_status(self, result_id: int, status: str) -> None:
+        with get_db_session() as db:
+            rd = db.get(ResultDetail, result_id)
+            if rd:
+                rd.status = status
+                db.commit()
 
-    async def _analyze_code(self, code: str, smell_types: list[str]) -> list[dict[str, Any]]:
-        findings: list[dict[str, Any]] = []
-        for smell in smell_types:
-            try:
-                examples = load_few_shot_examples(self.few_shot_dir, smell)
-                llm_result = await self.llm.analyze_smell(
-                    code=code, smell_type=smell, few_shot_examples=examples
-                )
-                normalized = self._normalize_result(llm_result, smell)
-                if normalized["confidence"] == 0 and self.fallback_llm:
-                    fallback_result = await self.fallback_llm.analyze_smell(
-                        code=code, smell_type=smell, few_shot_examples=examples
-                    )
-                    normalized = self._normalize_result(fallback_result, smell)
-                if normalized["confidence"] == 0:
-                    normalized = fallback_detect_smell(code, smell)
-            except Exception as exc:
-                normalized = fallback_detect_smell(code, smell)
-                normalized["explanation"] = (
-                    f"{normalized.get('explanation', '')} "
-                    f"(fallback due to analysis error: {exc})"
-                ).strip()
-            findings.append(normalized)
-        return findings
+    def _update_result_pattern(
+        self, result_id: int, pattern: str, value: str
+    ) -> None:
+        col = pattern.lower()
+        with get_db_session() as db:
+            rd = db.get(ResultDetail, result_id)
+            if rd and hasattr(rd, col):
+                setattr(rd, col, value)
+                db.commit()
 
-    def _normalize_result(self, payload: dict[str, Any], smell_type: str) -> dict[str, Any]:
-        has_smell = bool(payload.get("has_smell", False))
-        confidence = self._safe_int(payload.get("confidence", 0), default=0)
-        severity = payload.get("severity", "minor")
-        if severity not in ("critical", "major", "minor"):
-            severity = "minor"
-        return {
-            "smell_type": payload.get("smell_type", smell_type),
-            "has_smell": has_smell,
-            "confidence": max(0, min(confidence, 100)),
-            "severity": severity,
-            "explanation": str(payload.get("explanation", "")),
-            "location": payload.get("location", {"line": 1, "method": "unknown"}),
-            "suggestion": payload.get("suggestion"),
-            "refactored_code": payload.get("refactored_code"),
-        }
-
-    def _safe_int(self, value: Any, default: int = 0) -> int:
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            try:
-                return int(float(value))
-            except (TypeError, ValueError):
-                return default
-
-    def _build_code_payload(self, source_type: str, source_value: str) -> str:
-        if source_type in ("file", "snippet"):
-            return source_value
-        return (
-            "// URL mode placeholder for MVP\n"
-            f"// Target repository: {source_value}\n"
-            "// Clone-based deep analysis can be enabled in phase-2.\n"
-        )
-
-    def _compose_suggestion(self, findings: list[dict[str, Any]]) -> str:
-        hit_findings = [f for f in findings if f.get("has_smell")]
-        if not hit_findings:
-            return "No major energy smells detected in this run."
-        lines = ["Prioritized recommendations:"]
-        for f in hit_findings:
-            lines.append(
-                f"- [{f.get('smell_type')}] {f.get('explanation')} "
-                f"Fix: {f.get('suggestion') or 'Review and refactor control flow.'}"
-            )
-        return "\n".join(lines)
+    def _cleanup_folder(self, task_id: int) -> None:
+        task = self.get_task(task_id)
+        if not task:
+            return
+        folder = self.files_root / task.download_folder_name
+        if folder.exists():
+            shutil.rmtree(folder, ignore_errors=True)
