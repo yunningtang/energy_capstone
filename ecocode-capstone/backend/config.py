@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-4.1-mini"
 
+    frontend_url: str = ""
+
     semgrep_bin: str = "semgrep"
     temp_repo_dir: str = "./temp_repos"
 

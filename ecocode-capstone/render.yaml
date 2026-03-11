@@ -1,0 +1,29 @@
+databases:
+  - name: ecocode-db
+    plan: free
+    databaseName: ecocode
+    user: ecocode_user
+
+services:
+  - type: web
+    name: ecocode-api
+    runtime: python
+    plan: free
+    rootDir: ecocode-capstone/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecocode-db
+          property: connectionString
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini
+      - key: FRONTEND_URL
+        value: https://frontend-nine-ecru-83.vercel.app
+      - key: PYTHON_VERSION
+        value: "3.11.0"

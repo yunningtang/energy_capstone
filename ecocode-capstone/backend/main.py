@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -13,21 +14,49 @@ settings = get_settings()
 app = FastAPI(title="EcoCode API", version="0.1.0")
 task_manager = TaskManager()
 
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+if settings.frontend_url:
+    allowed_origins.append(settings.frontend_url.rstrip("/"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
+async def _background_worker() -> None:
+    """Poll for queued tasks and process them in the background."""
+    from task_manager import STATUS_FAILED
+    while True:
+        task = None
+        try:
+            task = task_manager.dequeue_task()
+            if not task:
+                await asyncio.sleep(2)
+                continue
+            await task_manager.process_task(task.id)
+        except Exception as exc:
+            if task:
+                try:
+                    task_manager.update_task_status(
+                        task.id, STATUS_FAILED, progress=100, error_message=str(exc),
+                    )
+                except Exception:
+                    pass
+            print(f"[worker] error: {exc}")
+            await asyncio.sleep(2)
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+    asyncio.get_event_loop().create_task(_background_worker())
 
 
 @app.get("/")
