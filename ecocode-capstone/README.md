@@ -1,4 +1,4 @@
-# EcoCode Capstone
+# Energy Capstone
 
 EcoCode is a local-first MVP for Android energy smell analysis using:
 
