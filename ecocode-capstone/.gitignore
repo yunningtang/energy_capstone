@@ -19,6 +19,9 @@ backend/.env
 data/
 temp_repos/
 *.log
+*.db
+*.db-wal
+*.db-shm
 
 # IDE
 .DS_Store

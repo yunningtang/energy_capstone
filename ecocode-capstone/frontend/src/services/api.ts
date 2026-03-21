@@ -1,5 +1,5 @@
 import axios from "axios";
-import { HealthInfo, ResultDetail, Task } from "../types";
+import { Finding, HealthInfo, Project, Run } from "../types";
 
 const API = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:8000",
@@ -11,11 +11,54 @@ export async function healthCheck(): Promise<HealthInfo> {
   return data;
 }
 
-export async function createTaskFromUrl(
+// ── Projects ──────────────────────────────────────────────
+
+export async function createProject(
+  name: string,
+  repoUrl?: string
+): Promise<Project> {
+  const { data } = await API.post("/api/projects", {
+    name,
+    repo_url: repoUrl || null,
+  });
+  return data;
+}
+
+export async function listProjects(): Promise<Project[]> {
+  const { data } = await API.get("/api/projects");
+  return data;
+}
+
+export async function getProject(projectId: number): Promise<Project> {
+  const { data } = await API.get(`/api/projects/${projectId}`);
+  return data;
+}
+
+export async function getProjectRuns(projectId: number): Promise<Run[]> {
+  const { data } = await API.get(`/api/projects/${projectId}/runs`);
+  return data;
+}
+
+export async function deleteProject(projectId: number): Promise<void> {
+  await API.delete(`/api/projects/${projectId}`);
+}
+
+export async function getPatternStats(
+  projectId: number
+): Promise<Record<string, number>> {
+  const { data } = await API.get(`/api/projects/${projectId}/pattern-stats`);
+  return data;
+}
+
+// ── Runs ──────────────────────────────────────────────────
+
+export async function createRunFromUrl(
+  projectId: number,
   description: string,
   sourceUrl: string
-): Promise<Task> {
-  const { data } = await API.post("/api/tasks", {
+): Promise<Run> {
+  const { data } = await API.post("/api/runs", {
+    project_id: projectId,
     description,
     source_type: "repo",
     source_url: sourceUrl,
@@ -23,31 +66,31 @@ export async function createTaskFromUrl(
   return data;
 }
 
-export async function createTaskUpload(
+export async function createRunUpload(
+  projectId: number,
   description: string,
   files: FileList
-): Promise<Task> {
+): Promise<Run> {
   const form = new FormData();
+  form.append("project_id", String(projectId));
   form.append("description", description);
   for (let i = 0; i < files.length; i++) {
     form.append("files", files[i]);
   }
-  const { data } = await API.post("/api/tasks/upload", form);
+  const { data } = await API.post("/api/runs/upload", form);
   return data;
 }
 
-export async function listTasks(status?: string): Promise<Task[]> {
-  const params = status && status !== "All" ? { status } : {};
-  const { data } = await API.get("/api/tasks", { params });
+export async function deleteRun(runId: number): Promise<void> {
+  await API.delete(`/api/runs/${runId}`);
+}
+
+export async function getRun(runId: number): Promise<Run> {
+  const { data } = await API.get(`/api/runs/${runId}`);
   return data;
 }
 
-export async function getTask(taskId: number): Promise<Task> {
-  const { data } = await API.get(`/api/tasks/${taskId}`);
-  return data;
-}
-
-export async function getResults(taskId: number): Promise<ResultDetail[]> {
-  const { data } = await API.get(`/api/tasks/${taskId}/results`);
+export async function getFindings(runId: number): Promise<Finding[]> {
+  const { data } = await API.get(`/api/runs/${runId}/findings`);
   return data;
 }

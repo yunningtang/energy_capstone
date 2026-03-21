@@ -1,17 +1,35 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
-class TaskCreateRequest(BaseModel):
+class ProjectCreateRequest(BaseModel):
+    name: str
+    repo_url: str | None = None
+
+
+class ProjectResponse(BaseModel):
+    id: int
+    name: str
+    repo_url: str | None
+    created_at: datetime
+    total_runs: int = 0
+    total_files: int = 0
+    total_issues: int = 0
+    last_run_at: datetime | None = None
+
+
+class RunCreateRequest(BaseModel):
+    project_id: int
     description: str = ""
     source_type: Literal["repo", "uploaded"] = "repo"
     source_url: str | None = None
 
 
-class TaskResponse(BaseModel):
+class RunResponse(BaseModel):
     id: int
+    project_id: int | None
     description: str
     source_type: str
     source_url: str | None
@@ -21,7 +39,7 @@ class TaskResponse(BaseModel):
     updated_at: datetime
 
 
-class ResultDetailResponse(BaseModel):
+class FindingResponse(BaseModel):
     id: int
     task_id: int
     folder_name: str
@@ -32,6 +50,7 @@ class ResultDetailResponse(BaseModel):
     has: str
     iod: str
     nlmr: str
+    feedback: dict | None = None
 
 
 class HealthResponse(BaseModel):

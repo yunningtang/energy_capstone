@@ -1,25 +1,24 @@
-# User Manual
+# User manual (EcoCode)
 
-## Submit Analysis
+## Run an analysis
 
-1. Open frontend page.
-2. Select input type: File, URL, or Snippet.
-3. Click **Analyze Code**.
+1. Open the app (**http://localhost:3000**).
+2. Open or create a **Project**.
+3. Click **New Run**.
+4. Choose **GitHub Repository** (URL) or **Upload Files** (`.java`).
+5. Click **Start Analysis**. You are taken to the run detail page when the run is created.
 
-## Monitor Requests
+## Background processing
 
-- Use **My Requests** panel for queue and progress state.
-- Select any task to view details.
+Analysis runs in a **background loop inside the FastAPI app** (`main.py`). You do **not** need a separate worker terminal as long as `uvicorn` is running.
 
-## View Results
+## View results
 
-- For finished tasks, result panel shows:
-  - smell findings by type
-  - confidence and severity
-  - suggestions and optional refactored snippets
-  - final LLM recommendation summary
+- On the run page, open each file row to see **DW / HMU / HAS / IOD / NLMR** and LLM reasoning.
+- API: `GET /api/runs/{id}/findings` (see [api-documentation.md](api-documentation.md)).
 
 ## Troubleshooting
 
-- If all tasks remain queued, confirm worker process is running.
-- If results are empty, check backend logs and Ollama health.
+- Runs stuck on **Pending**: ensure the backend is running (`uvicorn` on port **8000**).
+- **Failed to start run**: backend down, wrong `REACT_APP_API_BASE_URL`, or **SQLite locked** — close DB Browser / other tools using `ecocode.db`, then restart the backend.
+- Empty or wrong LLM output: check `GET /api/health` (`llm_status`), and `backend/.env` (`LLM_PROVIDER`, API keys, or Ollama URL).

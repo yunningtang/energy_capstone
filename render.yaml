@@ -24,6 +24,6 @@ services:
       - key: OPENAI_MODEL
         value: gpt-4.1-mini
       - key: FRONTEND_URL
-        value: https://frontend-nine-ecru-83.vercel.app
+        value: https://your-frontend-host.example.com
       - key: PYTHON_VERSION
         value: "3.11.0"

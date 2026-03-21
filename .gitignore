@@ -20,6 +20,8 @@ ecocode-capstone/backend/.env*
 
 # Database
 *.db
+*.db-wal
+*.db-shm
 *.sqlite3
 
 # Data and runtime

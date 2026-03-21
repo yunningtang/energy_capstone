@@ -1,5 +1,17 @@
-export interface Task {
+export interface Project {
   id: number;
+  name: string;
+  repo_url: string | null;
+  created_at: string;
+  total_runs: number;
+  total_files: number;
+  total_issues: number;
+  last_run_at: string | null;
+}
+
+export interface Run {
+  id: number;
+  project_id: number | null;
   description: string;
   source_type: "repo" | "uploaded";
   source_url: string | null;
@@ -9,7 +21,7 @@ export interface Task {
   updated_at: string;
 }
 
-export interface ResultDetail {
+export interface Finding {
   id: number;
   task_id: number;
   folder_name: string;
@@ -20,6 +32,7 @@ export interface ResultDetail {
   has: string;
   iod: string;
   nlmr: string;
+  feedback: Record<string, string> | null;
 }
 
 export interface HealthInfo {
