@@ -1,9 +1,20 @@
 import axios from "axios";
 import { Finding, HealthInfo, Project, Run } from "../types";
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:8000",
-  timeout: 30000,
+function getBaseUrl(): string {
+  return (
+    localStorage.getItem("api_base_url") ||
+    process.env.REACT_APP_API_BASE_URL ||
+    "http://localhost:8000"
+  );
+}
+
+const API = axios.create({ timeout: 30000 });
+
+// Dynamically set baseURL on each request so Settings changes take effect
+API.interceptors.request.use((config) => {
+  config.baseURL = getBaseUrl();
+  return config;
 });
 
 export async function healthCheck(): Promise<HealthInfo> {

@@ -24,7 +24,7 @@ export default function ConfirmDialog({
         <h3 className="dialog-title">{title}</h3>
         <p className="dialog-message">{message}</p>
         <div className="dialog-actions">
-          <button className="text-btn" onClick={onCancel}>Cancel</button>
+          <button className="btn outline btn-sm" onClick={onCancel}>Cancel</button>
           <button className="btn danger-btn btn-sm" onClick={onConfirm}>
             {confirmLabel}
           </button>

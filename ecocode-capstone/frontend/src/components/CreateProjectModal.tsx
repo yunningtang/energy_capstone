@@ -41,23 +41,22 @@ export default function CreateProjectModal({ open, onClose, onSubmit }: Props) {
           autoFocus
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
         />
-        <label className="field-label">Repository URL (optional)</label>
+        <label className="field-label">Repository URL <span className="optional">optional</span></label>
         <input
           className="input"
           placeholder="https://github.com/owner/repo"
           value={repoUrl}
           onChange={(e) => setRepoUrl(e.target.value)}
-          style={{ marginTop: "0.35rem" }}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
         />
-        <div className="dialog-actions" style={{ marginTop: "1.25rem" }}>
-          <button className="text-btn" onClick={onClose}>Cancel</button>
+        <div className="dialog-actions">
+          <button className="btn outline btn-sm" onClick={onClose}>Cancel</button>
           <button
             className="btn primary btn-sm"
             disabled={!name.trim() || creating}
             onClick={handleSubmit}
           >
-            {creating ? <><Loader2 size={14} className="spin" /> Creating...</> : "Create"}
+            {creating ? <><Loader2 size={14} className="spin" /><span>Creating...</span></> : <span>Create</span>}
           </button>
         </div>
       </div>

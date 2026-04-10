@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Loader2,
-  FolderOpen,
-  Plus,
-  ChevronRight,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Plus, ChevronRight, Trash2, WifiOff, MoreHorizontal } from "lucide-react";
 import { getProject, getProjectRuns, deleteProject, deleteRun } from "../services/api";
 import { Project, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -20,25 +13,21 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
   const [runToDelete, setRunToDelete] = useState<Run | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     if (!projectId) return;
     let active = true;
-
     const load = async () => {
       try {
-        const [p, r] = await Promise.all([
-          getProject(pid),
-          getProjectRuns(pid),
-        ]);
-        if (active) {
-          setProject(p);
-          setRuns(r);
-        }
-      } catch {}
-      finally { if (active) setLoading(false); }
+        const [p, r] = await Promise.all([getProject(pid), getProjectRuns(pid)]);
+        if (active) { setProject(p); setRuns(r); setError(""); }
+      } catch (e: any) {
+        if (active) setError(e?.message || "Failed to load project");
+      } finally { if (active) setLoading(false); }
     };
     load();
     const timer = setInterval(load, 5000);
@@ -46,10 +35,7 @@ export default function ProjectDetail() {
   }, [projectId]);
 
   async function handleDeleteProject() {
-    try {
-      await deleteProject(pid);
-      navigate("/");
-    } catch {}
+    try { await deleteProject(pid); navigate("/"); } catch {}
     setConfirmDeleteProject(false);
   }
 
@@ -64,77 +50,97 @@ export default function ProjectDetail() {
 
   if (loading)
     return (
-      <div className="page"><div className="empty-state">
-        <Loader2 size={28} className="spin" /><p>Loading project...</p>
-      </div></div>
+      <div className="page">
+        <div className="skeleton skeleton-text short" style={{ marginBottom: 16 }} />
+        <div className="skeleton skeleton-heading" />
+        <div className="skeleton-stats-row">
+          {[1,2,3].map(i => <div key={i} className="skeleton skeleton-stat" />)}
+        </div>
+        <div className="skeleton-table">
+          {[1,2,3].map(i => <div key={i} className="skeleton skeleton-row" />)}
+        </div>
+      </div>
     );
 
-  if (!project)
+  if (error || !project)
     return (
       <div className="page"><div className="empty-state">
-        <FolderOpen size={40} strokeWidth={1.2} />
-        <p className="empty-title">Project not found</p>
-        <Link to="/" className="back-link" style={{ marginTop: "0.5rem" }}>
-          <ArrowLeft size={14} /> Back to Projects
-        </Link>
+        <WifiOff size={40} strokeWidth={1.2} />
+        <p className="empty-title">{error || "Project not found"}</p>
+        <p className="empty-sub">Check that the backend is running and try again.</p>
+        <Link to="/" className="back-link"><ArrowLeft size={14} /><span>Projects</span></Link>
       </div></div>
     );
 
   function statusBadge(status: string) {
-    const cls =
-      status === "Done" ? "badge done"
-      : status === "In-Progress" ? "badge progress"
-      : status === "Failed" ? "badge failed"
-      : "badge pending";
-    return <span className={cls}>{status}</span>;
+    const cls = status === "Done" ? "done" : status === "In-Progress" ? "progress" : status === "Failed" ? "failed" : "pending";
+    return <span className={`badge ${cls}`}>{status}</span>;
   }
+
+  const hasRuns = runs.length > 0;
 
   return (
     <div className="page">
-      <Link to="/" className="back-link">
-        <ArrowLeft size={14} /> Back to Projects
-      </Link>
+      {/* Breadcrumb */}
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <Link to="/">Projects</Link>
+        <span className="breadcrumb-sep">/</span>
+        <span>{project.name}</span>
+      </nav>
 
       <div className="page-header">
         <h2>{project.name}</h2>
         <div className="header-actions">
           <Link to={`/projects/${project.id}/new-run`} className="btn primary btn-sm">
-            <Plus size={14} /> New Run
+            <Plus size={14} strokeWidth={2.5} /><span>New Run</span>
           </Link>
-          <button
-            className="btn danger-btn btn-sm"
-            onClick={() => setConfirmDeleteProject(true)}
-          >
-            <Trash2 size={14} />
-          </button>
+          <div className="menu-wrapper">
+            <button className="btn outline btn-sm icon-only" onClick={() => setShowMenu(!showMenu)}
+              aria-label="More actions">
+              <MoreHorizontal size={16} />
+            </button>
+            {showMenu && (
+              <div className="dropdown-menu" onClick={() => setShowMenu(false)}>
+                <button className="dropdown-item danger-text"
+                  onClick={() => setConfirmDeleteProject(true)}>
+                  <Trash2 size={14} /><span>Delete Project</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {project.repo_url && <p className="page-sub">{project.repo_url}</p>}
 
-      <div className="stats-row">
-        <div className="stat-card">
-          <span className="stat-number">{project.total_runs}</span>
-          <span className="stat-label">Runs</span>
+      {/* Stats — only show when there's data */}
+      {hasRuns && (
+        <div className="stats-row">
+          <div className="stat-card">
+            <span className="stat-number">{project.total_runs}</span>
+            <span className="stat-label">Runs</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-number">{project.total_files}</span>
+            <span className="stat-label">Files Scanned</span>
+          </div>
+          <div className="stat-card">
+            <span className={`stat-number ${project.total_issues > 0 ? "stat-issue-count" : ""}`}>
+              {project.total_issues}
+            </span>
+            <span className="stat-label">Issues Found</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <span className="stat-number">{project.total_files}</span>
-          <span className="stat-label">Files Scanned</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-number stat-issue-count">{project.total_issues}</span>
-          <span className="stat-label">Issues Found</span>
-        </div>
-      </div>
+      )}
 
-      <h3 className="section-title">Run History</h3>
+      {hasRuns && <h3 className="section-title">Run History</h3>}
 
-      {runs.length === 0 ? (
+      {!hasRuns ? (
         <div className="empty-state">
-          <p className="empty-title">No runs yet</p>
-          <p className="empty-sub">Start your first analysis run for this project.</p>
-          <Link to={`/projects/${project.id}/new-run`} className="btn primary btn-sm" style={{ marginTop: "0.8rem" }}>
-            <Plus size={14} /> Start Run
+          <p className="empty-title">Nothing to analyze yet</p>
+          <p className="empty-sub">Upload Java files or provide a GitHub repo to scan for energy anti-patterns.</p>
+          <Link to={`/projects/${project.id}/new-run`} className="btn primary btn-sm">
+            <Plus size={14} strokeWidth={2.5} /><span>Start Run</span>
           </Link>
         </div>
       ) : (
@@ -153,25 +159,18 @@ export default function ProjectDetail() {
             </thead>
             <tbody>
               {runs.map((r, i) => (
-                <motion.tr
-                  key={r.id}
-                  className="clickable-row"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.03 }}
+                <motion.tr key={r.id} className="clickable-row"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                   onClick={() => navigate(`/runs/${r.id}`)}
-                >
+                  role="button" aria-label={`View run #${r.id}`}>
                   <td className="id-cell">#{r.id}</td>
                   <td>{r.description || "\u2014"}</td>
-                  <td className="source-cell">{r.source_type}</td>
+                  <td className="source-cell">{r.source_type === "repo" ? "GitHub" : "Upload"}</td>
                   <td>{statusBadge(r.status)}</td>
                   <td className="date-cell">{new Date(r.created_at).toLocaleString()}</td>
                   <td className="delete-cell">
-                    <button
-                      className="icon-btn-danger"
-                      title="Delete run"
-                      onClick={(e) => { e.stopPropagation(); setRunToDelete(r); }}
-                    >
+                    <button className="icon-btn-danger" title="Delete run"
+                      onClick={(e) => { e.stopPropagation(); setRunToDelete(r); }}>
                       <Trash2 size={14} />
                     </button>
                   </td>
@@ -183,21 +182,12 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      <ConfirmDialog
-        open={confirmDeleteProject}
-        title="Delete Project"
-        message={`Delete "${project.name}" and all its runs and findings? This cannot be undone.`}
-        onConfirm={handleDeleteProject}
-        onCancel={() => setConfirmDeleteProject(false)}
-      />
-
-      <ConfirmDialog
-        open={!!runToDelete}
-        title="Delete Run"
+      <ConfirmDialog open={confirmDeleteProject} title="Delete Project"
+        message={`Delete "${project.name}" and all ${project.total_runs} run${project.total_runs !== 1 ? "s" : ""}? This cannot be undone.`}
+        onConfirm={handleDeleteProject} onCancel={() => setConfirmDeleteProject(false)} />
+      <ConfirmDialog open={!!runToDelete} title="Delete Run"
         message={`Delete Run #${runToDelete?.id} and all its findings? This cannot be undone.`}
-        onConfirm={handleDeleteRun}
-        onCancel={() => setRunToDelete(null)}
-      />
+        onConfirm={handleDeleteRun} onCancel={() => setRunToDelete(null)} />
     </div>
   );
 }
