@@ -498,7 +498,7 @@ body {
 
 .data-table th {
   text-align: left;
-  padding: 10px 12px;
+  padding: 12px 16px;
   font-size: 11px;
   font-weight: 600;
   color: var(--fg-tertiary);
@@ -509,7 +509,7 @@ body {
 }
 
 .data-table td {
-  padding: 10px 12px;
+  padding: 14px 16px;
   font-size: 13px;
   border-bottom: 1px solid var(--border-light);
   color: var(--fg);
@@ -537,9 +537,10 @@ body {
   font-size: 12px;
 }
 
-.cell-yes { color: var(--danger); font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 3px; }
-.cell-no { color: var(--success); font-weight: 500; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 3px; }
-.cell-empty { color: var(--fg-disabled); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+.cell-yes { color: var(--danger); font-weight: 600; font-size: 12px; text-align: center; white-space: nowrap; }
+.cell-no { color: var(--success); font-weight: 500; font-size: 12px; text-align: center; white-space: nowrap; }
+.cell-empty { color: var(--fg-disabled); font-size: 12px; text-align: center; }
+.cell-yes svg, .cell-no svg, .cell-empty svg { vertical-align: -3px; margin-right: 2px; }
 
 /* ── Feedback rows ───────────────────────────────────── */
 .feedback-row td { padding: 0 !important; border-bottom: 1px solid var(--border) !important; }
@@ -555,14 +556,14 @@ body {
 }
 
 .feedback-item.issue-found { background: var(--danger-light); border-color: var(--danger-border); }
-.feedback-item.no-issue { background: var(--bg); border-color: var(--border-light); }
+.feedback-item.no-issue { background: var(--bg-elevated); border-color: var(--border); }
 
 .feedback-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .feedback-pattern { font-weight: 600; font-size: 12px; color: var(--fg); }
 
 .feedback-verdict { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
 .feedback-verdict.yes { background: var(--danger); color: #fff; }
-.feedback-verdict.no { background: var(--success-light); color: var(--success); }
+.feedback-verdict.no { background: var(--bg-subtle); color: var(--fg-secondary); }
 
 .feedback-reason { font-size: 12px; color: var(--fg-secondary); line-height: 1.6; margin-top: 2px; }
 
@@ -588,7 +589,7 @@ body {
 
 /* ── Progress bar ────────────────────────────────────── */
 .progress-bar-wrapper { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem; }
-.progress-bar-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width 0.6s var(--ease-out); }
+.progress-bar-fill { height: 100%; background: var(--fg); border-radius: 2px; transition: width 0.6s var(--ease-out); }
 
 /* ── Badges ──────────────────────────────────────────── */
 .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
@@ -737,7 +738,10 @@ body {
   color: var(--subtle);
   cursor: pointer;
   transition: all 0.15s;
+  opacity: 0;
 }
+
+.clickable-row:hover .icon-btn-danger { opacity: 1; }
 
 .icon-btn-danger:hover { color: var(--danger); background: var(--danger-light); }
 .icon-btn-danger:active { transform: scale(0.9); }
@@ -761,7 +765,7 @@ body {
 /* ── Summary banner ──────────────────────────────────── */
 .summary-banner { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 1rem; border: 1px solid transparent; animation: popIn 0.35s var(--ease-spring); }
 .summary-banner.has-issues { background: var(--danger-light); border-color: var(--danger-border); color: var(--danger); }
-.summary-banner.clean { background: var(--success-light); border-color: var(--success-border); color: var(--success); }
+/* clean banner removed — redundant with table summary */
 
 .id-cell { color: var(--fg-tertiary); font-size: 12px; width: 40px; font-variant-numeric: tabular-nums; }
 .arrow-cell { color: var(--subtle); text-align: right; width: 32px; transition: color 0.15s, transform 0.2s; }
@@ -846,95 +850,93 @@ body {
 .status-summary-row { display: flex; align-items: center; justify-content: space-between; }
 .status-summary-value { font-size: 12px; color: var(--muted); font-family: "JetBrains Mono", "SF Mono", Menlo, monospace; }
 
-/* ── Hero ────────────────────────────────────────────── */
-.hero {
-  padding: 72px 0 48px;
-  animation: fadeIn 0.6s var(--ease-out);
+/* ── Hero banner (compact, dismissible) ──────────────── */
+@keyframes heroSlideIn {
+  from { opacity: 0; transform: translateY(-12px); max-height: 0; margin-bottom: 0; padding: 0 20px; }
+  to { opacity: 1; transform: translateY(0); max-height: 200px; margin-bottom: 20px; padding: 16px 20px; }
 }
 
-.hero-content {
-  max-width: 600px;
+@keyframes heroSlideOut {
+  from { opacity: 1; transform: translateY(0); max-height: 200px; margin-bottom: 20px; padding: 16px 20px; }
+  to { opacity: 0; transform: translateY(-12px); max-height: 0; margin-bottom: 0; padding: 0 20px; }
 }
 
-.hero-icon {
-  width: 48px;
-  height: 48px;
+.hero-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  animation: heroSlideIn 0.4s var(--ease-out) both;
+}
+
+.hero-banner.hero-closing {
+  animation: heroSlideOut 0.3s var(--ease-out) forwards;
+}
+
+.hero-banner-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
   background: var(--fg);
   color: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 28px;
-  animation: slideUp 0.5s var(--ease-out) 0.1s both;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
-.hero-title {
-  font-size: clamp(32px, 5vw, 48px);
+.hero-banner-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-banner-title {
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.03em;
   color: var(--fg);
-  margin-bottom: 20px;
-  animation: slideUp 0.6s var(--ease-out) 0.15s both;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
 }
 
-.hero-title-line2 {
-  display: block;
-  animation: slideUp 0.6s var(--ease-out) 0.22s both;
-}
-
-.hero-sub {
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--fg-secondary);
-  max-width: 480px;
-  margin-bottom: 32px;
-  animation: slideUp 0.6s var(--ease-out) 0.28s both;
-}
-
-.hero-actions {
-  margin-bottom: 48px;
-  animation: slideUp 0.5s var(--ease-out) 0.34s both;
-}
-
-.hero-actions .btn {
-  height: 48px;
-  padding: 0 28px;
-  font-size: 15px;
-  border-radius: var(--radius-sm);
-  gap: 10px;
-}
-
-.hero-steps {
+.hero-banner-steps {
   display: flex;
-  gap: 32px;
-  animation: slideUp 0.5s var(--ease-out) 0.4s both;
-}
-
-.hero-step {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.hero-step-num {
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
-  font-size: 11px;
-  color: var(--fg-tertiary);
-  letter-spacing: 0.04em;
-}
-
-.hero-step-text {
+  gap: 20px;
   font-size: 13px;
   color: var(--fg-secondary);
-  line-height: 1.4;
+  flex-wrap: wrap;
+}
+
+.hero-banner-steps strong {
+  color: var(--fg-tertiary);
+  font-weight: 500;
+  margin-right: 2px;
+}
+
+.hero-banner-close {
+  background: none;
+  border: none;
+  color: var(--fg-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.hero-banner-close:hover {
+  color: var(--fg);
+  background: var(--bg-subtle);
 }
 
 @media (max-width: 768px) {
-  .hero { padding: 40px 0 32px; }
-  .hero-steps { flex-direction: column; gap: 12px; }
-  .hero-actions .btn { width: 100%; justify-content: center; }
+  .hero-banner-steps { flex-direction: column; gap: 4px; }
 }
 
 /* ── Guide banner (onboarding) ────────────────────────── */
@@ -1118,6 +1120,38 @@ body {
   text-align: center;
   margin-top: 8px;
   font-size: 12px;
+}
+
+/* ── Run meta inline ─────────────────────────────────── */
+.run-meta-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fg-secondary);
+  margin-bottom: 16px;
+}
+
+.run-meta-inline .meta-sep {
+  color: var(--border);
+  user-select: none;
+}
+
+/* ── Run summary row (pass/fail count) ───────────────── */
+.run-summary-row {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  margin-bottom: 4px;
+}
+
+.run-summary-row strong {
+  color: var(--fg);
+}
+
+/* ── Relative time helper ────────────────────────────── */
+.time-relative {
+  cursor: help;
 }
 
 /* ── Pattern tooltip ──────────────────────────────────── */

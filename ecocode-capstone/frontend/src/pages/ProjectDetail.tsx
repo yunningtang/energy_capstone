@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, ChevronRight, Trash2, WifiOff, MoreHorizontal } from "lucide-react";
+import { Plus, Trash2, WifiOff, MoreHorizontal } from "lucide-react";
 import { getProject, getProjectRuns, deleteProject, deleteRun } from "../services/api";
 import { Project, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
+
+function relativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = now - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -53,9 +67,6 @@ export default function ProjectDetail() {
       <div className="page">
         <div className="skeleton skeleton-text short" style={{ marginBottom: 16 }} />
         <div className="skeleton skeleton-heading" />
-        <div className="skeleton-stats-row">
-          {[1,2,3].map(i => <div key={i} className="skeleton skeleton-stat" />)}
-        </div>
         <div className="skeleton-table">
           {[1,2,3].map(i => <div key={i} className="skeleton skeleton-row" />)}
         </div>
@@ -68,7 +79,7 @@ export default function ProjectDetail() {
         <WifiOff size={40} strokeWidth={1.2} />
         <p className="empty-title">{error || "Project not found"}</p>
         <p className="empty-sub">Check that the backend is running and try again.</p>
-        <Link to="/" className="back-link"><ArrowLeft size={14} /><span>Projects</span></Link>
+        <Link to="/" className="back-link"><span>Back to Projects</span></Link>
       </div></div>
     );
 
@@ -81,7 +92,6 @@ export default function ProjectDetail() {
 
   return (
     <div className="page">
-      {/* Breadcrumb */}
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Projects</Link>
         <span className="breadcrumb-sep">/</span>
@@ -113,28 +123,6 @@ export default function ProjectDetail() {
 
       {project.repo_url && <p className="page-sub">{project.repo_url}</p>}
 
-      {/* Stats — only show when there's data */}
-      {hasRuns && (
-        <div className="stats-row">
-          <div className="stat-card">
-            <span className="stat-number">{project.total_runs}</span>
-            <span className="stat-label">Runs</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">{project.total_files}</span>
-            <span className="stat-label">Files Scanned</span>
-          </div>
-          <div className="stat-card">
-            <span className={`stat-number ${project.total_issues > 0 ? "stat-issue-count" : ""}`}>
-              {project.total_issues}
-            </span>
-            <span className="stat-label">Issues Found</span>
-          </div>
-        </div>
-      )}
-
-      {hasRuns && <h3 className="section-title">Run History</h3>}
-
       {!hasRuns ? (
         <div className="empty-state">
           <p className="empty-title">Nothing to analyze yet</p>
@@ -149,11 +137,10 @@ export default function ProjectDetail() {
             <thead>
               <tr>
                 <th>Run</th>
-                <th>Description</th>
                 <th>Source</th>
                 <th>Status</th>
-                <th>Date</th>
-                <th></th>
+                <th>Issues</th>
+                <th>When</th>
                 <th></th>
               </tr>
             </thead>
@@ -163,18 +150,24 @@ export default function ProjectDetail() {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                   onClick={() => navigate(`/runs/${r.id}`)}
                   role="button" aria-label={`View run #${r.id}`}>
-                  <td className="id-cell">#{r.id}</td>
-                  <td>{r.description || "\u2014"}</td>
+                  <td>
+                    <span style={{ color: "var(--fg-tertiary)", fontSize: 12 }}>#{r.id}</span>
+                    {r.description && <span style={{ marginLeft: 6 }}>{r.description}</span>}
+                  </td>
                   <td className="source-cell">{r.source_type === "repo" ? "GitHub" : "Upload"}</td>
                   <td>{statusBadge(r.status)}</td>
-                  <td className="date-cell">{new Date(r.created_at).toLocaleString()}</td>
+                  <td style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-tertiary)" }}>0</td>
+                  <td className="date-cell">
+                    <span className="time-relative" title={new Date(r.created_at).toLocaleString()}>
+                      {relativeTime(r.created_at)}
+                    </span>
+                  </td>
                   <td className="delete-cell">
                     <button className="icon-btn-danger" title="Delete run"
                       onClick={(e) => { e.stopPropagation(); setRunToDelete(r); }}>
                       <Trash2 size={14} />
                     </button>
-                  </td>
-                  <td className="arrow-cell"><ChevronRight size={16} /></td>
+                  </td> 
                 </motion.tr>
               ))}
             </tbody>

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, FileWarning, CheckCircle2, Minus,
-  Clock, ChevronDown, ChevronUp, AlertTriangle, Trash2,
+  FileWarning, CheckCircle2, Minus, Clock, ChevronDown, ChevronUp,
+  AlertTriangle, Trash2, Download,
 } from "lucide-react";
-import { getFindings, getRun, deleteRun } from "../services/api";
+import { getFindings, getRun, deleteRun, getProject } from "../services/api";
 import { Finding, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
 
@@ -19,66 +19,71 @@ const PATTERN_INFO: Record<string, { short: string; full: string; tip: string }>
 
 const PATTERNS = ["dw", "hmu", "has", "iod", "nlmr"] as const;
 
-function PatternCell({ value }: { value: string }) {
-  if (!value) return <td className="cell-empty"><Minus size={14} /></td>;
-  if (value === "Yes") return <td className="cell-yes"><AlertTriangle size={14} /><span>Issue</span></td>;
-  return <td className="cell-no"><CheckCircle2 size={14} /><span>Clean</span></td>;
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
 }
 
-function PatternHeader({ pattern }: { pattern: string }) {
-  const info = PATTERN_INFO[pattern];
-  const [showTip, setShowTip] = useState(false);
-  return (
-    <th title={info.tip} style={{ position: "relative", cursor: "help" }}
-      onMouseEnter={() => setShowTip(true)} onMouseLeave={() => setShowTip(false)}>
-      {info.short}
-      {showTip && (
-        <div className="pattern-tooltip">
-          <strong>{info.full}</strong>
-          <p>{info.tip}</p>
-        </div>
-      )}
-    </th>
-  );
+function getFileIssues(f: Finding): string[] {
+  return PATTERNS.filter((p) => f[p] === "Yes").map((p) => PATTERN_INFO[p].short);
+}
+
+function getFileChecked(f: Finding): number {
+  return PATTERNS.filter((p) => f[p] === "Yes" || f[p] === "No").length;
 }
 
 function FeedbackRow({ result }: { result: Finding }) {
   const feedback = result.feedback;
-  const analyzed = PATTERNS.filter((p) => result[p] === "Yes" || result[p] === "No");
-
-  if (analyzed.length === 0 && !feedback) {
-    return (
-      <tr className="feedback-row">
-        <td colSpan={9}>
-          <div className="feedback-content">
-            <p className="feedback-empty">No analysis feedback available yet.</p>
-          </div>
-        </td>
-      </tr>
-    );
-  }
+  const issues = PATTERNS.filter((p) => result[p] === "Yes");
+  const clean = PATTERNS.filter((p) => result[p] === "No");
 
   return (
     <tr className="feedback-row">
-      <td colSpan={9}>
+      <td colSpan={5}>
         <div className="feedback-content">
-          {PATTERNS.map((p) => {
-            const val = result[p];
-            if (!val) return null;
+          {/* Show issues first (expanded) */}
+          {issues.map((p) => {
             const reason = feedback?.[p.toUpperCase()] || feedback?.[p] || "";
             const info = PATTERN_INFO[p];
             return (
-              <div key={p} className={`feedback-item ${val === "Yes" ? "issue-found" : "no-issue"}`}>
+              <div key={p} className="feedback-item issue-found">
                 <div className="feedback-header">
-                  <span className="feedback-pattern">{info.full} ({info.short})</span>
-                  <span className={`feedback-verdict ${val === "Yes" ? "yes" : "no"}`}>
-                    {val === "Yes" ? "Issue Found" : "Clean"}
-                  </span>
+                  <span className="feedback-pattern">{info.full}</span>
+                  <span className="feedback-verdict yes">Issue</span>
                 </div>
                 {reason && <p className="feedback-reason">{reason}</p>}
               </div>
             );
           })}
+          {/* Show clean as one compact block */}
+          {clean.length > 0 && issues.length > 0 && (
+            <div className="feedback-item no-issue">
+              <span className="feedback-pattern" style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
+                {clean.length} other check{clean.length > 1 ? "s" : ""} passed: {clean.map(p => PATTERN_INFO[p].short).join(", ")}
+              </span>
+            </div>
+          )}
+          {/* If ALL clean, show one compact summary */}
+          {issues.length === 0 && (
+            <div className="feedback-item no-issue" style={{ padding: "12px 14px" }}>
+              <div className="feedback-header" style={{ marginBottom: 0 }}>
+                <span className="feedback-pattern" style={{ fontSize: 13 }}>
+                  All {clean.length} checks passed
+                </span>
+                <span className="feedback-verdict no">Clean</span>
+              </div>
+              <p className="feedback-reason" style={{ marginTop: 6 }}>
+                {clean.map(p => PATTERN_INFO[p].full).join(" · ")}
+              </p>
+            </div>
+          )}
         </div>
       </td>
     </tr>
@@ -95,6 +100,7 @@ export default function RunDetail() {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [issuesOnly, setIssuesOnly] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [projectName, setProjectName] = useState("Project");
 
   const toggleRow = (id: number) => {
     setExpandedRows((prev) => {
@@ -102,12 +108,6 @@ export default function RunDetail() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-  };
-
-  const allExpanded = findings.length > 0 && findings.every((f) => expandedRows.has(f.id));
-  const toggleAll = () => {
-    if (allExpanded) setExpandedRows(new Set());
-    else setExpandedRows(new Set(findings.map((f) => f.id)));
   };
 
   useEffect(() => {
@@ -122,8 +122,13 @@ export default function RunDetail() {
           setRun(r);
           setFindings(f);
           setError("");
-          if (f.length === 1 && f[0].status === "Done") {
-            setExpandedRows(new Set([f[0].id]));
+          if (r.project_id) {
+            getProject(r.project_id).then(p => setProjectName(p.name)).catch(() => {});
+          }
+          // Auto-expand files with issues
+          const withIssues = f.filter((fi) => PATTERNS.some((p) => fi[p] === "Yes"));
+          if (withIssues.length > 0 && withIssues.length <= 3) {
+            setExpandedRows(new Set(withIssues.map((fi) => fi.id)));
           }
         }
       } catch (e: any) {
@@ -143,9 +148,6 @@ export default function RunDetail() {
       <div className="page">
         <div className="skeleton skeleton-text short" style={{ marginBottom: 16 }} />
         <div className="skeleton skeleton-heading" />
-        <div className="meta-card">
-          {[1,2,3,4].map(i => <div key={i} className="skeleton skeleton-text" />)}
-        </div>
         <div className="skeleton skeleton-row" style={{ height: 5, marginBottom: 20 }} />
         <div className="skeleton-table">
           {[1,2,3,4,5].map(i => <div key={i} className="skeleton skeleton-row" />)}
@@ -159,96 +161,101 @@ export default function RunDetail() {
         <FileWarning size={40} strokeWidth={1.2} />
         <p className="empty-title">{error || "Run not found"}</p>
         <p className="empty-sub">Check that the backend is running and try again.</p>
-        <Link to="/" className="back-link">
-          <ArrowLeft size={14} /><span>Back to Projects</span>
-        </Link>
+        <Link to="/" className="back-link"><span>Projects</span></Link>
       </div></div>
     );
 
-  const fileStatusLabel = (s: string) => {
-    if (s === "Done") return <span className="badge done">Done</span>;
-    if (s === "Analyzing") return <span className="badge progress">Analyzing</span>;
-    return <span className="badge pending">Pending</span>;
-  };
-
   const doneCount = findings.filter((f) => f.status === "Done").length;
   const totalCount = findings.length;
-  const issueCount = findings.reduce((sum, f) =>
-    sum + PATTERNS.filter((p) => f[p] === "Yes").length, 0
-  );
-  const filesWithIssues = findings.filter((f) =>
-    PATTERNS.some((p) => f[p] === "Yes")
-  ).length;
-
+  const issueCount = findings.reduce((sum, f) => sum + getFileIssues(f).length, 0);
+  const filesWithIssues = findings.filter((f) => getFileIssues(f).length > 0).length;
   const backTo = run.project_id ? `/projects/${run.project_id}` : "/";
 
   async function handleDelete() {
-    try {
-      await deleteRun(run!.id);
-      navigate(backTo);
-    } catch {}
+    try { await deleteRun(run!.id); navigate(backTo); } catch {}
     setConfirmDelete(false);
   }
 
+  function exportCsv() {
+    const header = "file,status,dw,hmu,has,iod,nlmr\n";
+    const rows = findings.map((f) =>
+      `${f.file_name},${f.status},${f.dw || ""},${f.hmu || ""},${f.has || ""},${f.iod || ""},${f.nlmr || ""}`
+    ).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `run-${run!.id}-results.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const displayFindings = issuesOnly
-    ? findings.filter((f) => PATTERNS.some((p) => f[p] === "Yes"))
+    ? findings.filter((f) => getFileIssues(f).length > 0)
     : findings;
 
   return (
     <div className="page">
-      <Link to={backTo} className="back-link">
-        <ArrowLeft size={14} /><span>Back to Project</span>
-      </Link>
+      {/* Breadcrumb */}
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <Link to="/">Projects</Link>
+        <span className="breadcrumb-sep">/</span>
+        <Link to={backTo}>{projectName}</Link>
+        <span className="breadcrumb-sep">/</span>
+        <span>Run #{run.id}</span>
+      </nav>
 
       <div className="page-header">
-        <div>
-          <h2>Run #{run.id}</h2>
-          {(run.status === "In-Progress" || run.status === "Pending") && (
-            <span className="live-badge">Live</span>
+        <h2>Run #{run.id}</h2>
+        <div className="header-actions">
+          {findings.length > 0 && (
+            <button className="btn outline btn-sm" onClick={exportCsv}>
+              <Download size={14} /><span>Export CSV</span>
+            </button>
           )}
+          <button className="btn outline btn-sm danger-text" onClick={() => setConfirmDelete(true)}>
+            <Trash2 size={14} /><span>Delete</span>
+          </button>
         </div>
-        <button className="btn outline btn-sm danger-text" onClick={() => setConfirmDelete(true)}>
-          <Trash2 size={14} /><span>Delete</span>
-        </button>
       </div>
 
-      <div className="meta-card">
-        <div className="meta-item">
-          <span className="meta-label">Description</span>
-          <span className="meta-value">{run.description || "\u2014"}</span>
-        </div>
-        <div className="meta-item">
-          <span className="meta-label">Source</span>
-          <span className="meta-value">{run.source_type === "repo" ? "GitHub" : "File Upload"}</span>
-        </div>
-        <div className="meta-item">
-          <span className="meta-label">Status</span>
-          <span className="meta-value">{fileStatusLabel(run.status)}</span>
-        </div>
-        {totalCount > 0 && (
-          <div className="meta-item">
-            <span className="meta-label">Progress</span>
-            <span className="meta-value">{doneCount} / {totalCount} files</span>
-          </div>
+      {/* Compact meta */}
+      <div className="run-meta-inline">
+        <span>{run.source_type === "repo" ? "GitHub" : "File Upload"}</span>
+        <span className="meta-sep">·</span>
+        <span className={`badge ${run.status === "Done" ? "done" : run.status === "In-Progress" ? "progress" : run.status === "Failed" ? "failed" : "pending"}`}>
+          {run.status}
+        </span>
+        <span className="meta-sep">·</span>
+        <span>{doneCount}/{totalCount} files</span>
+        <span className="meta-sep">·</span>
+        <span className="time-relative" title={new Date(run.created_at).toLocaleString()}>
+          {relativeTime(run.created_at)}
+        </span>
+        {run.description && (
+          <>
+            <span className="meta-sep">·</span>
+            <span style={{ color: "var(--fg-tertiary)" }}>{run.description}</span>
+          </>
         )}
       </div>
 
-      {totalCount > 0 && (
+      {/* Progress bar (only while running) */}
+      {run.status !== "Done" && totalCount > 0 && (
         <div className="progress-bar-wrapper">
-          <div className="progress-bar-fill" style={{ width: `${totalCount ? (doneCount / totalCount) * 100 : 0}%` }} />
+          <div className="progress-bar-fill" style={{ width: `${(doneCount / totalCount) * 100}%` }} />
         </div>
       )}
 
-      {run.status === "Done" && totalCount > 0 && (
-        <div className={`summary-banner ${issueCount > 0 ? "has-issues" : "clean"}`}>
-          {issueCount > 0 ? (
-            <><AlertTriangle size={16} /><span><strong>{issueCount} issue{issueCount > 1 ? "s" : ""}</strong> found in {filesWithIssues} of {totalCount} file{totalCount > 1 ? "s" : ""}</span></>
-          ) : (
-            <><CheckCircle2 size={16} /><span>No energy issues detected across {totalCount} file{totalCount > 1 ? "s" : ""}.</span></>
-          )}
+      {/* Summary — only show when issues found */}
+      {run.status === "Done" && issueCount > 0 && (
+        <div className="summary-banner has-issues">
+          <AlertTriangle size={16} />
+          <span><strong>{issueCount} issue{issueCount > 1 ? "s" : ""}</strong> in {filesWithIssues} of {totalCount} file{totalCount > 1 ? "s" : ""}</span>
         </div>
       )}
 
+      {/* Empty / processing */}
       {findings.length === 0 ? (
         <div className="empty-state">
           <Clock size={40} strokeWidth={1.2} />
@@ -263,58 +270,82 @@ export default function RunDetail() {
         </div>
       ) : (
         <>
+          {/* Filters */}
           <div className="table-actions">
             {issueCount > 0 && (
               <label className="toggle-label">
-                <input
-                  type="checkbox"
-                  checked={issuesOnly}
-                  onChange={(e) => setIssuesOnly(e.target.checked)}
-                />
+                <input type="checkbox" checked={issuesOnly}
+                  onChange={(e) => setIssuesOnly(e.target.checked)} />
                 <span>Issues only</span>
               </label>
             )}
-            {findings.length > 1 && (
-              <button className="text-btn" onClick={toggleAll}>
-                {allExpanded ? "Collapse All" : "Expand All"}
-              </button>
-            )}
+            <div style={{ flex: 1 }} />
           </div>
+
+          {/* Results table — simplified */}
           <div className="card table-wrapper">
-            <table className="data-table results-table">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th style={{ width: 32 }}>#</th>
                   <th>File</th>
                   <th>Status</th>
-                  {PATTERNS.map((p) => <PatternHeader key={p} pattern={p} />)}
-                  <th></th>
+                  <th>Result</th>
+                  <th style={{ width: 32 }}></th>
                 </tr>
               </thead>
               <tbody>
-                {displayFindings.map((f, idx) => (
-                  <React.Fragment key={f.id}>
-                    <motion.tr
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.03 }}
-                      className={`clickable-row ${expandedRows.has(f.id) ? "expanded" : ""}`}
-                      onClick={() => toggleRow(f.id)}
-                      role="button"
-                      aria-expanded={expandedRows.has(f.id)}
-                      aria-label={`Toggle details for ${f.file_name.split("/").pop()}`}
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleRow(f.id); } }}
-                    >
-                      <td className="id-cell">{idx + 1}</td>
-                      <td className="file-cell" title={f.file_name}>{f.file_name.split("/").pop()}</td>
-                      <td>{fileStatusLabel(f.status)}</td>
-                      {PATTERNS.map((p) => <PatternCell key={p} value={f[p]} />)}
-                      <td className="expand-cell">
-                        {expandedRows.has(f.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </td>
-                    </motion.tr>
-                    {expandedRows.has(f.id) && <FeedbackRow result={f} />}
-                  </React.Fragment>
-                ))}
+                {displayFindings.map((f, idx) => {
+                  const issues = getFileIssues(f);
+                  const checked = getFileChecked(f);
+                  const hasIssue = issues.length > 0;
+
+                  const isExpandable = hasIssue || f.status !== "Done";
+
+                  return (
+                    <React.Fragment key={f.id}>
+                      <motion.tr
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }}
+                        className={`${isExpandable ? "clickable-row" : ""} ${expandedRows.has(f.id) ? "expanded" : ""}`}
+                        onClick={isExpandable ? () => toggleRow(f.id) : undefined}
+                        role={isExpandable ? "button" : undefined}
+                        aria-expanded={isExpandable ? expandedRows.has(f.id) : undefined}
+                        aria-label={isExpandable ? `Toggle details for ${f.file_name.split("/").pop()}` : undefined}
+                        tabIndex={isExpandable ? 0 : undefined}
+                        onKeyDown={isExpandable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleRow(f.id); } } : undefined}
+                      >
+                        <td className="id-cell">{idx + 1}</td>
+                        <td className="file-cell" title={f.file_name}>{f.file_name.split("/").pop()}</td>
+                        <td>
+                          {f.status === "Done"
+                            ? <span className="badge done">Done</span>
+                            : f.status === "Analyzing"
+                            ? <span className="badge progress">Analyzing</span>
+                            : <span className="badge pending">Pending</span>
+                          }
+                        </td>
+                        <td>
+                          {f.status !== "Done" ? (
+                            <span style={{ color: "var(--fg-disabled)" }}><Minus size={14} /></span>
+                          ) : hasIssue ? (
+                            <span style={{ color: "var(--danger)", fontWeight: 500, fontSize: 13 }}>
+                              <AlertTriangle size={13} style={{ verticalAlign: -2, marginRight: 3 }} />
+                              {issues.length} issue{issues.length > 1 ? "s" : ""}: {issues.join(", ")}
+                            </span>
+                          ) : (
+                            <span style={{ color: "var(--fg-tertiary)", fontSize: 13 }}>
+                              {checked}/{checked} passed
+                            </span>
+                          )}
+                        </td>
+                        <td className="expand-cell">
+                          {isExpandable && (expandedRows.has(f.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
+                        </td>
+                      </motion.tr>
+                      {expandedRows.has(f.id) && <FeedbackRow result={f} />}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
