@@ -1154,6 +1154,70 @@ body {
   cursor: help;
 }
 
+/* ── Code viewer ─────────────────────────────────────── */
+.code-viewer-toggle {
+  margin-top: 8px;
+}
+
+.code-viewer {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.code-block {
+  margin: 0;
+  padding: 16px 20px;
+  background: var(--bg-subtle);
+  font-family: "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--fg);
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre;
+  tab-size: 4;
+}
+
+.code-block::-webkit-scrollbar { width: 6px; height: 6px; }
+.code-block::-webkit-scrollbar-track { background: transparent; }
+.code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Feedback fix suggestion ─────────────────────────── */
+.feedback-line-ref {
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--fg-tertiary);
+  margin-top: 4px;
+}
+
+.feedback-fix {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
+  border-left: 3px solid var(--fg);
+}
+
+.feedback-fix-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-tertiary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.feedback-fix-text {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* ── Pattern tooltip ──────────────────────────────────── */
 .pattern-tooltip {
   position: absolute;
@@ -1308,8 +1372,8 @@ body {
 .status-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 16px 20px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1337,7 +1401,8 @@ body {
 }
 
 .settings-section-block .section-title {
-  margin-bottom: 4px;
+  font-size: 16px;
+  margin-bottom: 6px;
 }
 
 .settings-section-desc {
@@ -1368,7 +1433,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-elevated);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   overflow: hidden;
   transition: border-color 0.15s;
 }

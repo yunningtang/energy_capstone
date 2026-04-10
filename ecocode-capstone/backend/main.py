@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from sqlalchemy import text
 
 from config import get_settings
@@ -199,6 +200,61 @@ def get_findings(run_id: int):
     return [_finding_dict(r) for r in rows]
 
 
+# --- Cancel & Retry ---
+
+@app.post("/api/runs/{run_id}/cancel")
+def cancel_run(run_id: int):
+    ok = task_manager.cancel_task(run_id)
+    return {"ok": ok, "status": "Cancelled"}
+
+
+@app.post("/api/runs/{run_id}/retry")
+def retry_run(run_id: int):
+    ids = task_manager.retry_failed(run_id)
+    return {"ok": True, "retrying": len(ids)}
+
+
+# --- SSE progress stream ---
+
+@app.get("/api/runs/{run_id}/progress")
+async def stream_progress(run_id: int):
+    """Server-Sent Events stream for real-time run progress."""
+    async def event_generator():
+        while True:
+            rows = task_manager.get_results(run_id)
+            if not rows:
+                yield f"data: {_json.dumps({'status': 'waiting', 'done': 0, 'total': 0})}\n\n"
+            else:
+                done = sum(1 for r in rows if r.status == "Done")
+                total = len(rows)
+                issues = sum(
+                    1 for r in rows
+                    for p in ("dw", "hmu", "has", "iod", "nlmr")
+                    if getattr(r, p, "") == "Yes"
+                )
+                current_file = next(
+                    (r.file_name for r in rows if r.status not in ("Done", "Pending")),
+                    None
+                )
+                payload = {
+                    "status": "done" if done == total else "running",
+                    "done": done,
+                    "total": total,
+                    "issues": issues,
+                    "current_file": current_file,
+                }
+                yield f"data: {_json.dumps(payload)}\n\n"
+                if done == total:
+                    break
+            await asyncio.sleep(1)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 # --- Legacy task endpoints (backward compat) ---
 
 @app.post("/api/tasks", response_model=RunResponse)
@@ -280,6 +336,7 @@ def _finding_dict(r) -> dict[str, Any]:
         "task_id": r.task_id,
         "folder_name": r.folder_name,
         "file_name": r.file_name,
+        "file_content": r.file_content,
         "status": r.status,
         "dw": r.dw,
         "hmu": r.hmu,

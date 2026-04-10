@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  FileWarning, CheckCircle2, Minus, Clock, ChevronDown, ChevronUp,
+  FileWarning, Minus, Clock, ChevronDown, ChevronUp,
   AlertTriangle, Trash2, Download,
 } from "lucide-react";
-import { getFindings, getRun, deleteRun, getProject } from "../services/api";
+import { getFindings, getRun, deleteRun, getProject, cancelRun, retryRun } from "../services/api";
 import { Finding, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
 
@@ -43,14 +43,24 @@ function FeedbackRow({ result }: { result: Finding }) {
   const feedback = result.feedback;
   const issues = PATTERNS.filter((p) => result[p] === "Yes");
   const clean = PATTERNS.filter((p) => result[p] === "No");
+  const [showCode, setShowCode] = useState(false);
+
+  // Parse feedback for structured fields (line_range, suggested_fix)
+  function getFeedbackObj(pattern: string): { reason: string; line_range?: string; suggested_fix?: string } {
+    const raw = feedback?.[pattern.toUpperCase()] || feedback?.[pattern] || "";
+    if (typeof raw === "object" && raw !== null) {
+      return raw as any;
+    }
+    return { reason: String(raw) };
+  }
 
   return (
     <tr className="feedback-row">
       <td colSpan={5}>
         <div className="feedback-content">
-          {/* Show issues first (expanded) */}
+          {/* Issues with details */}
           {issues.map((p) => {
-            const reason = feedback?.[p.toUpperCase()] || feedback?.[p] || "";
+            const fb = getFeedbackObj(p);
             const info = PATTERN_INFO[p];
             return (
               <div key={p} className="feedback-item issue-found">
@@ -58,11 +68,21 @@ function FeedbackRow({ result }: { result: Finding }) {
                   <span className="feedback-pattern">{info.full}</span>
                   <span className="feedback-verdict yes">Issue</span>
                 </div>
-                {reason && <p className="feedback-reason">{reason}</p>}
+                {fb.reason && <p className="feedback-reason">{fb.reason}</p>}
+                {fb.line_range && (
+                  <p className="feedback-line-ref">Line {fb.line_range}</p>
+                )}
+                {fb.suggested_fix && (
+                  <div className="feedback-fix">
+                    <span className="feedback-fix-label">Suggested fix</span>
+                    <p className="feedback-fix-text">{fb.suggested_fix}</p>
+                  </div>
+                )}
               </div>
             );
           })}
-          {/* Show clean as one compact block */}
+
+          {/* Clean summary */}
           {clean.length > 0 && issues.length > 0 && (
             <div className="feedback-item no-issue">
               <span className="feedback-pattern" style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
@@ -70,18 +90,21 @@ function FeedbackRow({ result }: { result: Finding }) {
               </span>
             </div>
           )}
-          {/* If ALL clean, show one compact summary */}
-          {issues.length === 0 && (
-            <div className="feedback-item no-issue" style={{ padding: "12px 14px" }}>
-              <div className="feedback-header" style={{ marginBottom: 0 }}>
-                <span className="feedback-pattern" style={{ fontSize: 13 }}>
-                  All {clean.length} checks passed
-                </span>
-                <span className="feedback-verdict no">Clean</span>
-              </div>
-              <p className="feedback-reason" style={{ marginTop: 6 }}>
-                {clean.map(p => PATTERN_INFO[p].full).join(" · ")}
-              </p>
+
+          {/* Source code viewer toggle */}
+          {result.file_content && (
+            <div className="code-viewer-toggle">
+              <button className="text-btn" onClick={(e) => { e.stopPropagation(); setShowCode(!showCode); }}>
+                {showCode ? "Hide source code" : "View source code"}
+              </button>
+            </div>
+          )}
+
+          {showCode && result.file_content && (
+            <div className="code-viewer">
+              <pre className="code-block">
+                <code>{result.file_content}</code>
+              </pre>
             </div>
           )}
         </div>
@@ -208,9 +231,19 @@ export default function RunDetail() {
       <div className="page-header">
         <h2>Run #{run.id}</h2>
         <div className="header-actions">
+          {(run.status === "In-Progress" || run.status === "Pending") && (
+            <button className="btn outline btn-sm" onClick={async () => { await cancelRun(run.id); window.location.reload(); }}>
+              <span>Cancel</span>
+            </button>
+          )}
+          {run.status === "Cancelled" && findings.some(f => f.status !== "Done") && (
+            <button className="btn primary btn-sm" onClick={async () => { await retryRun(run.id); window.location.reload(); }}>
+              <span>Retry</span>
+            </button>
+          )}
           {findings.length > 0 && (
             <button className="btn outline btn-sm" onClick={exportCsv}>
-              <Download size={14} /><span>Export CSV</span>
+              <Download size={14} /><span>Export</span>
             </button>
           )}
           <button className="btn outline btn-sm danger-text" onClick={() => setConfirmDelete(true)}>

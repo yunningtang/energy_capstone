@@ -44,6 +44,7 @@ class FindingResponse(BaseModel):
     task_id: int
     folder_name: str
     file_name: str
+    file_content: str | None = None
     status: str
     dw: str
     hmu: str

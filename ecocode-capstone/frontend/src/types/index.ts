@@ -26,6 +26,7 @@ export interface Finding {
   task_id: number;
   folder_name: string;
   file_name: string;
+  file_content: string | null;
   status: string;
   dw: string;
   hmu: string;

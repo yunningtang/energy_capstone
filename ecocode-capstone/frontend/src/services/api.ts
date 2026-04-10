@@ -105,3 +105,11 @@ export async function getFindings(runId: number): Promise<Finding[]> {
   const { data } = await API.get(`/api/runs/${runId}/findings`);
   return data;
 }
+
+export async function cancelRun(runId: number): Promise<void> {
+  await API.post(`/api/runs/${runId}/cancel`);
+}
+
+export async function retryRun(runId: number): Promise<void> {
+  await API.post(`/api/runs/${runId}/retry`);
+}

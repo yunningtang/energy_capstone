@@ -116,7 +116,8 @@ def build_smell_prompt(code: str, pattern: str, use_few_shot: bool = True, check
     base += (
         f"Analyze for [{pattern}]. Yes if pattern exists, No otherwise.\n\n"
         f"Code:\n```java\n{code}\n```\n\n"
-        'JSON only: {"answer":"Yes" or "No","reason":"brief"}'
+        'JSON only: {"answer":"Yes" or "No","reason":"brief explanation",'
+        '"line_range":"e.g. 42-47 or null","suggested_fix":"how to fix, or null if clean"}'
     )
     return base
 
@@ -145,18 +146,25 @@ def _safe_json(content: str) -> dict[str, Any]:
         m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
         if m:
             text = m.group(1)
+    def _extract(obj: dict) -> dict:
+        ans = _normalize_answer(obj.get("answer"))
+        result = {"answer": ans, "reason": str(obj.get("reason", ""))[:300]}
+        if obj.get("line_range"):
+            result["line_range"] = str(obj["line_range"])
+        if obj.get("suggested_fix"):
+            result["suggested_fix"] = str(obj["suggested_fix"])[:500]
+        return result
+
     try:
         obj = json.loads(text)
-        ans = _normalize_answer(obj.get("answer"))
-        return {"answer": ans, "reason": str(obj.get("reason", ""))[:300]}
+        return _extract(obj)
     except json.JSONDecodeError:
         pass
     match = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text, re.DOTALL) or re.search(r"\{.*\}", text, re.DOTALL)
     if match:
         try:
             obj = json.loads(match.group())
-            ans = _normalize_answer(obj.get("answer"))
-            return {"answer": ans, "reason": str(obj.get("reason", ""))[:300]}
+            return _extract(obj)
         except json.JSONDecodeError:
             pass
     # Fallback: check raw text for positive signals (avoid swallowing Yes)

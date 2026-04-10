@@ -25,6 +25,21 @@ class TaskManager:
         settings = get_settings()
         self.files_root = Path(settings.temp_repo_dir).resolve()
         self.files_root.mkdir(parents=True, exist_ok=True)
+        self._cancelled: set[int] = set()
+
+    def cancel_task(self, task_id: int) -> bool:
+        """Mark a running task for cancellation."""
+        self._cancelled.add(task_id)
+        self._set_task_status(task_id, "Cancelled")
+        return True
+
+    def retry_failed(self, task_id: int) -> list[int]:
+        """Re-queue failed/pending files in a task for reprocessing."""
+        results = self.get_results(task_id)
+        retry_ids = [r.id for r in results if r.status != "Done"]
+        if retry_ids:
+            self._set_task_status(task_id, "In-Progress")
+        return retry_ids
 
     # --- Project CRUD ---
 
@@ -301,6 +316,11 @@ class TaskManager:
             return
 
         for rd in results:
+            if task_id in self._cancelled:
+                self._cancelled.discard(task_id)
+                return  # Stop processing, keep partial results
+            if rd.status == "Done":
+                continue  # Skip already processed (for retry)
             await self._process_file(rd.id, rd.file_content or "")
 
         self._set_task_status(task_id, "Done")
@@ -339,10 +359,15 @@ class TaskManager:
                 resp = await self.llm.check_pattern(code, pattern)
                 answer_raw = str(resp.get("answer", "No")).strip().lower()
                 answer = "Yes" if answer_raw in ("yes", "y", "true") else "No"
-                reasons[pattern] = str(resp.get("reason", ""))
+                fb_entry: dict[str, Any] = {"reason": str(resp.get("reason", ""))}
+                if resp.get("line_range"):
+                    fb_entry["line_range"] = str(resp["line_range"])
+                if resp.get("suggested_fix"):
+                    fb_entry["suggested_fix"] = str(resp["suggested_fix"])
+                reasons[pattern] = fb_entry
             except Exception:
                 answer = "No"
-                reasons[pattern] = ""
+                reasons[pattern] = {"reason": "analysis error"}
             self._update_result_pattern(result_id, pattern, answer)
 
         self._update_result_feedback(result_id, json.dumps(reasons))
