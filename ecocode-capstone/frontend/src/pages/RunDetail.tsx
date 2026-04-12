@@ -204,11 +204,15 @@ function MatrixView({
   // Per-column totals (how many files tripped each pattern)
   const colTotals = PATTERNS.map((p) => findings.filter((f) => f[p] === "Yes").length);
 
-  // Helper to classify a cell
+  // Map backend verdict to visual state. Backend writes:
+  //   "Yes" = issue, "No" = passed, "NA" = not applicable, "" = pending
   function cellState(f: Finding, p: typeof PATTERNS[number]): "issue" | "passed" | "na" | "pending" {
     if (f.status !== "Done") return "pending";
-    if (f[p] === "Yes") return "issue";
-    if (f[p] === "No") {
+    const v = f[p];
+    if (v === "Yes") return "issue";
+    if (v === "NA") return "na";
+    if (v === "No") {
+      // Legacy fallback: old runs stored "No" for both passed + NA
       const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
       const reason = typeof raw === "object" && raw !== null ? (raw as any).reason || "" : String(raw || "");
       const r = reason.toLowerCase();
@@ -671,27 +675,33 @@ export default function RunDetail() {
   const issueCount = findings.reduce((sum, f) => sum + getFileIssues(f).length, 0);
   const backTo = run.project_id ? `/projects/${run.project_id}` : "/";
 
-  // Classify each check: Issue / Passed / N/A (based on reason text heuristic)
-  function classifyCheck(reason: string): "passed" | "na" {
+  // Four-state classification now comes directly from backend:
+  // "Yes" = issue, "No" = passed, "NA" = not applicable, "" = pending
+  // Legacy runs (before migration) may still have "No" meaning either —
+  // we fall back to the reason-text heuristic only for those.
+  function isLegacyNa(reason: string): boolean {
     const r = reason.toLowerCase();
-    if (
+    return (
       r.includes("not present") || r.includes("no ondraw") ||
       r.includes("no asynctask") || r.includes("does not use") ||
       r.includes("not an activity") || r.includes("does not require") ||
       r.includes("no hashmap") || r.includes("not applicable") ||
-      r.includes("no object allocation") || r.includes("not a")
-    ) return "na";
-    return "passed";
+      r.includes("no object allocation")
+    );
   }
 
   let passedCount = 0;
   let naCount = 0;
   findings.forEach((f) => {
     PATTERNS.forEach((p) => {
-      if (f[p] === "No") {
+      const verdict = f[p];
+      if (verdict === "NA") {
+        naCount++;
+      } else if (verdict === "No") {
+        // Legacy fallback — reason-based classification
         const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
         const reason = typeof raw === "object" && raw !== null ? (raw as any).reason || "" : String(raw || "");
-        if (classifyCheck(reason) === "na") naCount++;
+        if (isLegacyNa(reason)) naCount++;
         else passedCount++;
       }
     });

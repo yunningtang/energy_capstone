@@ -31,6 +31,7 @@ export default function ProjectDetail() {
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
   const [runToDelete, setRunToDelete] = useState<Run | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "In-Progress" | "Done" | "Failed">("all");
 
   useEffect(() => {
     if (!projectId) return;
@@ -132,47 +133,62 @@ export default function ProjectDetail() {
           </Link>
         </div>
       ) : (
-        <div className="card table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Run</th>
-                <th>Source</th>
-                <th>Status</th>
-                <th>Issues</th>
-                <th>When</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r, i) => (
-                <motion.tr key={r.id} className="clickable-row"
+        <>
+          {/* Segmented filter */}
+          <div className="run-filter-row">
+            {(["all", "In-Progress", "Done", "Failed"] as const).map((s) => {
+              const count = s === "all" ? runs.length : runs.filter(r => r.status === s).length;
+              const label = s === "all" ? "All" : s === "In-Progress" ? "Running" : s;
+              return (
+                <button
+                  key={s}
+                  className={`run-filter-btn ${statusFilter === s ? "active" : ""}`}
+                  onClick={() => setStatusFilter(s)}
+                >
+                  {label}
+                  <span className="run-filter-count">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Compact list — one row per run with left status bar */}
+          <ul className="run-list">
+            {runs
+              .filter(r => statusFilter === "all" || r.status === statusFilter)
+              .map((r, i) => (
+                <motion.li
+                  key={r.id}
+                  className={`run-list-item run-status-${r.status.toLowerCase().replace(/[^a-z]/g, "")}`}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                   onClick={() => navigate(`/runs/${r.id}`)}
-                  role="button" aria-label={`View run #${r.id}`}>
-                  <td>
-                    <span style={{ color: "var(--fg-tertiary)", fontSize: 12 }}>#{r.id}</span>
-                    {r.description && <span style={{ marginLeft: 6 }}>{r.description}</span>}
-                  </td>
-                  <td className="source-cell">{r.source_type === "repo" ? "GitHub" : "Upload"}</td>
-                  <td>{statusBadge(r.status)}</td>
-                  <td style={{ fontVariantNumeric: "tabular-nums", color: "var(--fg-tertiary)" }}>0</td>
-                  <td className="date-cell">
-                    <span className="time-relative" title={new Date(r.created_at).toLocaleString()}>
-                      {relativeTime(r.created_at)}
-                    </span>
-                  </td>
-                  <td className="delete-cell">
-                    <button className="icon-btn-danger" title="Delete run"
-                      onClick={(e) => { e.stopPropagation(); setRunToDelete(r); }}>
-                      <Trash2 size={14} />
-                    </button>
-                  </td> 
-                </motion.tr>
+                  role="button"
+                  aria-label={`View run #${r.id}`}
+                >
+                  <span className="run-list-bar" aria-hidden />
+                  <span className="run-list-id">#{r.id}</span>
+                  <span className="run-list-desc">
+                    {r.description || <span className="run-list-desc-empty">No description</span>}
+                  </span>
+                  <span className="run-list-source">
+                    {r.source_type === "repo" ? "GitHub" : "Upload"}
+                  </span>
+                  <span className="run-list-status">{statusBadge(r.status)}</span>
+                  <span className="run-list-time" title={new Date(r.created_at).toLocaleString()}>
+                    {relativeTime(r.created_at)}
+                  </span>
+                  <button
+                    className="icon-btn-danger run-list-delete"
+                    title="Delete run"
+                    aria-label="Delete run"
+                    onClick={(e) => { e.stopPropagation(); setRunToDelete(r); }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </motion.li>
               ))}
-            </tbody>
-          </table>
-        </div>
+          </ul>
+        </>
       )}
 
       <ConfirmDialog open={confirmDeleteProject} title="Delete Project"

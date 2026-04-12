@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Upload, FileCode, Loader2, GitBranch, AlertCircle } from "lucide-react";
+import { Upload, FileCode, Loader2, GitBranch, AlertCircle, CheckCircle2 } from "lucide-react";
 import { createRunFromUrl, createRunUpload, getProject } from "../services/api";
 import { Project } from "../types";
 
@@ -25,13 +25,24 @@ export default function NewRun() {
 
   useEffect(() => { getProject(pid).then(setProject).catch(() => {}); }, [pid]);
 
+  // Accept github.com / gitlab.com / bitbucket URLs with owner/repo path
+  const REPO_URL_RE = /^https?:\/\/(github|gitlab|bitbucket)\.(com|org)\/[\w.-]+\/[\w.-]+/i;
   const isValidUrl = (url: string) => { try { new URL(url); return true; } catch { return false; } };
+  const isValidRepoUrl = (url: string) => REPO_URL_RE.test(url.trim());
 
-  const canSubmit = !submitting && (tab === "repo" ? isValidUrl(repoUrl.trim()) : selectedFiles.length > 0);
+  const canSubmit = !submitting && (
+    tab === "repo"
+      ? isValidRepoUrl(repoUrl)
+      : selectedFiles.length > 0
+  );
 
   const disabledReason = submitting ? "" :
-    tab === "repo" ? (repoUrl.trim() ? (isValidUrl(repoUrl.trim()) ? "" : "Enter a valid URL") : "Enter a repository URL to continue") :
-    selectedFiles.length === 0 ? "Upload at least one .java file" : "";
+    tab === "repo"
+      ? (!repoUrl.trim() ? "Paste a repository URL to continue"
+         : !isValidUrl(repoUrl) ? "That doesn't look like a valid URL"
+         : !isValidRepoUrl(repoUrl) ? "Expected a GitHub, GitLab, or Bitbucket repo URL"
+         : "")
+      : selectedFiles.length === 0 ? "Upload at least one .java file" : "";
 
   const addFiles = useCallback((incoming: FileList | null) => {
     if (!incoming) return;
@@ -87,7 +98,8 @@ export default function NewRun() {
 
   useEffect(() => { if (project?.repo_url && !repoUrl) setRepoUrl(project.repo_url); }, [project]);
 
-  const showUrlError = tab === "repo" && repoUrl.trim().length > 0 && !isValidUrl(repoUrl.trim());
+  const showUrlError = tab === "repo" && repoUrl.trim().length > 0 && !isValidRepoUrl(repoUrl);
+  const showUrlOk = tab === "repo" && repoUrl.trim().length > 0 && isValidRepoUrl(repoUrl);
 
   return (
     <div className="page page-narrow">
@@ -119,10 +131,21 @@ export default function NewRun() {
         {tab === "repo" ? (
           <motion.div key="repo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
             <label className="field-label">Repository URL</label>
-            <input className={`input ${showUrlError ? "input-error" : ""}`}
-              placeholder="https://github.com/owner/repo"
-              value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} />
-            {showUrlError && <p className="error"><AlertCircle size={12} style={{ verticalAlign: -2 }} /> Enter a valid URL</p>}
+            <div className="input-with-icon">
+              <input className={`input ${showUrlError ? "input-error" : ""} ${showUrlOk ? "input-ok" : ""}`}
+                placeholder="https://github.com/owner/repo"
+                value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} />
+              {showUrlOk && <CheckCircle2 size={14} className="input-icon-ok" aria-hidden />}
+            </div>
+            {showUrlError && (
+              <p className="error">
+                <AlertCircle size={12} style={{ verticalAlign: -2 }} />{" "}
+                Expected a GitHub, GitLab, or Bitbucket repository URL.
+              </p>
+            )}
+            {!showUrlError && !showUrlOk && (
+              <p className="field-helper">Supports public repos on GitHub, GitLab, or Bitbucket.</p>
+            )}
           </motion.div>
         ) : (
           <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
@@ -136,14 +159,22 @@ export default function NewRun() {
             <input ref={fileRef} type="file" hidden multiple accept=".java" onChange={(e) => addFiles(e.target.files)} />
             {fileWarning && <p className="warning-text"><AlertCircle size={12} style={{ verticalAlign: -2 }} /> {fileWarning}</p>}
             {selectedFiles.length > 0 && (
-              <ul className="file-list">
-                {selectedFiles.map((f) => (
-                  <li key={f.name} className="file-item">
-                    <span className="file-item-name"><FileCode size={14} /> {f.name}</span>
-                    <button className="file-remove" onClick={() => removeFile(f.name)}>&times;</button>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <div className="file-preview-stats">
+                  <span><strong>{selectedFiles.length}</strong> {selectedFiles.length === 1 ? "file" : "files"} ready</span>
+                  <span>·</span>
+                  <span>{(selectedFiles.reduce((s, f) => s + f.size, 0) / 1024).toFixed(1)} KB total</span>
+                </div>
+                <ul className="file-list">
+                  {selectedFiles.map((f) => (
+                    <li key={f.name} className="file-item">
+                      <span className="file-item-name"><FileCode size={14} /> {f.name}</span>
+                      <span className="file-item-size">{(f.size / 1024).toFixed(1)} KB</span>
+                      <button className="file-remove" onClick={() => removeFile(f.name)} aria-label={`Remove ${f.name}`}>&times;</button>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </motion.div>
         )}

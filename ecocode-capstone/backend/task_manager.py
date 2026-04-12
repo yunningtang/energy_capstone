@@ -409,11 +409,11 @@ class TaskManager:
         reasons: dict[str, Any] = {}
         answers: dict[str, str] = {p: "No" for p in PATTERNS}
 
-        # Step 1: keyword prefilter
+        # Step 1: keyword prefilter — prefilter hits are "NA" (not applicable)
         to_check, auto_no = prefilter_patterns(code)
         for p, reason in auto_no.items():
-            reasons[p] = {"reason": reason}
-            answers[p] = "No"
+            reasons[p] = {"reason": reason, "source": "prefilter"}
+            answers[p] = "NA"
 
         # Step 2: batch LLM call for remaining patterns
         if to_check:

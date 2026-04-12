@@ -80,12 +80,12 @@ class ResultDetail(Base):
     file_name: Mapped[str] = mapped_column(String(512))
     file_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="Pending")
-    # Energy anti-pattern detection results: "Yes" or "No" for each pattern
-    dw: Mapped[str] = mapped_column(String(10), default="")   # Data Waste
-    hmu: Mapped[str] = mapped_column(String(10), default="")  # Heavy Method Use
-    has: Mapped[str] = mapped_column(String(10), default="")  # Heavy Async Start
-    iod: Mapped[str] = mapped_column(String(10), default="")   # Inefficient Data Structure
-    nlmr: Mapped[str] = mapped_column(String(10), default="")  # No Low Memory Resolution
+    # Per-pattern verdict: "Yes" (Issue) / "No" (Pass) / "NA" (Not Applicable) / "" (Pending)
+    dw: Mapped[str] = mapped_column(String(10), default="")   # Durable Wakelock
+    hmu: Mapped[str] = mapped_column(String(10), default="")  # HashMap Usage
+    has: Mapped[str] = mapped_column(String(10), default="")  # Heavy AsyncTask
+    iod: Mapped[str] = mapped_column(String(10), default="")  # Init OnDraw
+    nlmr: Mapped[str] = mapped_column(String(10), default="")  # No Low-Memory Resolver
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
