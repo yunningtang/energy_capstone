@@ -403,6 +403,7 @@ class TaskManager:
         3. Persist answers + structured feedback
         """
         from llm_service import prefilter_patterns  # local import to avoid cycle
+        from ast_slicer import build_sliced_prompt_code
 
         self._update_result_status(result_id, "Analyzing")
 
@@ -416,18 +417,20 @@ class TaskManager:
             answers[p] = "NA"
 
         # Step 2: batch LLM call for remaining patterns
+        # AST-slice the source to the methods/classes relevant to each pattern
+        # so we feed the LLM a denser, more on-topic context.
         if to_check:
+            sliced_code = build_sliced_prompt_code(code, to_check)
             try:
-                batch = await self.llm.check_all_patterns(code, to_check)
+                batch = await self.llm.check_all_patterns(sliced_code, to_check)
                 for p in to_check:
                     entry = batch.get(p, {})
                     answer_raw = str(entry.get("answer", "No")).strip().lower()
                     answers[p] = "Yes" if answer_raw in ("yes", "y", "true") else "No"
                     fb_entry: dict[str, Any] = {"reason": str(entry.get("reason", ""))}
-                    if entry.get("line_range"):
-                        fb_entry["line_range"] = str(entry["line_range"])
-                    if entry.get("suggested_fix"):
-                        fb_entry["suggested_fix"] = str(entry["suggested_fix"])
+                    for field in ("line_range", "suggested_fix", "original_snippet", "fixed_snippet"):
+                        if entry.get(field):
+                            fb_entry[field] = str(entry[field])
                     reasons[p] = fb_entry
             except Exception as exc:
                 for p in to_check:

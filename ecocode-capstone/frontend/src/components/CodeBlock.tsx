@@ -118,13 +118,24 @@ function renderTokens(tokens: Token[], keyPrefix: string): React.ReactNode {
   });
 }
 
+export interface LineAnnotation {
+  /** Short tag shown at end of line, e.g. "DW" */
+  tag: string;
+  /** Tooltip text shown on hover */
+  message: string;
+  /** Severity controls the underline color */
+  severity?: "error" | "warning";
+}
+
 interface Props {
   code: string;
   highlightLines?: Set<number>;  // 1-indexed line numbers to highlight
   focusLine?: number;             // scroll into view
+  /** Map from 1-indexed line number to annotation(s). Adds a spell-checker-style wavy underline. */
+  annotations?: Map<number, LineAnnotation[]>;
 }
 
-export default function CodeBlock({ code, highlightLines, focusLine }: Props) {
+export default function CodeBlock({ code, highlightLines, focusLine, annotations }: Props) {
   const lines = code.split("\n");
   const preRef = React.useRef<HTMLPreElement>(null);
 
@@ -145,6 +156,7 @@ export default function CodeBlock({ code, highlightLines, focusLine }: Props) {
           const lineNum = i + 1;
           const isHighlighted = highlightLines?.has(lineNum);
           const isFocus = focusLine === lineNum;
+          const lineAnns = annotations?.get(lineNum);
 
           // Handle block comments spanning multiple lines
           let rendered: React.ReactNode;
@@ -178,14 +190,32 @@ export default function CodeBlock({ code, highlightLines, focusLine }: Props) {
             }
           }
 
+          const hasAnn = !!lineAnns && lineAnns.length > 0;
+          const severity = lineAnns?.[0]?.severity ?? "error";
+
           return (
             <div
               key={lineNum}
               data-line={lineNum}
-              className={`code-line ${isHighlighted ? "code-line-hl" : ""} ${isFocus ? "code-line-focus" : ""}`}
+              className={`code-line ${isHighlighted ? "code-line-hl" : ""} ${isFocus ? "code-line-focus" : ""} ${hasAnn ? `code-line-ann code-line-ann-${severity}` : ""}`}
             >
               <span className="code-line-num">{lineNum}</span>
-              <span className="code-line-content">{rendered}</span>
+              <span className="code-line-content">
+                <span className="code-line-text">{rendered}</span>
+                {hasAnn && lineAnns && (
+                  <span className="code-line-ann-tags">
+                    {lineAnns.map((a, ai) => (
+                      <span
+                        key={ai}
+                        className={`code-ann-tag code-ann-${a.severity ?? "error"}`}
+                        title={a.message}
+                      >
+                        {a.tag}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </span>
             </div>
           );
         })}

@@ -6,7 +6,8 @@ import {
   AlertTriangle, Trash2, Download,
 } from "lucide-react";
 import { getFindings, getRun, deleteRun, getProject, cancelRun, retryRun } from "../services/api";
-import CodeBlock, { parseLineRange } from "../components/CodeBlock";
+import CodeBlock, { parseLineRange, LineAnnotation } from "../components/CodeBlock";
+import DiffView from "../components/DiffView";
 import { Finding, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
 
@@ -153,7 +154,13 @@ function FeedbackRow({ result }: { result: Finding }) {
 function InlineIssueList({ finding }: { finding: Finding }) {
   const issues = PATTERNS.filter((p) => finding[p] === "Yes");
 
-  function getFeedback(p: string): { reason?: string; line_range?: string; suggested_fix?: string } {
+  function getFeedback(p: string): {
+    reason?: string;
+    line_range?: string;
+    suggested_fix?: string;
+    original_snippet?: string;
+    fixed_snippet?: string;
+  } {
     const raw = finding.feedback?.[p.toUpperCase()] || finding.feedback?.[p];
     if (typeof raw === "object" && raw !== null) return raw as any;
     if (raw) return { reason: String(raw) };
@@ -166,24 +173,90 @@ function InlineIssueList({ finding }: { finding: Finding }) {
         const fb = getFeedback(p);
         const info = PATTERN_INFO[p];
         return (
-          <div key={p} className="inline-issue-item">
-            <div className="inline-issue-head">
-              <span className="inline-issue-code">{info.short}</span>
-              {fb.line_range && (
-                <span className="inline-issue-line">line {fb.line_range}</span>
-              )}
-              <span className="inline-issue-name">{info.full}</span>
-            </div>
-            {fb.reason && <p className="inline-issue-reason">{fb.reason}</p>}
-            {fb.suggested_fix && (
-              <p className="inline-issue-fix">
-                <span className="inline-issue-fix-label">Fix</span>
-                {fb.suggested_fix}
-              </p>
-            )}
-          </div>
+          <IssueEntry key={p} info={info} fb={fb} />
         );
       })}
+    </div>
+  );
+}
+
+/**
+ * One detected issue with an optional side-by-side diff view toggle.
+ * View state is per-issue so users can inspect them independently.
+ */
+function IssueEntry({
+  info,
+  fb,
+}: {
+  info: { short: string; full: string };
+  fb: {
+    reason?: string;
+    line_range?: string;
+    suggested_fix?: string;
+    original_snippet?: string;
+    fixed_snippet?: string;
+  };
+}) {
+  const hasDiff = !!(fb.original_snippet && fb.fixed_snippet);
+  const [showDiff, setShowDiff] = React.useState(hasDiff);
+
+  // Derive a start line for the diff view from line_range ("42-47" -> 42)
+  const startLine = React.useMemo(() => {
+    if (!fb.line_range) return undefined;
+    const m = /(\d+)/.exec(fb.line_range);
+    return m ? parseInt(m[1], 10) : undefined;
+  }, [fb.line_range]);
+
+  return (
+    <div className="inline-issue-item">
+      <div className="inline-issue-head">
+        <span className="inline-issue-code">{info.short}</span>
+        {fb.line_range && (
+          <span className="inline-issue-line">line {fb.line_range}</span>
+        )}
+        <span className="inline-issue-name">{info.full}</span>
+        {hasDiff && (
+          <span className="inline-issue-view-toggle" role="tablist">
+            <button
+              className={`view-toggle-btn ${!showDiff ? "active" : ""}`}
+              onClick={(e) => { e.stopPropagation(); setShowDiff(false); }}
+              role="tab"
+              aria-selected={!showDiff}
+            >Summary</button>
+            <button
+              className={`view-toggle-btn ${showDiff ? "active" : ""}`}
+              onClick={(e) => { e.stopPropagation(); setShowDiff(true); }}
+              role="tab"
+              aria-selected={showDiff}
+            >Diff</button>
+          </span>
+        )}
+      </div>
+
+      {fb.reason && <p className="inline-issue-reason">{fb.reason}</p>}
+
+      {!showDiff && fb.suggested_fix && (
+        <p className="inline-issue-fix">
+          <span className="inline-issue-fix-label">Fix</span>
+          {fb.suggested_fix}
+        </p>
+      )}
+
+      {showDiff && hasDiff && (
+        <div className="inline-issue-diff">
+          {fb.suggested_fix && (
+            <p className="inline-issue-fix" style={{ marginBottom: 8, borderTop: "none", paddingTop: 0 }}>
+              <span className="inline-issue-fix-label">Fix</span>
+              {fb.suggested_fix}
+            </p>
+          )}
+          <DiffView
+            before={fb.original_snippet!}
+            after={fb.fixed_snippet!}
+            startLine={startLine}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -406,9 +479,18 @@ function FeedbackRowContent({ result }: { result: Finding }) {
   }
 
   const highlightLines = new Set<number>();
+  const annotations = new Map<number, LineAnnotation[]>();
   issues.forEach((p) => {
     const fb = getFeedbackObj(p);
-    parseLineRange(fb.line_range).forEach((n) => highlightLines.add(n));
+    const lines = parseLineRange(fb.line_range);
+    lines.forEach((n) => highlightLines.add(n));
+    const info = PATTERN_INFO[p];
+    const message = fb.reason || info.full;
+    lines.forEach((n) => {
+      const existing = annotations.get(n) ?? [];
+      existing.push({ tag: info.short, message, severity: "error" });
+      annotations.set(n, existing);
+    });
   });
 
   // ═══ Clean-only layout (no issues) ═══
@@ -544,6 +626,7 @@ function FeedbackRowContent({ result }: { result: Finding }) {
               code={result.file_content}
               highlightLines={highlightLines}
               focusLine={focusLine}
+              annotations={annotations}
             />
           </div>
         )}

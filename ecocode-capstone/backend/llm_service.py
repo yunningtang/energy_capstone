@@ -218,22 +218,29 @@ PATTERNS_ALL = ["DW", "HMU", "HAS", "IOD", "NLMR"]
 # Batch prompt — check all patterns in one LLM call
 # ═══════════════════════════════════════════════════════════
 def build_batch_prompt(code: str, patterns: list[str]) -> str:
-    """One prompt, all patterns, structured JSON response."""
+    """One prompt, all patterns, structured JSON response with diff-ready snippets."""
     descriptions = "\n".join(
         f"- {p}: {PATTERN_DESCRIPTIONS.get(p, p)}" for p in patterns
     )
     schema_lines = ",\n    ".join(
         f'"{p}": {{"answer": "Yes" or "No", "reason": "brief", '
         f'"line_range": "e.g. 42-47 or null", '
-        f'"suggested_fix": "how to fix, or null if clean"}}'
+        f'"suggested_fix": "one-sentence explanation, or null if clean", '
+        f'"original_snippet": "EXACT code excerpt that has the issue (verbatim, ~3-8 lines), or null", '
+        f'"fixed_snippet": "the same excerpt rewritten to fix the issue (valid Java, same indent), or null"}}'
         for p in patterns
     )
     return (
         f"You are an Android code expert. Analyze the following Java file for these "
         f"energy anti-patterns:\n\n{descriptions}\n\n"
         f"For EACH pattern, decide Yes (pattern is present = bug) or No (pattern is absent = clean).\n"
-        f"If Yes, give a brief reason, the line range where it occurs, and a concrete fix.\n"
-        f"If No, give a brief reason (e.g. 'No WakeLock usage detected') and leave line_range and suggested_fix null.\n\n"
+        f"If Yes, provide:\n"
+        f"  - reason: a short explanation,\n"
+        f"  - line_range: the range where the issue occurs (e.g. '42-47'),\n"
+        f"  - suggested_fix: one sentence describing the fix,\n"
+        f"  - original_snippet: the EXACT code lines (~3-8) containing the issue, verbatim from the source,\n"
+        f"  - fixed_snippet: the same block rewritten to fix the issue, preserving indentation and keeping the diff minimal.\n"
+        f"If No, leave line_range/suggested_fix/original_snippet/fixed_snippet as null.\n\n"
         f"Source code:\n```java\n{code}\n```\n\n"
         f"Respond with JSON only, no prose:\n"
         f"{{\n    {schema_lines}\n}}"
@@ -267,14 +274,15 @@ def _parse_batch_response(content: str, patterns: list[str]) -> dict[str, dict]:
             entry = {"answer": str(entry), "reason": ""}
         ans = _normalize_answer(entry.get("answer"))
         out: dict[str, Any] = {"answer": ans, "reason": str(entry.get("reason", ""))[:300]}
-        if entry.get("line_range"):
-            lr = str(entry["line_range"]).strip()
-            if lr.lower() not in ("null", "none", "n/a", ""):
-                out["line_range"] = lr
-        if entry.get("suggested_fix"):
-            sf = str(entry["suggested_fix"]).strip()
-            if sf.lower() not in ("null", "none", "n/a", ""):
-                out["suggested_fix"] = sf[:500]
+        for field, max_len in (("line_range", 40), ("suggested_fix", 500),
+                                ("original_snippet", 2000), ("fixed_snippet", 2000)):
+            val = entry.get(field)
+            if val is None:
+                continue
+            sv = str(val).strip()
+            if sv.lower() in ("null", "none", "n/a", ""):
+                continue
+            out[field] = sv[:max_len]
         result[p] = out
     return result
 
