@@ -565,7 +565,7 @@ body {
 .feedback-verdict.yes { background: var(--danger); color: #fff; }
 .feedback-verdict.no { background: var(--bg-subtle); color: var(--fg-secondary); }
 
-.feedback-reason { font-size: 12px; color: var(--fg-secondary); line-height: 1.6; margin-top: 2px; }
+.feedback-reason { font-size: 12px; color: var(--fg-secondary); line-height: 1.6; margin-top: 2px; max-width: 68ch; }
 
 /* ── Pattern legend ──────────────────────────────────── */
 .pattern-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 12px; font-size: 11px; color: var(--fg-tertiary); }
@@ -597,6 +597,8 @@ body {
 .badge.progress { background: var(--info-light); color: var(--info); }
 .badge.done { background: var(--success-light); color: var(--success); }
 .badge.failed { background: var(--danger-light); color: var(--danger); }
+.badge.partial { background: var(--warning-light); color: var(--warning); }
+.badge.cancelled { background: var(--bg-subtle); color: var(--fg-tertiary); }
 
 /* ── Empty state ─────────────────────────────────────── */
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; color: var(--subtle); text-align: center; animation: fadeIn 0.4s var(--ease-out); }
@@ -1154,6 +1156,963 @@ body {
   cursor: help;
 }
 
+/* ── Conclusion banner (primary headline) ────────────── */
+.conclusion-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border-radius: var(--radius);
+  margin: 20px 0 24px;
+}
+
+/* Clean: near-white, restrained. Only the icon gets a hint of color. */
+.conclusion-banner.clean {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+/* Issues: red only used for the icon + title. Background stays neutral. */
+.conclusion-banner.has-issues {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+}
+
+.conclusion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+}
+
+.conclusion-banner.clean .conclusion-icon {
+  color: var(--fg);
+  background: var(--bg-subtle);
+}
+
+.conclusion-banner.has-issues .conclusion-icon {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.conclusion-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.conclusion-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+/* No color on the title for clean. Keep red only when there's something to worry about. */
+.conclusion-banner.has-issues .conclusion-title { color: var(--danger); }
+
+.conclusion-sub {
+  font-size: 13px;
+  color: var(--fg-tertiary);
+  margin: 0;
+}
+
+.conclusion-stat-passed,
+.conclusion-stat-na { color: var(--fg-tertiary); }
+
+/* ── Run hero stats (legacy, kept for ref) ────────────── */
+.run-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0 24px;
+}
+
+.run-stat {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+/* Only the issue stat gets a colored treatment — and ONLY when there are actual issues. */
+.run-stat.issues.has-issues {
+  background: var(--danger-light);
+  border-color: rgba(220,38,38,0.2);
+}
+
+.run-stat-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Numbers use semantic color only when meaningful:
+   - Issues: red only when > 0 (handled by has-issues)
+   - Passed: green always
+   - N/A: muted always */
+.run-stat.issues.has-issues .run-stat-num { color: var(--danger); }
+.run-stat.passed .run-stat-num { color: var(--success); }
+.run-stat.na .run-stat-num { color: var(--fg-tertiary); }
+
+.run-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 6px;
+}
+
+/* ── Single-file card layout ─────────────────────────── */
+.single-file-layout {
+  margin-top: 12px;
+}
+
+.file-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.file-card-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 20px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.file-card-header:hover { background: var(--bg-subtle); }
+
+.file-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.file-card-name {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.file-card-chevron {
+  color: var(--fg-tertiary);
+  flex-shrink: 0;
+}
+
+.file-card-body {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* ── Clean section (expandable, used in both layouts) ── */
+.clean-section {
+  margin-top: 8px;
+}
+
+.clean-section-toggle {
+  background: none;
+  border: none;
+  color: var(--fg-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 8px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clean-section-toggle:hover { color: var(--fg); }
+
+.clean-section .clean-details {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+}
+
+/* Clean checks — both PASSED and N/A are visually quiet.
+   Emphasis budget is reserved for FAILED (issue-found). */
+.clean-detail-item {
+  padding: 12px 14px;
+  border-radius: var(--radius-xs);
+  margin-bottom: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid transparent;
+}
+
+.clean-detail-item:last-child { margin-bottom: 0; }
+
+.clean-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.clean-detail-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clean-detail-short {
+  color: var(--fg-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.clean-detail-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+.clean-detail-icon.passed { color: var(--success); }
+.clean-detail-icon.na { color: var(--fg-tertiary); }
+
+.clean-detail-reason {
+  font-size: 12px;
+  color: var(--fg-secondary);
+  line-height: 1.55;
+  max-width: 68ch;
+  margin: 0;
+  padding-left: 20px;  /* align with name after icon */
+}
+
+/* code tokens inside reasons use mono */
+.clean-detail-reason code,
+.feedback-reason code {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 0.92em;
+  background: var(--bg-subtle);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.clean-detail-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.clean-detail-tag.passed {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.clean-detail-tag.na {
+  background: var(--border-light);
+  color: var(--fg-tertiary);
+}
+
+/* ── Clean summary (legacy) ──────────────────────────── */
+.clean-summary {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.clean-summary-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+
+.clean-summary-toggle:hover { background: var(--bg-subtle); }
+
+.clean-summary-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--fg-secondary);
+}
+
+.clean-summary-chevron {
+  color: var(--fg-tertiary);
+  font-size: 16px;
+  font-weight: 500;
+  width: 16px;
+  text-align: center;
+}
+
+.clean-details {
+  border-top: 1px solid var(--border-light);
+  padding: 8px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clean-detail-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.clean-detail-item:last-child { border-bottom: none; }
+
+.clean-detail-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+
+.clean-detail-short {
+  color: var(--fg-tertiary);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.clean-detail-reason {
+  font-size: 12px;
+  color: var(--fg-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Matrix view (files × patterns) ──────────────────── */
+.matrix-wrapper {
+  margin-top: 12px;
+}
+
+.matrix-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.matrix-header-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.matrix-scroll {
+  overflow-x: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.matrix-table th {
+  text-align: center;
+  padding: 12px 8px;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.matrix-file-col {
+  text-align: left !important;
+  padding-left: 20px !important;
+  min-width: 240px;
+}
+
+.matrix-pattern-col {
+  width: 72px;
+  cursor: help;
+}
+
+.matrix-pattern-short {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.matrix-status-col {
+  text-align: left !important;
+  min-width: 110px;
+  padding-right: 20px !important;
+}
+
+.matrix-row {
+  transition: background 0.12s;
+}
+
+.matrix-file-cell {
+  padding: 12px 20px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--fg);
+  white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrix-cell {
+  text-align: center;
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+.matrix-cell-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.matrix-cell-issue .matrix-cell-symbol {
+  background: var(--danger);
+  color: #fff;
+}
+
+.matrix-cell-passed .matrix-cell-symbol {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.matrix-cell-na .matrix-cell-symbol {
+  background: var(--bg-subtle);
+  color: var(--fg-tertiary);
+}
+
+.matrix-cell-pending .matrix-cell-symbol {
+  background: var(--bg-subtle);
+  color: var(--fg-tertiary);
+  animation: pendingPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pendingPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+.matrix-status-cell {
+  padding: 12px 20px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.matrix-status-issue {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.matrix-status-clean {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.matrix-status-pending {
+  color: var(--fg-tertiary);
+}
+
+/* Total row */
+.matrix-total-row {
+  background: var(--bg-subtle);
+  border-top: 2px solid var(--border);
+}
+
+.matrix-total-row .matrix-file-cell {
+  font-family: inherit;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fg-tertiary);
+}
+
+.matrix-total-cell {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  color: var(--fg-tertiary);
+}
+
+.matrix-total-cell.has-hits {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+/* Legend (above table, right-aligned) */
+.matrix-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--fg-tertiary);
+}
+
+.matrix-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.matrix-legend-dot {
+  width: 14px !important;
+  height: 14px !important;
+  font-size: 8px !important;
+}
+
+.matrix-legend-dot.issue { background: var(--danger); color: #fff; }
+.matrix-legend-dot.passed { background: var(--success-light); color: var(--success); }
+.matrix-legend-dot.na { background: var(--bg-subtle); color: var(--fg-tertiary); }
+
+/* ── Inline issue list (below matrix row with issues) ─── */
+.matrix-inline-issue-row > td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+  background: var(--bg-subtle);
+}
+
+.inline-issue-list {
+  padding: 12px 20px 16px 44px;  /* left indent matches file-cell */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inline-issue-item {
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-xs);
+}
+
+.inline-issue-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.inline-issue-code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--danger);
+  background: var(--danger-light);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.inline-issue-line {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-tertiary);
+}
+
+.inline-issue-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.inline-issue-reason {
+  font-size: 12px;
+  color: var(--fg-secondary);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 72ch;
+}
+
+.inline-issue-fix {
+  font-size: 12px;
+  color: var(--fg-secondary);
+  line-height: 1.55;
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+  max-width: 72ch;
+}
+
+.inline-issue-fix-label {
+  display: inline-block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-tertiary);
+  margin-right: 8px;
+}
+
+/* Remove hover on issue rows — they're no longer clickable */
+.matrix-row.has-issues { cursor: default; }
+.matrix-row.has-issues:hover { background: transparent; }
+
+/* ── Right-side detail drawer (legacy, unused) ────────── */
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  animation: fadeIn 0.2s var(--ease-out);
+}
+
+.detail-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(720px, 90vw);
+  background: var(--bg-elevated);
+  border-left: 1px solid var(--border);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlideIn 0.25s var(--ease-out);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.drawer-title-group { min-width: 0; flex: 1; }
+
+.drawer-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-tertiary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.drawer-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0;
+  word-break: break-all;
+}
+
+.drawer-close {
+  background: none;
+  border: none;
+  color: var(--fg-tertiary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 8px;
+  margin-left: 12px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.drawer-close:hover { color: var(--fg); }
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+@media (max-width: 768px) {
+  .detail-drawer { width: 100%; }
+}
+
+/* ── Issue-driven 2-column layout ─────────────────────── */
+.issue-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .issue-layout { grid-template-columns: 1fr; }
+}
+
+/* Left panel: issue list */
+.issue-panel {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.issue-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+
+.issue-list-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  border-left: 3px solid transparent;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.issue-list-item:hover { background: var(--bg-elevated); }
+
+.issue-list-item.active {
+  background: var(--bg-elevated);
+  border-left-color: var(--danger);
+}
+
+.issue-list-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+
+.issue-list-meta {
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  display: flex;
+  gap: 4px;
+}
+
+.issue-list-short {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.issue-list-line {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.issue-panel-footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+/* Right panel: code + fix */
+.issue-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.issue-code {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.issue-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* Fix panel (highlighted recommendation) */
+.issue-fix-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+}
+
+.issue-fix-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.issue-fix-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--danger);
+  background: var(--danger-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.issue-fix-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0;
+  flex: 1;
+}
+
+.issue-fix-line {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-tertiary);
+}
+
+.issue-fix-section { margin-bottom: 12px; }
+.issue-fix-section:last-child { margin-bottom: 0; }
+
+.issue-fix-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-tertiary);
+  margin-bottom: 6px;
+}
+
+.issue-fix-section-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-secondary);
+  max-width: 68ch;
+  margin: 0;
+}
+
+.issue-fix-highlight {
+  background: linear-gradient(to right, rgba(220,38,38,0.04), transparent);
+  border-left: 3px solid var(--danger);
+  padding: 12px 14px;
+  margin: 0 -4px;
+  border-radius: 4px;
+}
+
+.issue-fix-highlight .issue-fix-section-label {
+  color: var(--danger);
+}
+
+.issue-fix-highlight .issue-fix-section-text {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .issue-fix-highlight {
+  background: linear-gradient(to right, rgba(244,63,94,0.08), transparent);
+}
+
+/* ── Code viewer section ─────────────────────────────── */
+.code-viewer-section {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.code-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.code-viewer-filename {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-tertiary);
+}
+
+.code-viewer-badge {
+  color: var(--danger);
+  font-weight: 500;
+}
+
 /* ── Code viewer ─────────────────────────────────────── */
 .code-viewer-toggle {
   margin-top: 8px;
@@ -1185,6 +2144,86 @@ body {
 .code-block::-webkit-scrollbar-track { background: transparent; }
 .code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+/* ── CodeBlock with line numbers + syntax highlighting ── */
+.code-block-wrapper {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.code-block-pre {
+  margin: 0;
+  padding: 12px 0;
+  font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--fg);
+  max-height: 480px;
+  overflow: auto;
+  tab-size: 4;
+}
+
+.code-block-pre::-webkit-scrollbar { width: 8px; height: 8px; }
+.code-block-pre::-webkit-scrollbar-track { background: transparent; }
+.code-block-pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.code-line {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  padding: 0 16px 0 0;
+  white-space: pre;
+}
+
+.code-line-num {
+  color: var(--fg-disabled);
+  text-align: right;
+  padding-right: 16px;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.code-line-content {
+  overflow: visible;
+}
+
+.code-line-hl {
+  background: rgba(220,38,38,0.08);
+  border-left: 3px solid var(--danger);
+  padding-left: 0;
+}
+
+.code-line-hl .code-line-num {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .code-line-hl {
+  background: rgba(244,63,94,0.10);
+}
+
+.code-line-focus {
+  background: rgba(220,38,38,0.18) !important;
+  transition: background 0.3s;
+}
+[data-theme="dark"] .code-line-focus {
+  background: rgba(244,63,94,0.22) !important;
+}
+
+/* Java syntax tokens */
+.tok-keyword { color: #a0309d; font-weight: 500; }
+.tok-type { color: #2563eb; }
+.tok-string { color: #059669; }
+.tok-number { color: #b45309; }
+.tok-comment { color: var(--fg-tertiary); font-style: italic; }
+.tok-annotation { color: #7c3aed; }
+.tok-ident { color: var(--fg); }
+
+[data-theme="dark"] .tok-keyword { color: #e879f9; }
+[data-theme="dark"] .tok-type { color: #60a5fa; }
+[data-theme="dark"] .tok-string { color: #34d399; }
+[data-theme="dark"] .tok-number { color: #fbbf24; }
+[data-theme="dark"] .tok-annotation { color: #c4b5fd; }
+
 /* ── Feedback fix suggestion ─────────────────────────── */
 .feedback-line-ref {
   font-size: 11px;
@@ -1215,6 +2254,7 @@ body {
   font-size: 13px;
   color: var(--fg-secondary);
   line-height: 1.6;
+  max-width: 68ch;
   margin: 0;
 }
 

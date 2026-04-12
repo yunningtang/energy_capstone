@@ -176,6 +176,109 @@ def _safe_json(content: str) -> dict[str, Any]:
     return {"answer": "No", "reason": content[:200] if content else "parse failed"}
 
 
+# ═══════════════════════════════════════════════════════════
+# Keyword prefilter — skip LLM call for patterns that can't apply
+# ═══════════════════════════════════════════════════════════
+PATTERN_KEYWORDS = {
+    "DW":   ["wakelock", "acquire", "wake_lock", "newwakelock"],
+    "HMU":  ["hashmap", "hashmap<", "import java.util.hashmap"],
+    "HAS":  ["asynctask", "onpostexecute", "onpreexecute", "doinbackground", "onprogressupdate"],
+    "IOD":  ["ondraw", "@override\n    public void ondraw", "canvas"],
+    "NLMR": ["extends activity", "extends service", "extends appcompatactivity",
+             "extends fragmentactivity", "extends broadcastreceiver"],
+}
+
+
+def prefilter_patterns(code: str) -> tuple[list[str], dict[str, str]]:
+    """
+    Return (patterns_to_check_with_llm, patterns_auto_no).
+    patterns_auto_no contains patterns that the file doesn't trigger based on keyword scan.
+    """
+    code_lower = code.lower()
+    to_check = []
+    auto_no: dict[str, str] = {}
+    for pattern in PATTERNS_ALL:
+        keywords = PATTERN_KEYWORDS.get(pattern, [])
+        if not keywords:
+            to_check.append(pattern)
+            continue
+        # If no keyword found, the pattern can't possibly apply
+        hit = any(kw in code_lower for kw in keywords)
+        if hit:
+            to_check.append(pattern)
+        else:
+            auto_no[pattern] = f"No {pattern} indicators found in source (keyword prefilter)."
+    return to_check, auto_no
+
+
+PATTERNS_ALL = ["DW", "HMU", "HAS", "IOD", "NLMR"]
+
+
+# ═══════════════════════════════════════════════════════════
+# Batch prompt — check all patterns in one LLM call
+# ═══════════════════════════════════════════════════════════
+def build_batch_prompt(code: str, patterns: list[str]) -> str:
+    """One prompt, all patterns, structured JSON response."""
+    descriptions = "\n".join(
+        f"- {p}: {PATTERN_DESCRIPTIONS.get(p, p)}" for p in patterns
+    )
+    schema_lines = ",\n    ".join(
+        f'"{p}": {{"answer": "Yes" or "No", "reason": "brief", '
+        f'"line_range": "e.g. 42-47 or null", '
+        f'"suggested_fix": "how to fix, or null if clean"}}'
+        for p in patterns
+    )
+    return (
+        f"You are an Android code expert. Analyze the following Java file for these "
+        f"energy anti-patterns:\n\n{descriptions}\n\n"
+        f"For EACH pattern, decide Yes (pattern is present = bug) or No (pattern is absent = clean).\n"
+        f"If Yes, give a brief reason, the line range where it occurs, and a concrete fix.\n"
+        f"If No, give a brief reason (e.g. 'No WakeLock usage detected') and leave line_range and suggested_fix null.\n\n"
+        f"Source code:\n```java\n{code}\n```\n\n"
+        f"Respond with JSON only, no prose:\n"
+        f"{{\n    {schema_lines}\n}}"
+    )
+
+
+def _parse_batch_response(content: str, patterns: list[str]) -> dict[str, dict]:
+    """Parse a batch response. Return dict {pattern: {answer, reason, line_range?, suggested_fix?}}."""
+    if not content:
+        return {p: {"answer": "No", "reason": "empty response"} for p in patterns}
+    text = content.strip()
+    if "```" in text:
+        m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
+        if m:
+            text = m.group(1)
+    try:
+        obj = json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if not match:
+            return {p: {"answer": "No", "reason": "parse failed"} for p in patterns}
+        try:
+            obj = json.loads(match.group())
+        except json.JSONDecodeError:
+            return {p: {"answer": "No", "reason": "parse failed"} for p in patterns}
+
+    result: dict[str, dict] = {}
+    for p in patterns:
+        entry = obj.get(p) or obj.get(p.upper()) or obj.get(p.lower()) or {}
+        if not isinstance(entry, dict):
+            entry = {"answer": str(entry), "reason": ""}
+        ans = _normalize_answer(entry.get("answer"))
+        out: dict[str, Any] = {"answer": ans, "reason": str(entry.get("reason", ""))[:300]}
+        if entry.get("line_range"):
+            lr = str(entry["line_range"]).strip()
+            if lr.lower() not in ("null", "none", "n/a", ""):
+                out["line_range"] = lr
+        if entry.get("suggested_fix"):
+            sf = str(entry["suggested_fix"]).strip()
+            if sf.lower() not in ("null", "none", "n/a", ""):
+                out["suggested_fix"] = sf[:500]
+        result[p] = out
+    return result
+
+
 class LLMService:
     async def health_check(self) -> dict[str, Any]:
         raise NotImplementedError
@@ -183,6 +286,13 @@ class LLMService:
     async def check_pattern(self, code: str, pattern: str) -> dict[str, Any]:
         """Return {"answer": "Yes"/"No", "reason": "..."}."""
         raise NotImplementedError
+
+    async def check_all_patterns(self, code: str, patterns: list[str]) -> dict[str, dict]:
+        """Batch check — default falls back to per-pattern calls. Override for efficiency."""
+        result: dict[str, dict] = {}
+        for p in patterns:
+            result[p] = await self.check_pattern(code, p)
+        return result
 
 
 class OllamaService(LLMService):
@@ -351,6 +461,48 @@ class OpenAIService(LLMService):
             return _safe_json(raw)
         except Exception as exc:
             return {"answer": "No", "reason": f"OpenAI error: {exc}"}
+
+    async def check_all_patterns(self, code: str, patterns: list[str]) -> dict[str, dict]:
+        """Single-call batch check for OpenAI. Uses structured JSON mode."""
+        if not self.api_key:
+            return {p: {"answer": "No", "reason": "OPENAI_API_KEY not set"} for p in patterns}
+        if not patterns:
+            return {}
+        prompt = build_batch_prompt(code, patterns)
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an Android energy optimization expert. "
+                        "Return strict JSON only with one entry per requested pattern."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.2,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as c:
+                r = await c.post(
+                    f"{self.base_url}/chat/completions", headers=headers, json=body,
+                )
+            r.raise_for_status()
+            raw = (
+                r.json()
+                .get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "{}")
+            )
+            return _parse_batch_response(raw, patterns)
+        except Exception as exc:
+            return {p: {"answer": "No", "reason": f"OpenAI error: {exc}"} for p in patterns}
 
 
 def create_llm_service() -> tuple[LLMService, str]:

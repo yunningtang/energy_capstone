@@ -59,7 +59,8 @@ class Task(Base):
     source_type: Mapped[str] = mapped_column(String(20))  # "repo" or "uploaded"
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     download_folder_name: Mapped[str] = mapped_column(String(512), default="")
-    status: Mapped[str] = mapped_column(String(20), default="Pending")
+    status: Mapped[str] = mapped_column(String(20), default="Pending")  # Pending / In-Progress / Done / Failed / Partial / Cancelled
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
@@ -226,6 +227,7 @@ def init_db() -> None:
         with engine.connect() as conn:
             _migrate_column(conn, "results_details", "feedback", "TEXT")
             _migrate_column(conn, "tasks", "project_id", "INTEGER")
+            _migrate_column(conn, "tasks", "error_message", "TEXT")
 
             try:
                 row = conn.execute(

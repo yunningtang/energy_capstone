@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  FileWarning, Minus, Clock, ChevronDown, ChevronUp,
+  FileWarning, CheckCircle2, Check, Minus, Clock, ChevronDown, ChevronUp,
   AlertTriangle, Trash2, Download,
 } from "lucide-react";
 import { getFindings, getRun, deleteRun, getProject, cancelRun, retryRun } from "../services/api";
+import CodeBlock, { parseLineRange } from "../components/CodeBlock";
 import { Finding, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
 
@@ -43,7 +44,8 @@ function FeedbackRow({ result }: { result: Finding }) {
   const feedback = result.feedback;
   const issues = PATTERNS.filter((p) => result[p] === "Yes");
   const clean = PATTERNS.filter((p) => result[p] === "No");
-  const [showCode, setShowCode] = useState(false);
+  const [showCode, setShowCode] = useState(issues.length > 0);  // auto-open for issues
+  const [showCleanDetails, setShowCleanDetails] = useState(false);
 
   // Parse feedback for structured fields (line_range, suggested_fix)
   function getFeedbackObj(pattern: string): { reason: string; line_range?: string; suggested_fix?: string } {
@@ -54,18 +56,25 @@ function FeedbackRow({ result }: { result: Finding }) {
     return { reason: String(raw) };
   }
 
+  // Merge all line_ranges from issues
+  const highlightLines = new Set<number>();
+  issues.forEach((p) => {
+    const fb = getFeedbackObj(p);
+    parseLineRange(fb.line_range).forEach((n) => highlightLines.add(n));
+  });
+
   return (
     <tr className="feedback-row">
       <td colSpan={5}>
         <div className="feedback-content">
-          {/* Issues with details */}
+          {/* ── Issues with details ─────────────────── */}
           {issues.map((p) => {
             const fb = getFeedbackObj(p);
             const info = PATTERN_INFO[p];
             return (
               <div key={p} className="feedback-item issue-found">
                 <div className="feedback-header">
-                  <span className="feedback-pattern">{info.full}</span>
+                  <span className="feedback-pattern">{info.full} ({info.short})</span>
                   <span className="feedback-verdict yes">Issue</span>
                 </div>
                 {fb.reason && <p className="feedback-reason">{fb.reason}</p>}
@@ -82,34 +91,490 @@ function FeedbackRow({ result }: { result: Finding }) {
             );
           })}
 
-          {/* Clean summary */}
-          {clean.length > 0 && issues.length > 0 && (
-            <div className="feedback-item no-issue">
-              <span className="feedback-pattern" style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
-                {clean.length} other check{clean.length > 1 ? "s" : ""} passed: {clean.map(p => PATTERN_INFO[p].short).join(", ")}
-              </span>
-            </div>
-          )}
-
-          {/* Source code viewer toggle */}
-          {result.file_content && (
-            <div className="code-viewer-toggle">
-              <button className="text-btn" onClick={(e) => { e.stopPropagation(); setShowCode(!showCode); }}>
-                {showCode ? "Hide source code" : "View source code"}
+          {/* ── Clean summary with expand-to-details ─ */}
+          {clean.length > 0 && (
+            <div className="clean-summary">
+              <button className="clean-summary-toggle" onClick={(e) => { e.stopPropagation(); setShowCleanDetails(!showCleanDetails); }}>
+                <span className="feedback-verdict no">Clean</span>
+                <span className="clean-summary-text">
+                  {issues.length === 0
+                    ? `All ${clean.length} checks passed`
+                    : `${clean.length} other check${clean.length > 1 ? "s" : ""} passed`
+                  }
+                </span>
+                <span className="clean-summary-chevron">{showCleanDetails ? "−" : "+"}</span>
               </button>
+              {showCleanDetails && (
+                <div className="clean-details">
+                  {clean.map((p) => {
+                    const fb = getFeedbackObj(p);
+                    const info = PATTERN_INFO[p];
+                    return (
+                      <div key={p} className="clean-detail-item">
+                        <div className="clean-detail-name">{info.full} <span className="clean-detail-short">({info.short})</span></div>
+                        {fb.reason && <p className="clean-detail-reason">{fb.reason}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
-          {showCode && result.file_content && (
-            <div className="code-viewer">
-              <pre className="code-block">
-                <code>{result.file_content}</code>
-              </pre>
+          {/* ── Source code viewer ─────────────────── */}
+          {result.file_content && (
+            <div className="code-viewer-section">
+              <div className="code-viewer-header">
+                <button className="text-btn" onClick={(e) => { e.stopPropagation(); setShowCode(!showCode); }}>
+                  {showCode ? "Hide source" : "View source"}
+                  {highlightLines.size > 0 && !showCode && (
+                    <span className="code-viewer-badge"> · {highlightLines.size} line{highlightLines.size > 1 ? "s" : ""} flagged</span>
+                  )}
+                </button>
+                <span className="code-viewer-filename">{result.file_name}</span>
+              </div>
+              {showCode && (
+                <CodeBlock code={result.file_content} highlightLines={highlightLines} />
+              )}
             </div>
           )}
         </div>
       </td>
     </tr>
+  );
+}
+
+/* ──────────────────────────────────────────────────────
+   InlineIssueList — rendered directly under a matrix row
+   when that file has issues. ESLint/tsc-style output:
+   file → indented issue items with fix suggestions.
+   No clicks, no expansion — everything always visible.
+   ────────────────────────────────────────────────────── */
+function InlineIssueList({ finding }: { finding: Finding }) {
+  const issues = PATTERNS.filter((p) => finding[p] === "Yes");
+
+  function getFeedback(p: string): { reason?: string; line_range?: string; suggested_fix?: string } {
+    const raw = finding.feedback?.[p.toUpperCase()] || finding.feedback?.[p];
+    if (typeof raw === "object" && raw !== null) return raw as any;
+    if (raw) return { reason: String(raw) };
+    return {};
+  }
+
+  return (
+    <div className="inline-issue-list">
+      {issues.map((p) => {
+        const fb = getFeedback(p);
+        const info = PATTERN_INFO[p];
+        return (
+          <div key={p} className="inline-issue-item">
+            <div className="inline-issue-head">
+              <span className="inline-issue-code">{info.short}</span>
+              {fb.line_range && (
+                <span className="inline-issue-line">line {fb.line_range}</span>
+              )}
+              <span className="inline-issue-name">{info.full}</span>
+            </div>
+            {fb.reason && <p className="inline-issue-reason">{fb.reason}</p>}
+            {fb.suggested_fix && (
+              <p className="inline-issue-fix">
+                <span className="inline-issue-fix-label">Fix</span>
+                {fb.suggested_fix}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────
+   MatrixView — rows = files, cols = patterns (DW/HMU/HAS/IOD/NLMR)
+   Files with issues auto-expand with inline details (ESLint-style).
+   ────────────────────────────────────────────────────── */
+function MatrixView({
+  findings,
+  selectedFinding,
+  onSelectCell,
+}: {
+  findings: Finding[];
+  selectedFinding: Finding | null | undefined;
+  onSelectCell: (f: Finding) => void;
+}) {
+  // Per-column totals (how many files tripped each pattern)
+  const colTotals = PATTERNS.map((p) => findings.filter((f) => f[p] === "Yes").length);
+
+  // Helper to classify a cell
+  function cellState(f: Finding, p: typeof PATTERNS[number]): "issue" | "passed" | "na" | "pending" {
+    if (f.status !== "Done") return "pending";
+    if (f[p] === "Yes") return "issue";
+    if (f[p] === "No") {
+      const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
+      const reason = typeof raw === "object" && raw !== null ? (raw as any).reason || "" : String(raw || "");
+      const r = reason.toLowerCase();
+      if (
+        r.includes("not present") || r.includes("no ondraw") ||
+        r.includes("no asynctask") || r.includes("does not use") ||
+        r.includes("not an activity") || r.includes("does not require") ||
+        r.includes("no hashmap") || r.includes("not applicable") ||
+        r.includes("no object allocation")
+      ) return "na";
+      return "passed";
+    }
+    return "pending";
+  }
+
+  function cellSymbol(state: string) {
+    if (state === "issue") return "●";
+    if (state === "passed") return "✓";
+    if (state === "na") return "—";
+    return "●";  // pending — pulsing dot distinguishes it from the N/A dash
+  }
+
+  const showStatusCol = findings.length > 1;
+
+  return (
+    <div className="matrix-wrapper">
+      {/* Legend above table, right-aligned */}
+      <div className="matrix-header-row">
+        <span className="matrix-header-title">Checks across {findings.length} file{findings.length > 1 ? "s" : ""}</span>
+        <div className="matrix-legend">
+          <span><span className="matrix-cell-symbol matrix-legend-dot issue">●</span>Issue</span>
+          <span><span className="matrix-cell-symbol matrix-legend-dot passed">✓</span>Passed</span>
+          <span><span className="matrix-cell-symbol matrix-legend-dot na">—</span>N/A</span>
+        </div>
+      </div>
+
+      <div className="matrix-scroll">
+        <table className="matrix-table">
+          <thead>
+            <tr>
+              <th className="matrix-file-col">File</th>
+              {PATTERNS.map((p) => (
+                <th key={p} className="matrix-pattern-col" title={`${PATTERN_INFO[p].full} — ${PATTERN_INFO[p].tip}`}>
+                  <span className="matrix-pattern-short">{PATTERN_INFO[p].short}</span>
+                </th>
+              ))}
+              {showStatusCol && <th className="matrix-status-col">Status</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {findings.map((f) => {
+              const issues = PATTERNS.filter((p) => f[p] === "Yes");
+              const hasIssues = issues.length > 0;
+              return (
+                <React.Fragment key={f.id}>
+                  <tr
+                    className={`matrix-row ${hasIssues ? "has-issues" : ""}`}
+                  >
+                    <td className="matrix-file-cell" title={f.file_name}>
+                      {f.file_name.split("/").pop()}
+                    </td>
+                    {PATTERNS.map((p) => {
+                      const state = cellState(f, p);
+                      return (
+                        <td key={p} className={`matrix-cell matrix-cell-${state}`} title={`${PATTERN_INFO[p].short}: ${state}`}>
+                          <span className="matrix-cell-symbol">{cellSymbol(state)}</span>
+                        </td>
+                      );
+                    })}
+                    {showStatusCol && (
+                      <td className="matrix-status-cell">
+                        {hasIssues ? (
+                          <span className="matrix-status-issue">{issues.length} issue{issues.length > 1 ? "s" : ""}</span>
+                        ) : f.status === "Done" ? (
+                          <span className="matrix-status-clean">Clean</span>
+                        ) : (
+                          <span className="matrix-status-pending">{f.status}</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                  {hasIssues && (
+                    <tr className="matrix-inline-issue-row">
+                      <td colSpan={PATTERNS.length + 1 + (showStatusCol ? 1 : 0)}>
+                        <InlineIssueList finding={f} />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+          {findings.length > 1 && (
+            <tfoot>
+              <tr className="matrix-total-row">
+                <td className="matrix-file-cell">Total</td>
+                {colTotals.map((n, i) => (
+                  <td key={i} className={`matrix-cell matrix-total-cell ${n > 0 ? "has-hits" : ""}`}>
+                    {n > 0 ? n : "·"}
+                  </td>
+                ))}
+                {showStatusCol && (
+                  <td className="matrix-status-cell" style={{ color: "var(--fg-tertiary)", fontSize: 12 }}>
+                    {colTotals.reduce((a, b) => a + b, 0)} total
+                  </td>
+                )}
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────
+   FileCard — single-file card layout (used when totalCount === 1)
+   Replaces the table-for-one-row anti-pattern
+   ────────────────────────────────────────────────────── */
+function FileCard({ result, expanded, onToggle }: { result: Finding; expanded: boolean; onToggle: () => void }) {
+  const issues = PATTERNS.filter((p) => result[p] === "Yes");
+  const hasIssue = issues.length > 0;
+  const shortName = result.file_name.split("/").pop();
+
+  return (
+    <div className="file-card">
+      <button className="file-card-header" onClick={onToggle}>
+        <div className="file-card-info">
+          <div className="file-card-name-row">
+            <span className="file-card-name">{shortName}</span>
+            {result.status === "Done" && !hasIssue && (
+              <CheckCircle2 size={16} style={{ color: "var(--success)" }} aria-label="Clean" />
+            )}
+            {hasIssue && (
+              <span style={{ color: "var(--danger)", fontWeight: 500, fontSize: 13 }}>
+                <AlertTriangle size={13} style={{ verticalAlign: -2, marginRight: 4 }} />
+                {issues.length} issue{issues.length > 1 ? "s" : ""} · {issues.join(", ")}
+              </span>
+            )}
+            {result.status !== "Done" && (
+              <span className="badge pending">{result.status}</span>
+            )}
+          </div>
+        </div>
+        {result.status === "Done" && (
+          <span className="file-card-chevron">
+            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </span>
+        )}
+      </button>
+      {expanded && (
+        <div className="file-card-body">
+          <FeedbackRowContent result={result} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Extract the feedback content (without <tr><td>) so it can be reused
+ * in both the single-file card and the table's expanded row.
+ */
+function FeedbackRowContent({ result }: { result: Finding }) {
+  const feedback = result.feedback;
+  const issues = PATTERNS.filter((p) => result[p] === "Yes");
+  const clean = PATTERNS.filter((p) => result[p] === "No");
+  const [showCode, setShowCode] = useState(issues.length > 0);
+  const [showCleanDetails, setShowCleanDetails] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<string | null>(issues[0] || null);
+
+  function getFeedbackObj(pattern: string): { reason: string; line_range?: string; suggested_fix?: string } {
+    const raw = feedback?.[pattern.toUpperCase()] || feedback?.[pattern] || "";
+    if (typeof raw === "object" && raw !== null) return raw as any;
+    return { reason: String(raw) };
+  }
+
+  // Differentiate "actually passed" vs "N/A" based on reason text
+  function isNotApplicable(reason: string): boolean {
+    const r = reason.toLowerCase();
+    return (
+      r.includes("not present") ||
+      r.includes("no onDraw") ||
+      r.includes("no asynctask") ||
+      r.includes("does not use") ||
+      r.includes("not an activity") ||
+      r.includes("does not require") ||
+      r.includes("no hashmap") ||
+      r.includes("not applicable")
+    );
+  }
+
+  const highlightLines = new Set<number>();
+  issues.forEach((p) => {
+    const fb = getFeedbackObj(p);
+    parseLineRange(fb.line_range).forEach((n) => highlightLines.add(n));
+  });
+
+  // ═══ Clean-only layout (no issues) ═══
+  if (issues.length === 0) {
+    return (
+      <div className="feedback-content" style={{ padding: 0 }}>
+        {clean.length > 0 && (
+          <div className="clean-section">
+            <button className="clean-section-toggle" onClick={() => setShowCleanDetails(!showCleanDetails)}>
+              {clean.length} check{clean.length > 1 ? "s" : ""} ▾
+            </button>
+            {showCleanDetails && (
+              <div className="clean-details">
+                {clean
+                  .map((p) => ({ p, na: isNotApplicable(getFeedbackObj(p).reason || "") }))
+                  .sort((a, b) => Number(a.na) - Number(b.na))
+                  .map(({ p, na }) => {
+                    const fb = getFeedbackObj(p);
+                    const info = PATTERN_INFO[p];
+                    return (
+                      <div key={p} className="clean-detail-item">
+                        <div className="clean-detail-head">
+                          <span className="clean-detail-name">
+                            {info.full} <span className="clean-detail-short">({info.short})</span>
+                          </span>
+                          <span className={`clean-detail-tag ${na ? "na" : "passed"}`}>
+                            {na ? "N/A" : "Passed"}
+                          </span>
+                        </div>
+                        {fb.reason && <p className="clean-detail-reason">{fb.reason}</p>}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
+        {result.file_content && (
+          <div className="code-viewer-section">
+            <div className="code-viewer-header">
+              <button className="text-btn" onClick={(e) => { e.stopPropagation(); setShowCode(!showCode); }}>
+                {showCode ? "Hide source" : "View source"}
+              </button>
+              <span className="code-viewer-filename">{result.file_name}</span>
+            </div>
+            {showCode && <CodeBlock code={result.file_content} />}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ═══ Issue-driven layout: problems panel (left) + code + fix (right) ═══
+  const selected = selectedIssue && issues.includes(selectedIssue as any) ? selectedIssue : issues[0];
+  const selectedFb = selected ? getFeedbackObj(selected) : null;
+  const focusLine = selectedFb?.line_range ? Array.from(parseLineRange(selectedFb.line_range))[0] : undefined;
+
+  return (
+    <div className="issue-layout">
+      {/* ─── Left: issues list + clean collapse ─── */}
+      <aside className="issue-panel">
+        <div className="issue-panel-header">
+          <AlertTriangle size={14} style={{ color: "var(--danger)" }} />
+          <span>Issues ({issues.length})</span>
+        </div>
+        <ul className="issue-list">
+          {issues.map((p) => {
+            const fb = getFeedbackObj(p);
+            const info = PATTERN_INFO[p];
+            const isActive = selected === p;
+            return (
+              <li key={p}>
+                <button
+                  className={`issue-list-item ${isActive ? "active" : ""}`}
+                  onClick={() => setSelectedIssue(p)}
+                >
+                  <div className="issue-list-name">{info.full}</div>
+                  <div className="issue-list-meta">
+                    <span className="issue-list-short">{info.short}</span>
+                    {fb.line_range && <span className="issue-list-line">· Line {fb.line_range}</span>}
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {clean.length > 0 && (
+          <div className="issue-panel-footer">
+            <button className="clean-section-toggle" onClick={() => setShowCleanDetails(!showCleanDetails)}>
+              {clean.length} other check{clean.length > 1 ? "s" : ""} {showCleanDetails ? "▴" : "▾"}
+            </button>
+            {showCleanDetails && (
+              <div className="clean-details" style={{ marginTop: 4 }}>
+                {clean
+                  .map((p) => ({ p, na: isNotApplicable(getFeedbackObj(p).reason || "") }))
+                  .sort((a, b) => Number(a.na) - Number(b.na))
+                  .map(({ p, na }) => {
+                    const info = PATTERN_INFO[p];
+                    return (
+                      <div key={p} className="clean-detail-item">
+                        <div className="clean-detail-head">
+                          <span className="clean-detail-name">
+                            <span className={`clean-detail-icon ${na ? "na" : "passed"}`}>
+                              {na ? <Minus size={12} /> : <Check size={12} />}
+                            </span>
+                            {info.full} <span className="clean-detail-short">{info.short}</span>
+                          </span>
+                          <span className={`clean-detail-tag ${na ? "na" : "passed"}`}>
+                            {na ? "N/A" : "Passed"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
+      </aside>
+
+      {/* ─── Right: code + selected fix ─── */}
+      <main className="issue-main">
+        {result.file_content && (
+          <div className="issue-code">
+            <div className="issue-code-header">
+              <span className="code-viewer-filename">{result.file_name}</span>
+              <span style={{ color: "var(--danger)", fontSize: 11, fontWeight: 500 }}>
+                {highlightLines.size} line{highlightLines.size > 1 ? "s" : ""} flagged
+              </span>
+            </div>
+            <CodeBlock
+              code={result.file_content}
+              highlightLines={highlightLines}
+              focusLine={focusLine}
+            />
+          </div>
+        )}
+
+        {selectedFb && (
+          <div className="issue-fix-panel">
+            <div className="issue-fix-header">
+              <span className="issue-fix-tag">{PATTERN_INFO[selected!].short}</span>
+              <h4 className="issue-fix-title">{PATTERN_INFO[selected!].full}</h4>
+              {selectedFb.line_range && (
+                <span className="issue-fix-line">Line {selectedFb.line_range}</span>
+              )}
+            </div>
+
+            {selectedFb.reason && (
+              <div className="issue-fix-section">
+                <div className="issue-fix-section-label">Why it's a problem</div>
+                <p className="issue-fix-section-text">{selectedFb.reason}</p>
+              </div>
+            )}
+
+            {selectedFb.suggested_fix ? (
+              <div className="issue-fix-section issue-fix-highlight">
+                <div className="issue-fix-section-label">Suggested fix</div>
+                <p className="issue-fix-section-text">{selectedFb.suggested_fix}</p>
+              </div>
+            ) : (
+              <p style={{ fontSize: 12, color: "var(--fg-tertiary)", fontStyle: "italic", marginTop: 8 }}>
+                No fix suggestion available (run from older prompt version).
+              </p>
+            )}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
 
@@ -166,6 +631,19 @@ export default function RunDetail() {
     return () => { active = false; clearInterval(timer); };
   }, [runId]);
 
+  // Note: no auto-select — user clicks matrix row to open drawer
+
+  // Close drawer on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && expandedRows.size > 0) {
+        setExpandedRows(new Set());
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expandedRows.size]);
+
   if (loading)
     return (
       <div className="page">
@@ -191,8 +669,33 @@ export default function RunDetail() {
   const doneCount = findings.filter((f) => f.status === "Done").length;
   const totalCount = findings.length;
   const issueCount = findings.reduce((sum, f) => sum + getFileIssues(f).length, 0);
-  const filesWithIssues = findings.filter((f) => getFileIssues(f).length > 0).length;
   const backTo = run.project_id ? `/projects/${run.project_id}` : "/";
+
+  // Classify each check: Issue / Passed / N/A (based on reason text heuristic)
+  function classifyCheck(reason: string): "passed" | "na" {
+    const r = reason.toLowerCase();
+    if (
+      r.includes("not present") || r.includes("no ondraw") ||
+      r.includes("no asynctask") || r.includes("does not use") ||
+      r.includes("not an activity") || r.includes("does not require") ||
+      r.includes("no hashmap") || r.includes("not applicable") ||
+      r.includes("no object allocation") || r.includes("not a")
+    ) return "na";
+    return "passed";
+  }
+
+  let passedCount = 0;
+  let naCount = 0;
+  findings.forEach((f) => {
+    PATTERNS.forEach((p) => {
+      if (f[p] === "No") {
+        const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
+        const reason = typeof raw === "object" && raw !== null ? (raw as any).reason || "" : String(raw || "");
+        if (classifyCheck(reason) === "na") naCount++;
+        else passedCount++;
+      }
+    });
+  });
 
   async function handleDelete() {
     try { await deleteRun(run!.id); navigate(backTo); } catch {}
@@ -219,7 +722,6 @@ export default function RunDetail() {
 
   return (
     <div className="page">
-      {/* Breadcrumb */}
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Projects</Link>
         <span className="breadcrumb-sep">/</span>
@@ -229,7 +731,21 @@ export default function RunDetail() {
       </nav>
 
       <div className="page-header">
-        <h2>Run #{run.id}</h2>
+        <div>
+          <h2>Run #{run.id}</h2>
+          <div className="run-meta-inline" style={{ marginTop: 4, marginBottom: 0 }}>
+            <span>{run.source_type === "repo" ? "GitHub" : "File Upload"}</span>
+            <span className="meta-sep">·</span>
+            <span>{doneCount}/{totalCount} files</span>
+            <span className="meta-sep">·</span>
+            <span className="time-relative" title={new Date(run.created_at).toLocaleString()}>
+              {relativeTime(run.created_at)}
+            </span>
+            {run.description && (
+              <><span className="meta-sep">·</span><span style={{ color: "var(--fg-tertiary)" }}>{run.description}</span></>
+            )}
+          </div>
+        </div>
         <div className="header-actions">
           {(run.status === "In-Progress" || run.status === "Pending") && (
             <button className="btn outline btn-sm" onClick={async () => { await cancelRun(run.id); window.location.reload(); }}>
@@ -246,45 +762,38 @@ export default function RunDetail() {
               <Download size={14} /><span>Export</span>
             </button>
           )}
-          <button className="btn outline btn-sm danger-text" onClick={() => setConfirmDelete(true)}>
-            <Trash2 size={14} /><span>Delete</span>
+          <div style={{ width: 8 }} />
+          <button className="icon-btn-danger" style={{ opacity: 1 }} onClick={() => setConfirmDelete(true)} title="Delete run" aria-label="Delete run">
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
 
-      {/* Compact meta */}
-      <div className="run-meta-inline">
-        <span>{run.source_type === "repo" ? "GitHub" : "File Upload"}</span>
-        <span className="meta-sep">·</span>
-        <span className={`badge ${run.status === "Done" ? "done" : run.status === "In-Progress" ? "progress" : run.status === "Failed" ? "failed" : "pending"}`}>
-          {run.status}
-        </span>
-        <span className="meta-sep">·</span>
-        <span>{doneCount}/{totalCount} files</span>
-        <span className="meta-sep">·</span>
-        <span className="time-relative" title={new Date(run.created_at).toLocaleString()}>
-          {relativeTime(run.created_at)}
-        </span>
-        {run.description && (
-          <>
-            <span className="meta-sep">·</span>
-            <span style={{ color: "var(--fg-tertiary)" }}>{run.description}</span>
-          </>
-        )}
-      </div>
-
       {/* Progress bar (only while running) */}
       {run.status !== "Done" && totalCount > 0 && (
-        <div className="progress-bar-wrapper">
+        <div className="progress-bar-wrapper" style={{ marginTop: 16 }}>
           <div className="progress-bar-fill" style={{ width: `${(doneCount / totalCount) * 100}%` }} />
         </div>
       )}
 
-      {/* Summary — only show when issues found */}
-      {run.status === "Done" && issueCount > 0 && (
-        <div className="summary-banner has-issues">
-          <AlertTriangle size={16} />
-          <span><strong>{issueCount} issue{issueCount > 1 ? "s" : ""}</strong> in {filesWithIssues} of {totalCount} file{totalCount > 1 ? "s" : ""}</span>
+      {/* ─── Conclusion banner (primary headline, not 3 equal-weight stats) ─── */}
+      {run.status === "Done" && totalCount > 0 && (
+        <div className={`conclusion-banner ${issueCount > 0 ? "has-issues" : "clean"}`}>
+          <div className="conclusion-icon">
+            {issueCount > 0 ? <AlertTriangle size={22} /> : <CheckCircle2 size={22} />}
+          </div>
+          <div className="conclusion-content">
+            <h3 className="conclusion-title">
+              {issueCount > 0
+                ? `${issueCount} issue${issueCount > 1 ? "s" : ""} found`
+                : "All checks passed"}
+            </h3>
+            <p className="conclusion-sub">
+              {totalCount} file{totalCount > 1 ? "s" : ""} scanned ·{" "}
+              <span className="conclusion-stat-passed">{passedCount} passed</span> ·{" "}
+              <span className="conclusion-stat-na">{naCount} not applicable</span>
+            </p>
+          </div>
         </div>
       )}
 
@@ -302,87 +811,11 @@ export default function RunDetail() {
           </p>
         </div>
       ) : (
-        <>
-          {/* Filters */}
-          <div className="table-actions">
-            {issueCount > 0 && (
-              <label className="toggle-label">
-                <input type="checkbox" checked={issuesOnly}
-                  onChange={(e) => setIssuesOnly(e.target.checked)} />
-                <span>Issues only</span>
-              </label>
-            )}
-            <div style={{ flex: 1 }} />
-          </div>
-
-          {/* Results table — simplified */}
-          <div className="card table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 32 }}>#</th>
-                  <th>File</th>
-                  <th>Status</th>
-                  <th>Result</th>
-                  <th style={{ width: 32 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayFindings.map((f, idx) => {
-                  const issues = getFileIssues(f);
-                  const checked = getFileChecked(f);
-                  const hasIssue = issues.length > 0;
-
-                  const isExpandable = hasIssue || f.status !== "Done";
-
-                  return (
-                    <React.Fragment key={f.id}>
-                      <motion.tr
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }}
-                        className={`${isExpandable ? "clickable-row" : ""} ${expandedRows.has(f.id) ? "expanded" : ""}`}
-                        onClick={isExpandable ? () => toggleRow(f.id) : undefined}
-                        role={isExpandable ? "button" : undefined}
-                        aria-expanded={isExpandable ? expandedRows.has(f.id) : undefined}
-                        aria-label={isExpandable ? `Toggle details for ${f.file_name.split("/").pop()}` : undefined}
-                        tabIndex={isExpandable ? 0 : undefined}
-                        onKeyDown={isExpandable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleRow(f.id); } } : undefined}
-                      >
-                        <td className="id-cell">{idx + 1}</td>
-                        <td className="file-cell" title={f.file_name}>{f.file_name.split("/").pop()}</td>
-                        <td>
-                          {f.status === "Done"
-                            ? <span className="badge done">Done</span>
-                            : f.status === "Analyzing"
-                            ? <span className="badge progress">Analyzing</span>
-                            : <span className="badge pending">Pending</span>
-                          }
-                        </td>
-                        <td>
-                          {f.status !== "Done" ? (
-                            <span style={{ color: "var(--fg-disabled)" }}><Minus size={14} /></span>
-                          ) : hasIssue ? (
-                            <span style={{ color: "var(--danger)", fontWeight: 500, fontSize: 13 }}>
-                              <AlertTriangle size={13} style={{ verticalAlign: -2, marginRight: 3 }} />
-                              {issues.length} issue{issues.length > 1 ? "s" : ""}: {issues.join(", ")}
-                            </span>
-                          ) : (
-                            <span style={{ color: "var(--fg-tertiary)", fontSize: 13 }}>
-                              {checked}/{checked} passed
-                            </span>
-                          )}
-                        </td>
-                        <td className="expand-cell">
-                          {isExpandable && (expandedRows.has(f.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
-                        </td>
-                      </motion.tr>
-                      {expandedRows.has(f.id) && <FeedbackRow result={f} />}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </>
+        <MatrixView
+          findings={displayFindings}
+          selectedFinding={null}
+          onSelectCell={() => {}}
+        />
       )}
 
       <ConfirmDialog

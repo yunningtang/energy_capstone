@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import os
@@ -299,32 +300,76 @@ class TaskManager:
     # --- Task processing ---
 
     async def process_task(self, task_id: int) -> None:
-        with get_db_session() as db:
-            task = db.get(Task, task_id)
-            if not task:
+        failed_files = 0
+        total_files = 0
+        try:
+            with get_db_session() as db:
+                task = db.get(Task, task_id)
+                if not task:
+                    return
+                source_type = task.source_type
+
+            if source_type == "repo":
+                t = self.get_task(task_id)
+                if t:
+                    try:
+                        await self.download_repo(t)
+                    except Exception as exc:
+                        self._set_task_failed(task_id, f"Repo download failed: {exc}")
+                        return
+
+            results = self.get_results(task_id)
+            if not results:
+                self._set_task_status(task_id, "Done")
                 return
-            source_type = task.source_type
 
-        if source_type == "repo":
-            t = self.get_task(task_id)
-            if t:
-                await self.download_repo(t)
+            total_files = len(results)
 
-        results = self.get_results(task_id)
-        if not results:
-            self._set_task_status(task_id, "Done")
-            return
+            # Filter out already-done files (for retry scenarios)
+            pending_results = [rd for rd in results if rd.status != "Done"]
 
-        for rd in results:
+            # Concurrency-limited parallel processing
+            CONCURRENCY = 5
+            sem = asyncio.Semaphore(CONCURRENCY)
+
+            async def process_one(rd):
+                nonlocal failed_files
+                if task_id in self._cancelled:
+                    return
+                async with sem:
+                    if task_id in self._cancelled:
+                        return
+                    try:
+                        await self._process_file(rd.id, rd.file_content or "")
+                    except Exception:
+                        failed_files += 1
+                        self._update_result_status(rd.id, "Failed")
+
+            await asyncio.gather(*(process_one(rd) for rd in pending_results))
+
             if task_id in self._cancelled:
                 self._cancelled.discard(task_id)
-                return  # Stop processing, keep partial results
-            if rd.status == "Done":
-                continue  # Skip already processed (for retry)
-            await self._process_file(rd.id, rd.file_content or "")
+                return
 
-        self._set_task_status(task_id, "Done")
-        self._cleanup_folder(task_id)
+            # Classify final status
+            if failed_files == 0:
+                self._set_task_status(task_id, "Done")
+            elif failed_files == total_files:
+                self._set_task_failed(task_id, f"All {total_files} files failed to analyze.")
+            else:
+                self._set_task_status(task_id, "Partial")
+
+            self._cleanup_folder(task_id)
+        except Exception as exc:
+            self._set_task_failed(task_id, f"Unexpected error: {exc}")
+
+    def _set_task_failed(self, task_id: int, message: str) -> None:
+        with get_db_session() as db:
+            task = db.get(Task, task_id)
+            if task:
+                task.status = "Failed"
+                task.error_message = message[:500]
+                db.commit()
 
     async def analyze_code(
         self, code: str, patterns: list[str] | None = None
@@ -351,25 +396,46 @@ class TaskManager:
         return results
 
     async def _process_file(self, result_id: int, code: str) -> None:
+        """
+        Per-file pipeline:
+        1. Keyword prefilter — skip LLM for patterns that can't apply
+        2. Single batch prompt for remaining patterns (5x fewer calls)
+        3. Persist answers + structured feedback
+        """
+        from llm_service import prefilter_patterns  # local import to avoid cycle
+
         self._update_result_status(result_id, "Analyzing")
 
-        reasons: dict[str, str] = {}
-        for pattern in PATTERNS:
-            try:
-                resp = await self.llm.check_pattern(code, pattern)
-                answer_raw = str(resp.get("answer", "No")).strip().lower()
-                answer = "Yes" if answer_raw in ("yes", "y", "true") else "No"
-                fb_entry: dict[str, Any] = {"reason": str(resp.get("reason", ""))}
-                if resp.get("line_range"):
-                    fb_entry["line_range"] = str(resp["line_range"])
-                if resp.get("suggested_fix"):
-                    fb_entry["suggested_fix"] = str(resp["suggested_fix"])
-                reasons[pattern] = fb_entry
-            except Exception:
-                answer = "No"
-                reasons[pattern] = {"reason": "analysis error"}
-            self._update_result_pattern(result_id, pattern, answer)
+        reasons: dict[str, Any] = {}
+        answers: dict[str, str] = {p: "No" for p in PATTERNS}
 
+        # Step 1: keyword prefilter
+        to_check, auto_no = prefilter_patterns(code)
+        for p, reason in auto_no.items():
+            reasons[p] = {"reason": reason}
+            answers[p] = "No"
+
+        # Step 2: batch LLM call for remaining patterns
+        if to_check:
+            try:
+                batch = await self.llm.check_all_patterns(code, to_check)
+                for p in to_check:
+                    entry = batch.get(p, {})
+                    answer_raw = str(entry.get("answer", "No")).strip().lower()
+                    answers[p] = "Yes" if answer_raw in ("yes", "y", "true") else "No"
+                    fb_entry: dict[str, Any] = {"reason": str(entry.get("reason", ""))}
+                    if entry.get("line_range"):
+                        fb_entry["line_range"] = str(entry["line_range"])
+                    if entry.get("suggested_fix"):
+                        fb_entry["suggested_fix"] = str(entry["suggested_fix"])
+                    reasons[p] = fb_entry
+            except Exception as exc:
+                for p in to_check:
+                    reasons[p] = {"reason": f"analysis error: {exc}"}
+
+        # Step 3: persist
+        for p in PATTERNS:
+            self._update_result_pattern(result_id, p, answers[p])
         self._update_result_feedback(result_id, json.dumps(reasons))
         self._update_result_status(result_id, "Done")
 
