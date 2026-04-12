@@ -1191,39 +1191,25 @@ body {
 
 .run-list-item {
   display: grid;
-  grid-template-columns: 4px auto minmax(0, 1fr) 72px 90px 80px 32px;
+  grid-template-columns: auto minmax(0, 1fr) 72px 90px 80px 32px;
   align-items: center;
   gap: 14px;
-  padding: 10px 16px 10px 0;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-light);
   cursor: pointer;
   transition: background 0.12s;
-  position: relative;
 }
 
 .run-list-item:last-child { border-bottom: none; }
 .run-list-item:hover { background: var(--bg-subtle); }
 
-/* Left status bar (color-coded) */
-.run-list-bar {
-  width: 4px;
-  height: 100%;
-  align-self: stretch;
-  grid-column: 1;
-}
-
-.run-status-done .run-list-bar { background: var(--success); }
-.run-status-inprogress .run-list-bar { background: var(--info); animation: pendingPulse 1.6s ease-in-out infinite; }
-.run-status-pending .run-list-bar { background: var(--warning); }
-.run-status-failed .run-list-bar { background: var(--danger); }
-.run-status-partial .run-list-bar { background: var(--warning); }
-.run-status-cancelled .run-list-bar { background: var(--fg-tertiary); }
+/* No colored bar. Status is expressed by the right-aligned badge only. */
+.run-list-bar { display: none; }
 
 .run-list-id {
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
   color: var(--fg-tertiary);
-  padding-left: 12px;
   min-width: 40px;
 }
 
@@ -1256,11 +1242,67 @@ body {
 .run-list-item:hover .run-list-delete { opacity: 1; }
 
 @media (max-width: 768px) {
-  .run-list-item { grid-template-columns: 4px auto minmax(0, 1fr) 90px; }
+  .run-list-item { grid-template-columns: auto minmax(0, 1fr) 90px; }
   .run-list-source, .run-list-time, .run-list-delete { display: none; }
 }
 
-/* ── Run meta inline ─────────────────────────────────── */
+/* ── Run meta row (left content group + right timestamp) ── */
+.run-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.run-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.run-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  line-height: 1;
+}
+
+.run-meta-scale {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.run-meta-desc {
+  font-size: 12px;
+  color: var(--fg-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 360px;
+}
+
+.run-meta-time {
+  font-size: 12px;
+  color: var(--fg-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Run meta inline (legacy) ────────────────────────── */
 .run-meta-inline {
   display: flex;
   flex-wrap: wrap;
@@ -1320,20 +1362,21 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--bg-subtle);
 }
 
+/* Clean: solid dark circle + white check. Confident, no hollow ring look. */
 .conclusion-banner.clean .conclusion-icon {
-  color: var(--fg);
-  background: var(--bg-subtle);
+  background: var(--fg);
+  color: var(--bg);
 }
 
+/* Issues: solid red circle + white icon. */
 .conclusion-banner.has-issues .conclusion-icon {
-  color: var(--danger);
-  background: var(--danger-light);
+  background: var(--danger);
+  color: #fff;
 }
 
 .conclusion-content {
@@ -1730,20 +1773,23 @@ body {
   transition: background 0.12s;
 }
 
+.matrix-table tbody tr { border-bottom: 1px solid var(--border-light); }
+.matrix-table tbody tr:last-child { border-bottom: none; }
+
 .matrix-file-cell {
-  padding: 12px 20px;
+  padding: 16px 20px;
   font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--fg);
   white-space: nowrap;
-  max-width: 280px;
+  max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .matrix-cell {
   text-align: center;
-  padding: 10px 8px;
+  padding: 16px 8px;
   vertical-align: middle;
 }
 
@@ -1786,7 +1832,7 @@ body {
 }
 
 .matrix-status-cell {
-  padding: 12px 20px;
+  padding: 16px 20px;
   font-size: 12px;
   white-space: nowrap;
 }

@@ -736,24 +736,22 @@ export default function RunDetail() {
         <Link to="/">Projects</Link>
         <span className="breadcrumb-sep">/</span>
         <Link to={backTo}>{projectName}</Link>
-        <span className="breadcrumb-sep">/</span>
-        <span>Run #{run.id}</span>
       </nav>
 
       <div className="page-header">
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <h2>Run #{run.id}</h2>
-          <div className="run-meta-inline" style={{ marginTop: 4, marginBottom: 0 }}>
-            <span>{run.source_type === "repo" ? "GitHub" : "File Upload"}</span>
-            <span className="meta-sep">·</span>
-            <span>{doneCount}/{totalCount} files</span>
-            <span className="meta-sep">·</span>
-            <span className="time-relative" title={new Date(run.created_at).toLocaleString()}>
+          <div className="run-meta-row">
+            <div className="run-meta-left">
+              <span className="run-meta-badge">{run.source_type === "repo" ? "GitHub" : "Upload"}</span>
+              <span className="run-meta-scale">{doneCount}/{totalCount} {totalCount === 1 ? "file" : "files"}</span>
+              {run.description && (
+                <span className="run-meta-desc">{run.description}</span>
+              )}
+            </div>
+            <span className="run-meta-time" title={new Date(run.created_at).toLocaleString()}>
               {relativeTime(run.created_at)}
             </span>
-            {run.description && (
-              <><span className="meta-sep">·</span><span style={{ color: "var(--fg-tertiary)" }}>{run.description}</span></>
-            )}
           </div>
         </div>
         <div className="header-actions">
