@@ -14,9 +14,9 @@ build/
 # Environment files
 .env
 *.env
-ecocode-capstone/backend/.env*
-!ecocode-capstone/backend/.env.example
-!ecocode-capstone/.env.example
+backend/.env*
+!backend/.env.example
+!.env.example
 
 # Database
 *.db
