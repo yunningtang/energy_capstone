@@ -5,6 +5,10 @@ Pairs the **DynAMICS** research dataset (events, results, manual validation) wit
 
 **Repo:** [github.com/yunningtang/energy_capstone](https://github.com/yunningtang/energy_capstone)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/yunningtang/energy_capstone)
+
+> One-click hosted demo on Render's free tier — provisions Postgres, FastAPI backend, and React frontend in ~5 minutes. After the build finishes, paste your Gemini or OpenAI API key into `ecocode-api → Environment` to enable analysis. Full walkthrough: [docs/deployment-guide.md](docs/deployment-guide.md#1--render-recommended-for-evaluators).
+
 ---
 
 ## What this project does
