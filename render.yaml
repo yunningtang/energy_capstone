@@ -17,10 +17,13 @@ databases:
 
 services:
   # ── Backend API ───────────────────────────────────────
+  # NOTE: Render removed explicit `plan: free` for web services in
+  # Blueprints. Omitting the field lets Render assign a default plan
+  # (shown in the preview step when you click Deploy); pick "Free" or
+  # "Starter" from the dropdown before applying.
   - type: web
     name: ecocode-api
     runtime: python
-    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -54,7 +57,6 @@ services:
   - type: web
     name: ecocode-frontend
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
