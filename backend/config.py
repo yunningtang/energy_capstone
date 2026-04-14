@@ -5,6 +5,7 @@ Configuration module. Loads settings from .env (backend/.env).
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -36,6 +37,27 @@ class Settings(BaseSettings):
 
     semgrep_bin: str = "semgrep"
     temp_repo_dir: str = "./temp_repos"
+
+    # Strip surrounding whitespace from every string-valued setting. Defends
+    # against API keys pasted from dashboards with trailing \n / spaces, which
+    # otherwise produce "Illegal header value" errors when sent in HTTP headers.
+    @field_validator(
+        "openai_api_key",
+        "gemini_api_key",
+        "ollama_base_url",
+        "ollama_model",
+        "openai_model",
+        "gemini_model",
+        "llm_provider",
+        "frontend_url",
+        "database_url",
+        mode="before",
+    )
+    @classmethod
+    def _strip_whitespace(cls, v):
+        if isinstance(v, str):
+            return v.strip()
+        return v
 
 
 @lru_cache
