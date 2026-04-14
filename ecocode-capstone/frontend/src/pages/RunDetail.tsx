@@ -708,11 +708,35 @@ export default function RunDetail() {
     URL.revokeObjectURL(url);
   }
   function exportCsv() {
-    const header = "file,status,dw,hmu,has,iod,nlmr\n";
-    const rows = findings.map((f) =>
-      `${f.file_name},${f.status},${f.dw || ""},${f.hmu || ""},${f.has || ""},${f.iod || ""},${f.nlmr || ""}`
-    ).join("\n");
-    download(`run-${run!.id}-results.csv`, header + rows, "text/csv");
+    // Per-pattern rows — one row per (file × pattern) so the structured
+    // finding fields (location, severity, confidence, fix description)
+    // have a place to live without nesting.
+    const cols = [
+      "file", "status", "pattern", "verdict", "severity", "confidence",
+      "line_range", "location_hint", "reason", "suggested_fix",
+    ];
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows: string[] = [cols.join(",")];
+    findings.forEach((f) => {
+      PATTERNS.forEach((p) => {
+        const verdict = f[p];
+        if (!verdict) return;
+        const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
+        const fb: any = typeof raw === "object" && raw !== null
+          ? raw
+          : raw ? { reason: String(raw) } : {};
+        rows.push([
+          f.file_name, f.status, PATTERN_INFO[p].short, verdict,
+          fb.severity || "", fb.confidence || "",
+          fb.line_range || "", fb.location_hint || "",
+          fb.reason || "", fb.suggested_fix || "",
+        ].map(escape).join(","));
+      });
+    });
+    download(`run-${run!.id}-results.csv`, rows.join("\n"), "text/csv");
   }
   function exportJson() {
     const payload = {
@@ -734,10 +758,29 @@ export default function RunDetail() {
       const lines = [`## ${f.file_name}\n`];
       issues.forEach(p => {
         const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
-        const fb = typeof raw === "object" && raw !== null ? raw as any : { reason: String(raw || "") };
-        lines.push(`### ${p.toUpperCase()}${fb.line_range ? ` (line ${fb.line_range})` : ""}\n`);
+        const fb: any = typeof raw === "object" && raw !== null
+          ? raw
+          : { reason: String(raw || "") };
+        const short = PATTERN_INFO[p].short;
+        const full = PATTERN_INFO[p].full;
+        const metaBits: string[] = [];
+        if (fb.severity) metaBits.push(fb.severity);
+        if (fb.confidence) metaBits.push(`${fb.confidence} confidence`);
+        if (fb.line_range) metaBits.push(`line ${fb.line_range}`);
+        const meta = metaBits.length > 0 ? ` — _${metaBits.join(" · ")}_` : "";
+        lines.push(`### ${short} · ${full}${meta}\n`);
+        if (fb.diagnosis_summary) lines.push(`**${fb.diagnosis_summary}**\n`);
         if (fb.reason) lines.push(fb.reason + "\n");
+        if (fb.location_hint) lines.push(`📍 ${fb.location_hint}\n`);
         if (fb.suggested_fix) lines.push(`**Fix:** ${fb.suggested_fix}\n`);
+        const snippet = fb.example_code || fb.fixed_snippet;
+        if (snippet) {
+          lines.push("```java");
+          lines.push(snippet);
+          lines.push("```");
+          lines.push("");
+        }
+        if (fb.fix_explanation) lines.push(`_${fb.fix_explanation}_\n`);
       });
       return lines.join("\n");
     }).join("\n\n---\n\n");

@@ -993,233 +993,8 @@ body {
   border-color: var(--c-border-base);
 }
 
-/* ── Finding card ──────────────────────────────────────── */
-.finding-card {
-  background: transparent;
-  border-radius: 0;
-  overflow: visible;
-}
-/* When embedded inside run-inspector, the inspector already provides the
-   outer card chrome — drop the card's own border/background. */
-.run-inspector .finding-card { border: none; }
-
-.fc-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--c-bg-muted);
-  flex-wrap: wrap;
-}
-
-.fc-head-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.fc-tag {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  padding: 3px 8px;
-  border-radius: 4px;
-  color: var(--c-text-secondary);
-  background: var(--c-bg-surface);
-  border: 1px solid var(--c-border-base);
-}
-
-.fc-pattern-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--c-text-primary);
-  margin: 0;
-}
-
-.fc-confidence {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 999px;
-  text-transform: capitalize;
-}
-.fc-confidence-high {
-  color: var(--c-green-fg, #0e7a3a);
-  background: rgba(46, 160, 67, 0.12);
-}
-.fc-confidence-medium {
-  color: var(--c-amber-fg, #9a6700);
-  background: rgba(217, 119, 6, 0.12);
-}
-.fc-confidence-low {
-  color: var(--c-text-secondary);
-  background: var(--c-bg-muted);
-}
-
-.fc-rules-link {
-  font-size: 12px;
-  color: var(--info);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.fc-rules-link:hover { text-decoration: underline; text-underline-offset: 3px; }
-
-.fc-section {
-  padding: 14px;
-  border-bottom: 1px solid var(--border-light);
-}
-.fc-section:last-child { border-bottom: none; }
-
-/* Fix section — visually distinct (green-tinted) so the eye goes red/amber
-   (problem) → green (solution). No colored left bar; the bg tint carries it. */
-.fc-section-fix {
-  background: rgba(16, 185, 120, 0.06);
-}
-[data-theme="dark"] .fc-section-fix {
-  background: rgba(46, 160, 67, 0.08);
-}
-.fc-section-fix .fc-section-label { color: #0e7a3a; }
-[data-theme="dark"] .fc-section-fix .fc-section-label { color: #7ee787; }
-
-.fc-section-label,
-.fc-section-label-row .fc-section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--c-text-secondary);
-  margin-bottom: 8px;
-}
-.fc-section-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-.fc-section-label-row .fc-section-label { margin-bottom: 0; }
-
-.fc-summary {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--c-text-primary);
-  margin: 0;
-}
-.fc-explanation {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--c-text-secondary);
-  margin: 8px 0 0;
-}
-
-.fc-fix-desc {
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--c-text-primary);
-  margin: 0 0 10px;
-}
-
-.fc-location {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 6px 10px;
-  margin-bottom: 10px;
-  font-size: 12px;
-  color: var(--c-text-secondary);
-  background: var(--c-bg-muted);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: 4px;
-}
-.fc-location-icon {
-  font-size: 13px;
-  color: var(--c-text-secondary);
-  line-height: 1;
-}
-.fc-op {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-.fc-op-insert  { color: #0e7a3a; background: rgba(46,160,67,0.12); }
-.fc-op-replace { color: #9a6700; background: rgba(217,119,6,0.12); }
-.fc-op-wrap    { color: #6e40c9; background: rgba(139,92,246,0.12); }
-
-.fc-location-anchor {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11.5px;
-  color: var(--info);
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-button.fc-location-anchor:hover { text-decoration: underline; text-underline-offset: 3px; }
-
-.fc-location-hint {
-  color: var(--c-text-secondary);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.fc-snippet {
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
-  font-size: 12.5px;
-  line-height: 1.55;
-  background: #0d1117;
-  color: #e6edf3;
-  border-radius: 6px;
-  padding: 10px 0;
-  margin: 0;
-  overflow-x: auto;
-  border: 1px solid #30363d;
-}
-.fc-snippet-line {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  align-items: start;
-  padding: 0 12px 0 0;
-}
-.fc-snippet-num {
-  color: #6e7681;
-  text-align: right;
-  padding-right: 12px;
-  font-variant-numeric: tabular-nums;
-  user-select: none;
-}
-.fc-snippet-content {
-  white-space: pre;
-  overflow-x: auto;
-}
-
-.fc-fix-note {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--c-text-secondary);
-  margin: 10px 0 0;
-  font-style: italic;
-}
-
-.fc-snippet::-webkit-scrollbar,
-.fc-snippet-content::-webkit-scrollbar { width: 8px; height: 8px; }
-.fc-snippet::-webkit-scrollbar-thumb,
-.fc-snippet-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
-.fc-snippet::-webkit-scrollbar-thumb:hover,
-.fc-snippet-content::-webkit-scrollbar-thumb:hover { background: #484f58; }
+/* (Removed dead .finding-card / .fc-* rules — superseded by InlineFindingCard
+   which uses .ifc-* classes. See App.css further down for the live styles.) */
 
 /* Small link-style button in the inspector to jump to the diff on the stage. */
 .run-inspector-show-diff {
@@ -4652,6 +4427,36 @@ pre *, code * {
   font-size: 13px;
   color: var(--muted);
   margin-bottom: 14px;
+}
+
+/* Info banner inside a Settings section — clarifies that browser-side
+   preferences don't reach the backend. Uses info-light background (no
+   coloured left bar per design). */
+.settings-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  background: var(--info-light);
+  border: 1px solid rgba(9, 105, 218, 0.25);
+  border-radius: var(--radius-xs);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--c-text-primary);
+}
+[data-theme="dark"] .settings-info-banner {
+  border-color: rgba(56, 139, 253, 0.35);
+}
+.settings-info-banner > svg { flex-shrink: 0; margin-top: 2px; color: var(--info); }
+.settings-info-banner code {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  padding: 1px 5px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 3px;
+  margin: 0 2px;
 }
 
 /* ── Settings: field row (inline label + input + actions) */

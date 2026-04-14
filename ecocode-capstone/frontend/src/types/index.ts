@@ -58,6 +58,11 @@ export interface PatternFeedback {
   fix_explanation?: string;
   severity?: "minor" | "major" | "critical";
   confidence?: "high" | "medium" | "low";
+  // Analysis-error signalling — when the LLM call failed or returned no
+  // verdict for this pattern, the verdict is stored as "NA" and this flag
+  // is set so the UI can distinguish "error" from genuine not-applicable.
+  error?: boolean;
+  source?: "prefilter" | "missing" | "llm_error";
 }
 
 export interface HealthInfo {

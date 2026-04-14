@@ -7,3 +7,7 @@ pydantic-settings==2.6.1
 python-dotenv==1.0.1
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.9
+
+# Runtime requirements (non-pip):
+#   - git CLI on PATH (task_manager calls `git clone --depth 1 ...` for repo runs)
+#   - (optional) semgrep CLI if SEMGREP_BIN is used

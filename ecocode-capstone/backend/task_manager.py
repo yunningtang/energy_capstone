@@ -35,11 +35,25 @@ class TaskManager:
         return True
 
     def retry_failed(self, task_id: int) -> list[int]:
-        """Re-queue failed/pending files in a task for reprocessing."""
+        """Re-queue failed/pending files in a task for reprocessing.
+        Resets each non-Done file result back to "Pending" and flips the
+        task status to "Pending" so `dequeue_pending` will re-pick it and
+        the background worker runs `process_task` on it again."""
         results = self.get_results(task_id)
         retry_ids = [r.id for r in results if r.status != "Done"]
-        if retry_ids:
-            self._set_task_status(task_id, "In-Progress")
+        if not retry_ids:
+            return []
+        with get_db_session() as db:
+            for rid in retry_ids:
+                rd = db.get(ResultDetail, rid)
+                if rd:
+                    rd.status = "Pending"
+            task = db.get(Task, task_id)
+            if task:
+                task.status = "Pending"
+                task.error_message = None
+            db.commit()
+        self._cancelled.discard(task_id)
         return retry_ids
 
     # --- Project CRUD ---
@@ -458,6 +472,17 @@ class TaskManager:
                 batch = await self.llm.check_all_patterns(sliced_code, to_check)
                 for p in to_check:
                     entry = batch.get(p, {})
+                    # Missing entry — the model didn't return a verdict for this
+                    # pattern. Mark "NA" with an explicit error flag rather than
+                    # silently defaulting to "No" (which would look like a pass).
+                    if not entry:
+                        answers[p] = "NA"
+                        reasons[p] = {
+                            "reason": "Analyzer did not return a verdict for this pattern.",
+                            "error": True,
+                            "source": "missing",
+                        }
+                        continue
                     answer_raw = str(entry.get("answer", "No")).strip().lower()
                     answers[p] = "Yes" if answer_raw in ("yes", "y", "true") else "No"
                     fb_entry: dict[str, Any] = {"reason": str(entry.get("reason", ""))}
@@ -475,8 +500,16 @@ class TaskManager:
                         fb_entry["anchor_line"] = entry["anchor_line"]
                     reasons[p] = fb_entry
             except Exception as exc:
+                # Batch-level failure — don't silently fall through to "No".
+                # Mark every affected pattern as "NA" with the error reason so
+                # the UI can surface that analysis didn't complete cleanly.
                 for p in to_check:
-                    reasons[p] = {"reason": f"analysis error: {exc}"}
+                    answers[p] = "NA"
+                    reasons[p] = {
+                        "reason": f"Analysis error: {exc}",
+                        "error": True,
+                        "source": "llm_error",
+                    }
 
         # Step 3: persist
         for p in PATTERNS:

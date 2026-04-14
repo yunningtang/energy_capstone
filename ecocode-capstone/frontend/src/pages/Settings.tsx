@@ -176,7 +176,13 @@ export default function SettingsPage() {
         changing for self-hosted deployments.
       </p>
 
-      {/* ═════════ LLM Providers (most users come here first) ═════════ */}
+      {/* ═════════ LLM Providers ═════════
+          NB: provider credentials are configured on the **backend** via
+          environment variables (see backend/.env.example). The fields on
+          this page persist to localStorage only and do NOT reach the
+          backend. That's deliberate — keys must not be posted across the
+          browser/backend boundary. The "Active" chip reflects whichever
+          provider the server chose from its own env.  */}
       <section className="settings-section-block">
         <header className="settings-section-header">
           <h3 className="section-title">AI Providers</h3>
@@ -189,7 +195,20 @@ export default function SettingsPage() {
             <StatusChip kind={llmOverall} />
           )}
         </header>
-        <p className="settings-section-desc">Connect at least one provider to run code analysis.</p>
+        <p className="settings-section-desc">
+          Connect at least one provider to run code analysis.
+        </p>
+        <div className="settings-info-banner" role="note">
+          <Lock size={12} />
+          <span>
+            <strong>Backend is configured via environment variables.</strong> Set
+            <code>LLM_PROVIDER</code>, <code>OPENAI_API_KEY</code>, <code>GEMINI_API_KEY</code>, or
+            <code>OLLAMA_BASE_URL</code> in <code>backend/.env</code> and restart the server.
+            The fields below are saved locally in your browser for convenience and
+            do not change the active provider. The "Active" chip above reflects the
+            server's real choice via <code>/api/health</code>.
+          </span>
+        </div>
 
         {/* ── Local ── */}
         <div className="settings-subgroup">
