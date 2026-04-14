@@ -461,9 +461,18 @@ class TaskManager:
                     answer_raw = str(entry.get("answer", "No")).strip().lower()
                     answers[p] = "Yes" if answer_raw in ("yes", "y", "true") else "No"
                     fb_entry: dict[str, Any] = {"reason": str(entry.get("reason", ""))}
-                    for field in ("line_range", "suggested_fix", "original_snippet", "fixed_snippet"):
+                    # String passthroughs (legacy + new structured fields)
+                    for field in (
+                        "line_range", "suggested_fix",
+                        "original_snippet", "fixed_snippet",
+                        "diagnosis_summary", "location_hint", "operation",
+                        "example_code", "fix_explanation",
+                        "severity", "confidence",
+                    ):
                         if entry.get(field):
                             fb_entry[field] = str(entry[field])
+                    if entry.get("anchor_line") is not None:
+                        fb_entry["anchor_line"] = entry["anchor_line"]
                     reasons[p] = fb_entry
             except Exception as exc:
                 for p in to_check:

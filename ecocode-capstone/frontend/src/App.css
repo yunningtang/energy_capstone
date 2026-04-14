@@ -119,62 +119,72 @@
   color-scheme: light;
 }
 
-/* ── Dark Mode ──────────────────────────────────────── */
+/* ── Dark Mode ── GitHub Primer dark palette ────────────
+   All tokens mapped to GitHub's published design-system values.
+   Reference: https://primer.style/design/foundations/color */
 [data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-elevated: #161616;
-  --bg-subtle: #111111;
-  --fg: #f2f2f2;
-  --fg-secondary: #bdbdbd;
-  --fg-tertiary: #767676;
-  --fg-disabled: #464646;
-  --card: #1c1c1c;
-  --border: #3d3d3d;
-  --border-light: #2a2a2a;
-  --muted: #949494;
-  --subtle: #767676;
+  /* canvas */
+  --bg: #0d1117;               /* canvas.default */
+  --bg-elevated: #161b22;      /* canvas.subtle / overlay */
+  --bg-subtle: #010409;        /* canvas.inset (deeper than default) */
+  --card: #161b22;
 
-  --primary: #ffffff;
-  --primary-hover: #e5e5e5;
-  --primary-light: rgba(255,255,255,0.08);
-  --primary-lighter: rgba(255,255,255,0.04);
+  /* fg */
+  --fg: #e6edf3;               /* fg.default */
+  --fg-secondary: #7d8590;     /* fg.muted */
+  --fg-tertiary: #6e7681;      /* fg.subtle */
+  --fg-disabled: #484f58;
+  --muted: #8b949e;
+  --subtle: #6e7681;
 
-  --accent: #5d79df;
-  --accent-hover: #7b93e8;
+  /* border */
+  --border: #30363d;           /* border.default */
+  --border-light: #21262d;     /* border.muted */
 
-  --danger: #eb524b;
-  --danger-hover: #f47670;
-  --danger-light: rgba(235,82,75,0.12);
-  --warning: #dab718;
-  --warning-light: rgba(218,183,24,0.12);
-  --info: #5d79df;
-  --info-light: rgba(93,121,223,0.12);
-  --success: #10b978;
-  --success-light: rgba(16,185,120,0.14);
+  /* neutral / primary — GitHub uses accent blue for primary actions */
+  --primary: #e6edf3;
+  --primary-hover: #ffffff;
+  --primary-light: rgba(110,118,129,0.15);
+  --primary-lighter: rgba(110,118,129,0.08);
 
-  --shadow-sm: rgba(0,0,0,0.3) 0px 1px 4px;
-  --shadow: rgba(0,0,0,0.4) 0px 4px 24px;
-  --shadow-md: rgba(0,0,0,0.5) 0px 8px 32px;
-  --shadow-lg: rgba(0,0,0,0.6) 0px 16px 48px;
+  /* accent */
+  --accent: #2f81f7;           /* accent.fg */
+  --accent-hover: #58a6ff;
 
-  --overlay-bg: rgba(0,0,0,0.6);
-  --danger-border: rgba(235,82,75,0.15);
-  --success-border: rgba(16,185,120,0.15);
+  /* functional colors — GitHub Primer */
+  --danger: #f85149;           /* danger.fg */
+  --danger-hover: #ff6a69;
+  --danger-light: rgba(248,81,73,0.15);   /* danger.subtle */
+  --warning: #d29922;          /* attention.fg */
+  --warning-light: rgba(187,128,9,0.15);  /* attention.subtle */
+  --info: #2f81f7;             /* accent.fg */
+  --info-light: rgba(56,139,253,0.15);    /* accent.subtle */
+  --success: #3fb950;          /* success.fg */
+  --success-light: rgba(46,160,67,0.15);  /* success.subtle */
 
-  /* Dark mode mapping for the canonical token system */
-  --c-bg-page:       #0a0a0a;
-  --c-bg-surface:    #161616;
-  --c-bg-muted:      #1f1f1f;
-  --c-bg-sunken:     #2a2a2a;
+  --shadow-sm: rgba(1,4,9,0.5) 0px 1px 4px;
+  --shadow: rgba(1,4,9,0.6) 0px 4px 24px;
+  --shadow-md: rgba(1,4,9,0.7) 0px 8px 32px;
+  --shadow-lg: rgba(1,4,9,0.8) 0px 16px 48px;
 
-  --c-border-subtle: rgba(255,255,255,0.06);
-  --c-border-base:   rgba(255,255,255,0.10);
-  --c-border-strong: rgba(255,255,255,0.18);
+  --overlay-bg: rgba(1,4,9,0.7);
+  --danger-border: rgba(248,81,73,0.30);
+  --success-border: rgba(46,160,67,0.30);
 
-  --c-text-primary:   #f2f2f2;
-  --c-text-secondary: #bdbdbd;
-  --c-text-tertiary:  #767676;
-  --c-text-disabled:  #464646;
+  /* Canonical token system — GitHub Primer dark */
+  --c-bg-page:       #0d1117;   /* canvas.default */
+  --c-bg-surface:    #161b22;   /* canvas.subtle */
+  --c-bg-muted:      #161b22;   /* header / muted surfaces */
+  --c-bg-sunken:     #010409;   /* canvas.inset */
+
+  --c-border-subtle: #21262d;   /* border.muted */
+  --c-border-base:   #30363d;   /* border.default */
+  --c-border-strong: #484f58;
+
+  --c-text-primary:   #e6edf3;  /* fg.default */
+  --c-text-secondary: #7d8590;  /* fg.muted */
+  --c-text-tertiary:  #6e7681;  /* fg.subtle */
+  --c-text-disabled:  #484f58;
 
   --c-red-fg:    #f87171;
   --c-red-bg:    rgba(248,113,113,0.10);
@@ -944,6 +954,272 @@ body {
   align-items: center;
   gap: 12px;
 }
+
+/* ── Fix-mode stage wrapper + pattern tabs ─────────────── */
+.run-stage-fix {
+  padding: 20px;
+  overflow: auto;
+  max-height: 720px;
+  background: var(--c-bg-base);
+}
+
+.run-stage-fix-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--c-bg-muted);
+}
+.run-stage-fix-tab {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--c-text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.run-stage-fix-tab:hover { color: var(--c-text-primary); background: var(--c-bg-surface); }
+.run-stage-fix-tab.active {
+  background: var(--c-bg-surface);
+  color: var(--c-text-primary);
+  border-color: var(--c-border-base);
+}
+
+/* ── Finding card ──────────────────────────────────────── */
+.finding-card {
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+}
+/* When embedded inside run-inspector, the inspector already provides the
+   outer card chrome — drop the card's own border/background. */
+.run-inspector .finding-card { border: none; }
+
+.fc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--c-bg-muted);
+  flex-wrap: wrap;
+}
+
+.fc-head-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.fc-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+}
+
+.fc-pattern-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  margin: 0;
+}
+
+.fc-confidence {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+.fc-confidence-high {
+  color: var(--c-green-fg, #0e7a3a);
+  background: rgba(46, 160, 67, 0.12);
+}
+.fc-confidence-medium {
+  color: var(--c-amber-fg, #9a6700);
+  background: rgba(217, 119, 6, 0.12);
+}
+.fc-confidence-low {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-muted);
+}
+
+.fc-rules-link {
+  font-size: 12px;
+  color: var(--info);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.fc-rules-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.fc-section {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+.fc-section:last-child { border-bottom: none; }
+
+/* Fix section — visually distinct (green-tinted) so the eye goes red/amber
+   (problem) → green (solution). No colored left bar; the bg tint carries it. */
+.fc-section-fix {
+  background: rgba(16, 185, 120, 0.06);
+}
+[data-theme="dark"] .fc-section-fix {
+  background: rgba(46, 160, 67, 0.08);
+}
+.fc-section-fix .fc-section-label { color: #0e7a3a; }
+[data-theme="dark"] .fc-section-fix .fc-section-label { color: #7ee787; }
+
+.fc-section-label,
+.fc-section-label-row .fc-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-text-secondary);
+  margin-bottom: 8px;
+}
+.fc-section-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.fc-section-label-row .fc-section-label { margin-bottom: 0; }
+
+.fc-summary {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--c-text-primary);
+  margin: 0;
+}
+.fc-explanation {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--c-text-secondary);
+  margin: 8px 0 0;
+}
+
+.fc-fix-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--c-text-primary);
+  margin: 0 0 10px;
+}
+
+.fc-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 4px;
+}
+.fc-location-icon {
+  font-size: 13px;
+  color: var(--c-text-secondary);
+  line-height: 1;
+}
+.fc-op {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.fc-op-insert  { color: #0e7a3a; background: rgba(46,160,67,0.12); }
+.fc-op-replace { color: #9a6700; background: rgba(217,119,6,0.12); }
+.fc-op-wrap    { color: #6e40c9; background: rgba(139,92,246,0.12); }
+
+.fc-location-anchor {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  color: var(--info);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+button.fc-location-anchor:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.fc-location-hint {
+  color: var(--c-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fc-snippet {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  background: #0d1117;
+  color: #e6edf3;
+  border-radius: 6px;
+  padding: 10px 0;
+  margin: 0;
+  overflow-x: auto;
+  border: 1px solid #30363d;
+}
+.fc-snippet-line {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: start;
+  padding: 0 12px 0 0;
+}
+.fc-snippet-num {
+  color: #6e7681;
+  text-align: right;
+  padding-right: 12px;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+.fc-snippet-content {
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.fc-fix-note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text-secondary);
+  margin: 10px 0 0;
+  font-style: italic;
+}
+
+.fc-snippet::-webkit-scrollbar,
+.fc-snippet-content::-webkit-scrollbar { width: 8px; height: 8px; }
+.fc-snippet::-webkit-scrollbar-thumb,
+.fc-snippet-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+.fc-snippet::-webkit-scrollbar-thumb:hover,
+.fc-snippet-content::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
 /* Small link-style button in the inspector to jump to the diff on the stage. */
 .run-inspector-show-diff {
@@ -2182,14 +2458,129 @@ body {
 .matrix-table tbody tr:last-child { border-bottom: none; }
 
 .matrix-file-cell {
-  padding: 16px 20px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 13px;
+  padding: 10px 16px;              /* 60→44px row height */
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12.5px;
   color: var(--fg);
+  max-width: 420px;
+  overflow: hidden;
+}
+/* Path display: dir muted, filename bold — reverse-prioritize
+   "what the file is" over "where in the tree it lives." */
+.matrix-file-path {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  max-width: 100%;
+  overflow: hidden;
   white-space: nowrap;
-  max-width: 320px;
+}
+.matrix-file-dir {
+  color: var(--c-text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
+  direction: rtl;                  /* ellipsize the LEFT side so filename is never cut */
+  text-align: left;
+  min-width: 0;
+  max-width: 260px;
+}
+.matrix-file-name {
+  color: var(--c-text-primary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.matrix-table-dense tbody td {
+  padding: 10px 12px;              /* dense rows for long lists */
+}
+.matrix-table-dense .matrix-cell { padding: 10px 8px; }
+.matrix-table-dense .matrix-status-cell { padding: 10px 12px; }
+
+/* Quiet-clean checkmark: just a faint ✓, no word "Clean" — cuts color
+   noise when 19 of 21 rows are green-text clean. */
+.matrix-status-clean-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-disabled);
+}
+
+/* Table filter chips (Issues / All) — segmented pill style */
+.table-filter-chips {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  gap: 2px;
+}
+.table-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--c-text-secondary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.table-filter-chip:hover { color: var(--c-text-primary); }
+.table-filter-chip.active {
+  background: var(--c-bg-surface);
+  color: var(--c-text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-weight: 600;
+}
+.table-filter-chip-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-text-tertiary);
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  padding: 0 6px;
+  min-width: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.table-filter-chip.active .table-filter-chip-count {
+  background: var(--c-bg-muted);
+}
+
+/* All-clean celebration — replaces the 21-rows-of-N/A noise */
+.all-clean-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+.all-clean-state > div:first-child + div,
+.all-clean-state .matrix-header-row {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.all-clean-icon {
+  display: inline-flex;
+  color: var(--c-green-fg);
+  margin-bottom: 10px;
+}
+.all-clean-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  margin: 0 0 6px;
+}
+.all-clean-sub {
+  font-size: 13px;
+  color: var(--c-text-secondary);
+  margin: 0;
 }
 
 .matrix-cell {
@@ -2890,9 +3281,35 @@ body {
 .code-block::-webkit-scrollbar-track { background: transparent; }
 .code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* ── CodeBlock: dark terminal theme (always, regardless of app theme) ── */
+/* ── CodeBlock: theme-aware GitHub Primer palette ────────
+   Light tokens set in :root below; dark tokens under [data-theme="dark"].
+   Code block now follows the app theme instead of being always-dark. */
+:root {
+  --code-bg:          #ffffff;           /* GitHub Light canvas */
+  --code-fg:          #1f2328;           /* fg.default */
+  --code-gutter-fg:   #8c959f;           /* fg.subtle */
+  --code-gutter-fg-hl:#1f2328;
+  --code-border:      #d0d7de;           /* border.default */
+  --code-scroll-thumb:#afb8c1;
+  --code-scroll-thumb-hover:#8c959f;
+  /* Highlight row tint in light mode — lighter than dark for contrast */
+  --code-hl-bg:       rgba(234,179,8,0.12);
+  --code-focus-bg:    rgba(191,137,0,0.18);
+}
+[data-theme="dark"] {
+  --code-bg:          #0d1117;           /* GitHub Dark canvas */
+  --code-fg:          #e6edf3;           /* fg.default */
+  --code-gutter-fg:   #6e7681;
+  --code-gutter-fg-hl:#e6edf3;
+  --code-border:      #30363d;           /* border.default */
+  --code-scroll-thumb:#30363d;
+  --code-scroll-thumb-hover:#484f58;
+  --code-hl-bg:       rgba(248,113,113,0.10);
+  --code-focus-bg:    rgba(244,63,94,0.22);
+}
+
 .code-block-wrapper {
-  background: #0d1117;           /* GitHub Dark */
+  background: var(--code-bg);
   border-radius: var(--radius-xs);
   overflow: hidden;
 }
@@ -2902,8 +3319,8 @@ body {
   padding: 12px 0;
   font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   font-size: 13px;
-  line-height: 1.55;             /* tighter — no more "bloated" look */
-  color: #e6edf3;                /* GitHub Dark fg */
+  line-height: 1.55;
+  color: var(--code-fg);
   max-height: 640px;
   overflow: auto;
   tab-size: 4;
@@ -2911,8 +3328,8 @@ body {
 
 .code-block-pre::-webkit-scrollbar { width: 8px; height: 8px; }
 .code-block-pre::-webkit-scrollbar-track { background: transparent; }
-.code-block-pre::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
-.code-block-pre::-webkit-scrollbar-thumb:hover { background: #484f58; }
+.code-block-pre::-webkit-scrollbar-thumb { background: var(--code-scroll-thumb); border-radius: 4px; }
+.code-block-pre::-webkit-scrollbar-thumb:hover { background: var(--code-scroll-thumb-hover); }
 
 /* Single-line rows; long lines scroll horizontally via .code-block-pre.
    No soft-wrap → line numbers always match visual rows 1:1. */
@@ -2928,7 +3345,7 @@ body {
 .code-line-num {
   flex-shrink: 0;
   min-width: 56px;
-  color: #484f58;
+  color: var(--code-gutter-fg);
   text-align: right;
   padding-right: 16px;
   user-select: none;
@@ -2946,21 +3363,64 @@ body {
 }
 
 .code-line-hl {
-  background: rgba(248,113,113,0.10);
-  /* No border-left — line-number color + pill tag carry the signal. */
+  background: var(--code-hl-bg);
 }
 
 .code-line-hl .code-line-num {
-  color: #f87171;
+  color: var(--danger);
   font-weight: 500;
 }
 
 .code-line-focus {
-  background: rgba(220,38,38,0.18) !important;
+  background: var(--code-focus-bg) !important;
   transition: background 0.3s;
 }
-[data-theme="dark"] .code-line-focus {
-  background: rgba(244,63,94,0.22) !important;
+
+/* ── Severity row tints — painted on the whole code-line so the eye
+       can scan for issues at a glance. No colored left bar (per design).
+       Uses GitHub Primer danger/attention subtle backgrounds. */
+.code-line-sev-critical { background: rgba(248, 81, 73, 0.12); }
+.code-line-sev-major    { background: rgba(251, 146, 60, 0.14); }
+.code-line-sev-minor    { background: rgba(210, 153, 34, 0.14); }
+.code-line-sev-critical .code-line-num { color: #cf222e; font-weight: 500; }
+.code-line-sev-major    .code-line-num { color: #bf3989; font-weight: 500; }
+.code-line-sev-minor    .code-line-num { color: #9a6700; font-weight: 500; }
+[data-theme="dark"] .code-line-sev-critical .code-line-num { color: #ff9b95; }
+[data-theme="dark"] .code-line-sev-major    .code-line-num { color: #ffa28b; }
+[data-theme="dark"] .code-line-sev-minor    .code-line-num { color: #e3b341; }
+
+/* ── Gutter dot on the line-number column — click opens inspector. ── */
+.code-line-gutter-dot {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--code-bg);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.code-line-gutter-dot:hover {
+  transform: translateY(-50%) scale(1.4);
+  box-shadow: 0 0 0 2px var(--code-bg), 0 0 0 5px var(--border-light);
+}
+.code-line-gutter-dot-critical { background: #f43f5e; }
+.code-line-gutter-dot-major    { background: #f97316; }
+.code-line-gutter-dot-minor    { background: #eab308; }
+
+/* ── Flash animation: triggered when the user clicks "line N" in the
+       inspector finding card. Pulses once over ~900ms then clears. */
+@keyframes code-line-flash {
+  0%   { background: rgba(59, 130, 246, 0.45); }
+  60%  { background: rgba(59, 130, 246, 0.22); }
+  100% { background: inherit; }
+}
+.code-line-flash {
+  animation: code-line-flash 0.9s ease-out;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -2973,7 +3433,9 @@ body {
   /* Balanced for actual Java line lengths (~60–90 chars at 13px mono needs
      ~650–720px).  Files narrow, code column takes the lion's share, inspector
      shrinkable down to 300px when viewport is tight. */
-  grid-template-columns: 180px minmax(480px, 1fr) minmax(300px, 340px);
+  --run-files-w: 180px;
+  --run-inspector-w: clamp(360px, 32vw, 420px);
+  grid-template-columns: var(--run-files-w) minmax(0, 1fr) var(--run-inspector-w);
   gap: 12px;
   margin-top: 16px;
   align-items: start;  /* all three columns start from the same top baseline */
@@ -2986,12 +3448,411 @@ body {
   grid-template-columns: minmax(480px, 1fr) minmax(300px, 340px);
 }
 
-/* Diff mode: stage takes full width. Diagnosis is condensed into a strip
-   above the diff grid, inside the stage itself. Matches Sentry/GitHub PR
-   resolution flow — the user has already read "why", now they're reviewing
-   the change. */
-.run-shell.run-shell-diff {
-  grid-template-columns: 1fr;
+/* Collapsible side panels — each reduces to a 40px rail so the code column
+   can breathe. Matches VS Code / GitHub Codespaces activity-bar pattern. */
+.run-shell.run-shell-files-collapsed      { --run-files-w: 40px; }
+.run-shell.run-shell-inspector-collapsed  { --run-inspector-w: 40px; }
+
+/* 2-col inline layout — files | code+cards. Replaces the old 3-col (files | code | inspector)
+   layout with a Copilot/GitHub-PR style where findings appear inline under the affected line. */
+.run-shell.run-shell-inline {
+  grid-template-columns: var(--run-files-w) minmax(0, 1fr);
+}
+.run-shell.run-shell-inline.run-shell-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Issue navigator bar — sits between the stage header and the code block,
+   shows one chip per issue with severity dot + line number. */
+.run-stage-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--c-bg-muted);
+  flex-wrap: wrap;
+}
+.run-stage-nav-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+.run-stage-nav-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.run-stage-nav-chip:hover {
+  border-color: var(--c-border-base);
+  color: var(--c-text-primary);
+}
+.run-stage-nav-chip.active {
+  background: var(--info-light);
+  border-color: var(--info);
+  color: var(--info);
+}
+.run-stage-nav-chip-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.run-stage-nav-chip-line {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  color: var(--c-text-tertiary);
+}
+
+/* ── Inline finding card (Copilot style) ─────────────────
+   Rendered inside the code flow right below the anchor line.
+   Collapsed: single-line pill with pattern + line + summary.
+   Expanded: diagnosis + location + suggested change + learn more. */
+.code-line-slot {
+  padding: 8px 16px 8px 72px;   /* left padding aligns body with code content (past the gutter) */
+  background: var(--c-bg-muted);
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.ifc {
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: "Inter", -apple-system, system-ui, sans-serif;
+  max-width: 760px;
+}
+
+.ifc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--c-bg-muted);
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--c-text-primary);
+}
+.ifc-head:hover { background: var(--c-bg-sunken); }
+.ifc-expanded .ifc-head { border-bottom: 1px solid var(--border-light); }
+
+.ifc-head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.ifc-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-secondary);
+  flex-shrink: 0;
+}
+
+.ifc-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+  color: var(--c-text-primary);
+}
+.ifc-head-pattern {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ifc-head-line {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--c-text-secondary);
+  padding: 1px 6px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 4px;
+}
+.ifc-head-summary {
+  font-size: 12.5px;
+  color: var(--c-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+.ifc-conf {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+.ifc-conf-high   { color: #1a7f37; background: rgba(46,160,67,0.12); }
+.ifc-conf-medium { color: #9a6700; background: rgba(217,119,6,0.12); }
+.ifc-conf-low    { color: #6e7781; background: var(--c-bg-sunken); }
+
+.ifc-body {
+  padding: 12px 14px;
+}
+
+.ifc-diag {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--c-text-primary);
+  margin: 0 0 10px;
+}
+
+.ifc-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-subtle);
+  padding: 5px 9px;
+  border-radius: 4px;
+  margin: 0 0 10px;
+  max-width: 100%;
+}
+.ifc-location-icon { color: var(--info); font-size: 12px; line-height: 1; }
+
+.ifc-fix-desc {
+  font-size: 13px;
+  color: var(--c-text-primary);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.ifc-change {
+  margin: 10px 0;
+  border: 1px solid var(--c-border-base);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--c-bg-surface);
+}
+.ifc-change-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--c-bg-muted);
+  border-bottom: 1px solid var(--border-light);
+}
+.ifc-change-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Suggested-change mini-diff — GitHub Primer red/green rows. */
+.ifc-diff {
+  margin: 0;
+  padding: 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  background: var(--c-bg-surface);
+  overflow-x: auto;
+}
+.ifc-diff-row {
+  display: grid;
+  grid-template-columns: 44px 22px 1fr;
+  align-items: start;
+  padding: 0;
+  white-space: pre;
+}
+.ifc-diff-row-remove { background: rgba(248, 81, 73, 0.10); }
+.ifc-diff-row-add    { background: rgba(46, 160, 67, 0.10); }
+[data-theme="dark"] .ifc-diff-row-remove { background: rgba(248, 81, 73, 0.15); }
+[data-theme="dark"] .ifc-diff-row-add    { background: rgba(46, 160, 67, 0.15); }
+
+.ifc-diff-num {
+  color: var(--c-text-tertiary);
+  text-align: right;
+  padding: 1px 10px 1px 6px;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+.ifc-diff-marker {
+  text-align: center;
+  padding: 1px 0;
+  font-weight: 700;
+  user-select: none;
+}
+.ifc-diff-row-remove .ifc-diff-marker { color: #cf222e; }
+.ifc-diff-row-add    .ifc-diff-marker { color: #1a7f37; }
+[data-theme="dark"] .ifc-diff-row-remove .ifc-diff-marker { color: #f85149; }
+[data-theme="dark"] .ifc-diff-row-add    .ifc-diff-marker { color: #3fb950; }
+.ifc-diff-content {
+  padding: 1px 12px 1px 4px;
+  min-width: 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.ifc-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+.ifc-learn-more {
+  font-size: 12px;
+  color: var(--info);
+  text-decoration: none;
+}
+.ifc-learn-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Collapsible-panel toggle button (shared by files + inspector) ── */
+.run-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.run-panel-toggle:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+/* ── Collapsed rails — 40px vertical stripes that keep a key signal
+       visible (file count / severity dots) so users remember the panel
+       exists and what's in it. Stretched to match code column height so
+       they don't look like orphaned pills floating on the side. */
+.run-files-rail,
+.run-inspector-rail {
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;           /* fill grid cell height (matches code column) */
+  min-height: 300px;
+}
+.run-files-rail-count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+}
+/* When the issues-only filter is active, highlight the count to signal
+   "you're seeing a filtered view" even though the panel is collapsed. */
+.run-files-rail-count.filtered {
+  color: var(--info);
+  background: var(--info-light);
+  border: 1px solid rgba(9, 105, 218, 0.25);
+}
+[data-theme="dark"] .run-files-rail-count.filtered {
+  border-color: rgba(56, 139, 253, 0.35);
+}
+
+/* ── Files panel header — filter toggle sits on its own row below the
+       title, so the 180px-wide panel has breathing room. ───────── */
+.run-files-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 6px;
+  margin-left: -6px;              /* negative offset so label aligns with "Files" above */
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+  width: fit-content;
+  white-space: nowrap;
+}
+.run-files-filter:hover { color: var(--c-text-primary); background: var(--bg-subtle); }
+.run-files-filter input {
+  margin: 0;
+  cursor: pointer;
+}
+.run-files-filter:has(input:checked) {
+  color: var(--info);
+  background: var(--info-light);
+}
+.run-inspector-rail-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.run-inspector-rail-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s;
+}
+.run-inspector-rail-dot:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+}
+.run-inspector-rail-dot.active {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+}
+
+/* Inspector header — tabs + collapse button in one row. */
+.run-inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 8px 8px;
+  border-bottom: 1px solid var(--border-light);
+  min-height: 40px;
+}
+/* When tabs exist they already have their own inline layout; ensure the
+   collapse button stays aligned to the right. */
+.run-inspector-header .run-inspector-tabs {
+  padding: 0;
+  border-bottom: none;
+  flex-wrap: wrap;
 }
 
 /* left: file list — intentionally NOT a card, to avoid nested cards. */
@@ -3008,12 +3869,19 @@ body {
   display: flex;
   flex-direction: column;
 }
+.run-files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
 .run-files-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--fg-secondary);
-  padding: 14px 16px;               /* matches stage header padding exactly */
-  border-bottom: 1px solid var(--border);
+  padding: 0;
   margin: 0;
 }
 .run-files-list {
@@ -3434,7 +4302,7 @@ body {
   gap: 4px;
   user-select: none;
   pointer-events: auto;
-  background: linear-gradient(90deg, transparent, #0d1117 24px);
+  background: linear-gradient(90deg, transparent, var(--code-bg) 24px);
   padding-left: 24px;               /* fade behind the pill so code doesn't touch */
 }
 .code-ann-tag {
@@ -3466,11 +4334,22 @@ body {
 }
 
 /* Java syntax tokens — tuned for the dark code-block background (GitHub Dark palette) */
-.tok-keyword    { color: #ff7b72; font-weight: 500; }
-.tok-type       { color: #79c0ff; }
-.tok-string     { color: #a5d6ff; }
-.tok-number     { color: #79c0ff; }
-.tok-comment    { color: #8b949e; font-style: normal; }
+/* Syntax tokens — GitHub Primer Light by default, Dark via theme override. */
+.tok-keyword    { color: #cf222e; font-weight: 500; }
+.tok-type       { color: #953800; }
+.tok-string     { color: #0a3069; }
+.tok-number     { color: #0550ae; }
+.tok-comment    { color: #6e7781; font-style: normal; }
+.tok-annotation { color: #8250df; }
+.tok-ident      { color: #1f2328; }
+
+[data-theme="dark"] .tok-keyword    { color: #ff7b72; }
+[data-theme="dark"] .tok-type       { color: #79c0ff; }
+[data-theme="dark"] .tok-string     { color: #a5d6ff; }
+[data-theme="dark"] .tok-number     { color: #79c0ff; }
+[data-theme="dark"] .tok-comment    { color: #8b949e; }
+[data-theme="dark"] .tok-annotation { color: #d2a8ff; }
+[data-theme="dark"] .tok-ident      { color: #e6edf3; }
 
 /* ══════════════════════════════════════════════════════════
    Hard override — every character inside a code block uses the
@@ -3504,10 +4383,6 @@ pre *, code * {
   font-weight: 600;
 }
 .hero-inline-link:hover { color: var(--c-text-primary); }
-.tok-annotation { color: #d2a8ff; }
-.tok-ident      { color: #e6edf3; }
-
-/* Code tokens are tuned once (for the always-dark code block); no theme override. */
 
 /* ── Feedback fix suggestion ─────────────────────────── */
 .feedback-line-ref {
@@ -3901,6 +4776,151 @@ pre *, code * {
 /* Backend form — no card wrapper; give the footer a top separator so
    buttons still feel grouped with the input above. */
 .settings-backend-form { margin-top: 8px; }
+/* ══════════════════════════════════════════════════════════
+   Dashboard (formerly "Projects list") — 方案 A
+   Solves "empty page" by elevating content:
+     header + stat tiles + Recent runs + Projects (sunk below)
+   ══════════════════════════════════════════════════════════ */
+.dashboard-header { align-items: flex-end; margin-bottom: 20px; }
+.dashboard-sub {
+  font-size: 13px;
+  color: var(--c-text-secondary);
+  margin-top: 4px;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 36px;
+}
+@media (max-width: 720px) { .dashboard-stats { grid-template-columns: repeat(2, 1fr); } }
+.dashboard-stat {
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+}
+.dashboard-stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-stat-value.has-issues { color: var(--c-red-fg); }
+.dashboard-stat-value.dashboard-stat-time { font-size: 18px; font-weight: 500; }
+.dashboard-stat-label {
+  font-size: 12px;
+  color: var(--c-text-tertiary);
+  margin-top: 6px;
+}
+
+.dashboard-section { margin-bottom: 32px; }
+.dashboard-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.dashboard-section-head .section-title { margin: 0; font-size: 15px; font-weight: 600; }
+.section-title-count {
+  color: var(--c-text-tertiary);
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.dashboard-empty {
+  border: 1px dashed var(--c-border-base);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  text-align: center;
+  background: var(--c-bg-muted);
+}
+
+/* Recent runs list */
+.dashboard-runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.dashboard-run-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 140px 120px 80px 20px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--c-border-subtle);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--c-text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.dashboard-runs li:last-child .dashboard-run-row { border-bottom: none; }
+.dashboard-run-row:hover { background: var(--c-bg-muted); }
+.dashboard-run-id {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--c-text-tertiary);
+  font-size: 12px;
+}
+.dashboard-run-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-primary);
+}
+.dashboard-run-project { color: var(--c-text-tertiary); font-size: 12px; }
+.dashboard-run-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.dashboard-run-status.clean { color: var(--c-green-fg); }
+.dashboard-run-status.has-issues { color: var(--c-red-fg); }
+.dashboard-run-status.pending { color: var(--c-text-secondary); }
+.dashboard-run-time {
+  color: var(--c-text-tertiary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.dashboard-run-chevron { color: var(--c-text-tertiary); }
+
+@media (max-width: 720px) {
+  .dashboard-run-row { grid-template-columns: 48px minmax(0,1fr) 80px 16px; gap: 10px; }
+  .dashboard-run-project, .dashboard-run-time { display: none; }
+}
+
+/* Projects grid — sunk to bottom, smaller than before since it's no longer the hero */
+.dashboard-projects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.inline-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--info);
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .settings-backend-footer {
   display: flex;
   align-items: center;
@@ -4176,6 +5196,7 @@ pre *, code * {
   margin-bottom: 12px;
 }
 .section-header-row-end { justify-content: flex-end; }
+.section-header-row-between { justify-content: space-between; }
 .section-header-title {
   font-size: 13px;
   color: var(--fg-secondary);
@@ -4477,6 +5498,12 @@ pre *, code * {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+}
+.table-toolbar-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .issues-only-check {
   display: inline-flex;

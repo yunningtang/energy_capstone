@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   FileWarning, CheckCircle2, Check, Minus, Clock, ChevronDown, ChevronUp,
-  AlertTriangle, Trash2, Loader2,
+  AlertTriangle, Trash2, Loader2, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { getFindings, getRun, deleteRun, getProject, cancelRun, retryRun } from "../services/api";
 import CodeBlock, { parseLineRange, LineAnnotation } from "../components/CodeBlock";
-import DiffView from "../components/DiffView";
+import InlineFindingCard from "../components/InlineFindingCard";
 import SeverityBadge from "../components/SeverityBadge";
 import ExportMenu from "../components/ExportMenu";
-import { Finding, Run } from "../types";
+import { Finding, PatternFeedback, Run } from "../types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { severityOf, countBySeverity } from "../lib/severity";
 
@@ -76,13 +76,18 @@ function TableView({
   findings,
   expandedRows,
   onToggleRow,
-  headerSlot,
+  totalFiles,
+  issuesOnly,
+  onToggleExpandAll,
 }: {
   findings: Finding[];
   expandedRows: Set<number>;
   onToggleRow: (id: number) => void;
-  headerSlot?: React.ReactNode;
+  totalFiles: number;
+  issuesOnly: boolean;
+  onToggleExpandAll?: () => void;
 }) {
+  const allExpanded = findings.length > 0 && findings.every((f) => expandedRows.has(f.id));
   const colTotals = PATTERNS.map((p) => findings.filter((f) => f[p] === "Yes").length);
 
   function cellState(f: Finding, p: typeof PATTERNS[number]): "issue" | "passed" | "na" | "pending" {
@@ -105,9 +110,15 @@ function TableView({
     <div className="matrix-wrapper">
       <div className="matrix-header-row">
         <span className="matrix-header-title">
-          Checks across {findings.length} file{findings.length > 1 ? "s" : ""}
+          {issuesOnly && findings.length !== totalFiles
+            ? `Showing ${findings.length} of ${totalFiles} files`
+            : `Checks across ${findings.length} file${findings.length > 1 ? "s" : ""}`}
         </span>
-        {headerSlot}
+        {onToggleExpandAll && findings.length > 1 && (
+          <button className="text-btn" onClick={onToggleExpandAll}>
+            {allExpanded ? "Collapse all" : "Expand all"}
+          </button>
+        )}
       </div>
 
       <div className="matrix-scroll">
@@ -256,12 +267,23 @@ function TableView({
    center: selected file's source with inline annotations
    right: selected issue's diagnosis + diff
    ────────────────────────────────────────────────────── */
-function InspectorView({ findings }: { findings: Finding[] }) {
+function InspectorView({
+  findings,
+  totalFiles,
+  issuesOnly,
+}: {
+  findings: Finding[];
+  totalFiles: number;
+  issuesOnly: boolean;
+}) {
   const filesWithIssues = findings.filter((f) => PATTERNS.some((p) => f[p] === "Yes"));
   const firstInteresting = filesWithIssues[0] ?? findings[0];
   const [selectedFileId, setSelectedFileId] = React.useState<number | null>(firstInteresting?.id ?? null);
   const [selectedPattern, setSelectedPattern] = React.useState<string | null>(null);
-  const [stageMode, setStageMode] = React.useState<"code" | "diff">("code");
+  const [flashLine, setFlashLine] = React.useState<number | null>(null);
+  const [filesCollapsed, setFilesCollapsed] = React.useState(false);
+  // Per-pattern expanded state for inline finding cards. Default: first pattern expanded.
+  const [expandedPatterns, setExpandedPatterns] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     if (selectedFileId == null && firstInteresting) setSelectedFileId(firstInteresting.id);
@@ -276,27 +298,21 @@ function InspectorView({ findings }: { findings: Finding[] }) {
 
   }, [selectedFileId]);
 
-  function getFeedback(f: Finding, p: string): {
-    reason?: string;
-    line_range?: string;
-    suggested_fix?: string;
-    original_snippet?: string;
-    fixed_snippet?: string;
-  } {
+  function getFeedback(f: Finding, p: string): PatternFeedback {
     const raw = f.feedback?.[p.toUpperCase()] || f.feedback?.[p];
-    if (typeof raw === "object" && raw !== null) return raw as any;
+    if (typeof raw === "object" && raw !== null) return raw as PatternFeedback;
     if (raw) return { reason: String(raw) };
     return {};
   }
 
-  // Build annotations map for the selected file
-  const { highlightLines, annotations } = React.useMemo(() => {
+  // Build annotation + severity maps so CodeBlock can paint row tints
+  // and render gutter dots on the line-number column.
+  const { highlightLines, annotations, lineSeverities, lineToPattern } = React.useMemo(() => {
     const hl = new Set<number>();
     const ann = new Map<number, LineAnnotation[]>();
-    if (!selectedFile) return { highlightLines: hl, annotations: ann };
-    // Anchor each issue to a single line — the first line of its range —
-    // so we don't paint the wavy underline + row tint over a 15-line block.
-    // The pill + gutter marker on the anchor line is enough signal.
+    const sevMap = new Map<number, "critical" | "major" | "minor">();
+    const patternMap = new Map<number, string>();
+    if (!selectedFile) return { highlightLines: hl, annotations: ann, lineSeverities: sevMap, lineToPattern: patternMap };
     fileIssues.forEach((p) => {
       const fb = getFeedback(selectedFile, p);
       const lines = Array.from(parseLineRange(fb.line_range)).sort((a, b) => a - b);
@@ -312,265 +328,246 @@ function InspectorView({ findings }: { findings: Finding[] }) {
         severity: sev === "critical" ? "error" : "warning",
       });
       ann.set(anchor, prev);
+      // Only set severity if nothing stronger is there already.
+      const rank = { critical: 3, major: 2, minor: 1 } as const;
+      const existing = sevMap.get(anchor);
+      if (!existing || rank[sev] > rank[existing]) sevMap.set(anchor, sev);
+      if (!patternMap.has(anchor)) patternMap.set(anchor, p);
     });
-    return { highlightLines: hl, annotations: ann };
+    return { highlightLines: hl, annotations: ann, lineSeverities: sevMap, lineToPattern: patternMap };
   }, [selectedFile, fileIssues]);
 
   const selectedFb = selectedFile && selectedPattern ? getFeedback(selectedFile, selectedPattern) : null;
   const focusLine = selectedFb?.line_range ? Array.from(parseLineRange(selectedFb.line_range))[0] : undefined;
-  const diffStart = React.useMemo(() => {
-    if (!selectedFb?.line_range) return undefined;
-    const m = /(\d+)/.exec(selectedFb.line_range);
-    return m ? parseInt(m[1], 10) : undefined;
-  }, [selectedFb?.line_range]);
+
+  // Flash a line for ~600ms — used when the user clicks "line N" in the card.
+  const flashLineOnce = React.useCallback((line: number) => {
+    setFlashLine(line);
+    const el = document.querySelector<HTMLElement>(`[data-line="${line}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => setFlashLine((cur) => (cur === line ? null : cur)), 900);
+  }, []);
+
+  // Clicking a gutter dot — select that pattern + expand its inline card + flash line.
+  const handleGutterClick = React.useCallback((line: number) => {
+    const p = lineToPattern.get(line);
+    if (p) {
+      setSelectedPattern(p);
+      setExpandedPatterns((prev) => new Set(prev).add(p));
+    }
+    flashLineOnce(line);
+  }, [lineToPattern, flashLineOnce]);
+
+  const togglePatternExpanded = React.useCallback((p: string) => {
+    setExpandedPatterns((prev) => {
+      const next = new Set(prev);
+      if (next.has(p)) next.delete(p);
+      else next.add(p);
+      return next;
+    });
+  }, []);
+
+  // When the selected file changes, default to expanding the first issue.
+  React.useEffect(() => {
+    if (fileIssues.length > 0) {
+      setExpandedPatterns(new Set([fileIssues[0]]));
+    } else {
+      setExpandedPatterns(new Set());
+    }
+  }, [selectedFileId]);
 
   if (findings.length === 0) return null;
 
   const singleFile = findings.length === 1;
 
+  // Map from anchor line number → pattern short — lets us render inline
+  // cards directly below the offending code line (GitHub PR review style).
+  const anchorPatterns = new Map<number, string[]>();
+  if (selectedFile) {
+    fileIssues.forEach((p) => {
+      const fb = getFeedback(selectedFile, p);
+      const lines = Array.from(parseLineRange(fb.line_range)).sort((a, b) => a - b);
+      const anchor = lines[0];
+      if (!anchor) return;
+      const prev = anchorPatterns.get(anchor) ?? [];
+      prev.push(p);
+      anchorPatterns.set(anchor, prev);
+    });
+  }
+
+  // For each anchor line, render one or more InlineFindingCard components.
+  const renderLineSlot = (line: number): React.ReactNode => {
+    const patterns = anchorPatterns.get(line);
+    if (!patterns || !selectedFile) return null;
+    const sourceLines = selectedFile.file_content?.split("\n") ?? [];
+    return patterns.map((p) => {
+      const fb = getFeedback(selectedFile, p);
+      const sev = severityOf(PATTERN_INFO[p].short);
+      const template = PATTERN_FIX_TEMPLATES[p];
+      const rangeLines = Array.from(parseLineRange(fb.line_range)).sort((a, b) => a - b);
+      // Grab the actual source lines covered by the issue for the "before" side.
+      const originalLines = rangeLines.length > 0
+        ? rangeLines.map((n) => sourceLines[n - 1] ?? "").filter((l) => l !== undefined)
+        : [sourceLines[line - 1] ?? ""];
+      return (
+        <InlineFindingCard
+          key={p}
+          patternShort={PATTERN_INFO[p].short}
+          patternFull={PATTERN_INFO[p].full}
+          severity={sev}
+          feedback={fb}
+          fallbackExample={template?.after}
+          lineRange={fb.line_range}
+          expanded={expandedPatterns.has(p)}
+          onToggle={() => {
+            setSelectedPattern(p);
+            togglePatternExpanded(p);
+          }}
+          originalLines={originalLines}
+        />
+      );
+    });
+  };
+
   return (
-    <div className={`run-shell ${singleFile ? "run-shell-single" : ""} ${stageMode === "diff" ? "run-shell-diff" : ""}`}>
-      {/* ── LEFT: file list (hidden when there's only one file — that column
-              is dead weight and steals ~180px from the code panel;
-              also hidden in diff mode because diff needs full width) ─── */}
-      {!singleFile && stageMode !== "diff" && (
-        <aside className="run-files">
-          <div className="run-files-label">Files ({findings.length})</div>
-          <ul className="run-files-list">
-            {findings.map((f) => {
-              const issues = PATTERNS.filter((p) => f[p] === "Yes");
-              const n = issues.length;
-              const active = f.id === selectedFileId;
-              const short = f.file_name.split("/").pop() || f.file_name;
-              return (
-                <li key={f.id}>
-                  <button
-                    className={`run-file-item ${active ? "active" : ""}`}
-                    onClick={() => setSelectedFileId(f.id)}
-                    title={f.file_name}
-                  >
-                    <span className="run-file-name">{short}</span>
-                    {n > 0 ? (
-                      <span className="run-file-count">{n}</span>
-                    ) : f.status === "Done" ? (
-                      <Check size={12} className="run-file-check" />
-                    ) : (
-                      <span className="run-file-pending">·</span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </aside>
+    <div className={[
+      "run-shell",
+      singleFile ? "run-shell-single" : "",
+      filesCollapsed ? "run-shell-files-collapsed" : "",
+      "run-shell-inline",     /* 2-col layout (files | code+inline cards) */
+    ].filter(Boolean).join(" ")}>
+      {/* ── LEFT: file list, collapsible ─── */}
+      {!singleFile && (
+        filesCollapsed ? (
+          <aside className="run-files run-files-rail">
+            <button
+              className="run-panel-toggle"
+              onClick={() => setFilesCollapsed(false)}
+              title="Show files"
+              aria-label="Show files"
+            >
+              <PanelLeftOpen size={14} />
+            </button>
+            <div
+              className={`run-files-rail-count ${issuesOnly ? "filtered" : ""}`}
+              title={issuesOnly ? `${findings.length} of ${totalFiles} (filtered)` : `${findings.length} files`}
+            >
+              {issuesOnly ? `${findings.length}/${totalFiles}` : findings.length}
+            </div>
+          </aside>
+        ) : (
+          <aside className="run-files">
+            <div className="run-files-header">
+              <span className="run-files-label">
+                Files ({issuesOnly ? `${findings.length} / ${totalFiles}` : findings.length})
+              </span>
+              <button
+                className="run-panel-toggle"
+                onClick={() => setFilesCollapsed(true)}
+                title="Collapse files"
+                aria-label="Collapse files"
+              >
+                <PanelLeftClose size={14} />
+              </button>
+            </div>
+            <ul className="run-files-list">
+              {findings.map((f) => {
+                const issues = PATTERNS.filter((p) => f[p] === "Yes");
+                const n = issues.length;
+                const active = f.id === selectedFileId;
+                const short = f.file_name.split("/").pop() || f.file_name;
+                return (
+                  <li key={f.id}>
+                    <button
+                      className={`run-file-item ${active ? "active" : ""}`}
+                      onClick={() => setSelectedFileId(f.id)}
+                      title={f.file_name}
+                    >
+                      <span className="run-file-name">{short}</span>
+                      {n > 0 ? (
+                        <span className="run-file-count">{n}</span>
+                      ) : f.status === "Done" ? (
+                        <Check size={12} className="run-file-check" />
+                      ) : (
+                        <span className="run-file-pending">·</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        )
       )}
 
-      {/* ── CENTER: stage ─ Code ⇄ Diff toggle ────────────── */}
+      {/* ── RIGHT: code with inline finding cards (Copilot/GitHub PR style) ─── */}
       <main className="run-stage">
-        {selectedFile ? (() => {
-          // Diff mode needs an active pattern and at least a template to show.
-          const activeFb = selectedPattern ? getFeedback(selectedFile, selectedPattern) : null;
-          const template = selectedPattern ? PATTERN_FIX_TEMPLATES[selectedPattern] : undefined;
-          const diffAfter = activeFb?.fixed_snippet ?? template?.after ?? "";
-          const diffBefore = activeFb?.original_snippet ?? (activeFb?.fixed_snippet ? "" : template?.before ?? "");
-          const isTemplate = !activeFb?.fixed_snippet && !!template;
-          const canDiff = !!diffAfter;
-          const mode = canDiff ? stageMode : "code";
-          const copyPatch = () => {
-            const fileName = selectedFile.file_name.split("/").pop() || "file.java";
-            const payload = mode === "diff"
-              ? `# ${PATTERN_INFO[selectedPattern!].short} — ${PATTERN_INFO[selectedPattern!].full}\n# File: ${fileName}\n\n--- Before\n${diffBefore}\n\n+++ After\n${diffAfter}\n`
-              : selectedFile.file_content || "";
-            navigator.clipboard?.writeText(payload);
-          };
-          return (
-            <>
-              <div className="run-stage-header">
-                <span className="run-stage-file">{selectedFile.file_name}</span>
-                <span className="run-stage-spacer" />
-                {canDiff && (
-                  <div className="stage-mode-toggle" role="tablist" aria-label="View mode">
-                    <button
-                      role="tab"
-                      aria-selected={mode === "code"}
-                      className={`stage-mode-btn ${mode === "code" ? "active" : ""}`}
-                      onClick={() => setStageMode("code")}
-                    >
-                      Full code
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={mode === "diff"}
-                      className={`stage-mode-btn ${mode === "diff" ? "active" : ""}`}
-                      onClick={() => setStageMode("diff")}
-                    >
-                      Diff {isTemplate && <span className="preview-tag">Preview</span>}
-                    </button>
-                  </div>
-                )}
-                <span className="run-stage-meta">
-                  {mode === "code" && selectedFile.file_content
-                    ? `${selectedFile.file_content.split("\n").length} lines`
-                    : ""}
+        {selectedFile ? (
+          <>
+            <div className="run-stage-header">
+              <span className="run-stage-file">{selectedFile.file_name}</span>
+              <span className="run-stage-spacer" />
+              <span className="run-stage-meta">
+                {selectedFile.file_content
+                  ? `${selectedFile.file_content.split("\n").length} lines`
+                  : ""}
+              </span>
+              {fileIssues.length > 0 && (
+                <span className="run-stage-issues">
+                  {fileIssues.length} issue{fileIssues.length > 1 ? "s" : ""}
                 </span>
-                {mode === "code" && fileIssues.length > 0 && (
-                  <span className="run-stage-issues">
-                    {fileIssues.length} issue{fileIssues.length > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-              {/* Diff-only strip — replaces the (hidden) inspector with a
-                  compact issue header right above the before/after grid. */}
-              {mode === "diff" && selectedPattern && activeFb && (
-                <div className="run-stage-diff-strip">
-                  <div className="run-stage-diff-strip-title">
-                    <span className="run-stage-diff-pattern-chip">{PATTERN_INFO[selectedPattern].short}</span>
-                    <span className="run-stage-diff-pattern-name">{PATTERN_INFO[selectedPattern].full}</span>
-                    <SeverityBadge severity={severityOf(PATTERN_INFO[selectedPattern].short)} />
-                  </div>
-                  <div className="run-stage-diff-strip-actions">
-                    <button className="copy-btn" onClick={copyPatch} title="Copy unified patch">
-                      Copy patch
-                    </button>
-                    <Link
-                      to={`/rules#rule-${PATTERN_INFO[selectedPattern].short}`}
-                      className="run-inspector-rules-link"
-                    >
-                      Learn more →
-                    </Link>
-                  </div>
-                </div>
               )}
-              <div className="run-stage-code">
-                {mode === "diff" && canDiff ? (
-                  <div className="run-stage-diff">
-                    <DiffView
-                      before={diffBefore}
-                      after={diffAfter}
-                      startLine={diffStart}
-                    />
-                  </div>
-                ) : selectedFile.file_content ? (
-                  <CodeBlock
-                    code={selectedFile.file_content}
-                    highlightLines={highlightLines}
-                    focusLine={focusLine}
-                    annotations={annotations}
-                  />
-                ) : (
-                  <div className="run-stage-empty">Source not available.</div>
-                )}
+            </div>
+
+            {/* Issue navigator bar — one chip per issue, click to scroll + expand. */}
+            {fileIssues.length > 0 && (
+              <div className="run-stage-nav">
+                <span className="run-stage-nav-label">Issues:</span>
+                {fileIssues.map((p) => {
+                  const fb = getFeedback(selectedFile, p);
+                  const sev = severityOf(PATTERN_INFO[p].short);
+                  const firstLine = Array.from(parseLineRange(fb.line_range))[0];
+                  return (
+                    <button
+                      key={p}
+                      className={`run-stage-nav-chip ${selectedPattern === p ? "active" : ""}`}
+                      onClick={() => {
+                        setSelectedPattern(p);
+                        setExpandedPatterns((prev) => new Set(prev).add(p));
+                        if (firstLine) flashLineOnce(firstLine);
+                      }}
+                      title={PATTERN_INFO[p].full}
+                    >
+                      <span className={`sev-dot sev-dot-${sev}`} />
+                      <span className="run-stage-nav-chip-tag">{PATTERN_INFO[p].short}</span>
+                      {firstLine && <span className="run-stage-nav-chip-line">L{firstLine}</span>}
+                    </button>
+                  );
+                })}
               </div>
-            </>
-          );
-        })() : (
+            )}
+
+            <div className="run-stage-code">
+              {selectedFile.file_content ? (
+                <CodeBlock
+                  code={selectedFile.file_content}
+                  highlightLines={highlightLines}
+                  focusLine={focusLine}
+                  annotations={annotations}
+                  lineSeverities={lineSeverities}
+                  flashLine={flashLine ?? undefined}
+                  onGutterClick={handleGutterClick}
+                  renderLineSlot={renderLineSlot}
+                />
+              ) : (
+                <div className="run-stage-empty">Source not available.</div>
+              )}
+            </div>
+          </>
+        ) : (
           <div className="run-stage-empty">Select a file from the list.</div>
         )}
       </main>
-
-      {/* ── RIGHT: inspector (hidden in diff mode — stage takes full width) ── */}
-      {stageMode !== "diff" && (
-      <aside className="run-inspector">
-        {selectedFile && fileIssues.length > 0 ? (
-          <>
-            <div className="run-inspector-tabs">
-              {fileIssues.map((p) => (
-                <button
-                  key={p}
-                  className={`run-inspector-tab ${selectedPattern === p ? "active" : ""}`}
-                  onClick={() => setSelectedPattern(p)}
-                >
-                  {PATTERN_INFO[p].short}
-                </button>
-              ))}
-            </div>
-            {selectedFb && selectedPattern && (
-              <div className="run-inspector-body">
-                <div className="run-inspector-head">
-                  <div className="run-inspector-title-row">
-                    <div className="run-inspector-pattern">{PATTERN_INFO[selectedPattern].full}</div>
-                    <SeverityBadge severity={severityOf(PATTERN_INFO[selectedPattern].short)} />
-                  </div>
-                  <div className="run-inspector-head-actions">
-                    {selectedFb.line_range && (
-                      <button
-                        className="run-inspector-loc-link"
-                        onClick={() => {
-                          const first = Array.from(parseLineRange(selectedFb.line_range!))[0];
-                          if (first) {
-                            const el = document.querySelector<HTMLElement>(`[data-line="${first}"]`);
-                            el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }
-                        }}
-                      >
-                        Line {selectedFb.line_range} →
-                      </button>
-                    )}
-                    <Link
-                      to={`/rules#rule-${PATTERN_INFO[selectedPattern].short}`}
-                      className="run-inspector-rules-link"
-                    >
-                      Learn more →
-                    </Link>
-                  </div>
-                </div>
-                {selectedFb.reason && (
-                  <section className="run-inspector-section">
-                    <div className="run-inspector-label">Diagnosis</div>
-                    <p className="run-inspector-text">{selectedFb.reason}</p>
-                  </section>
-                )}
-                {(() => {
-                  // Inspector now only carries description + copy.  The diff itself lives
-                  // on the stage (Code ⇄ Diff toggle), so we don't render it twice.
-                  const template = PATTERN_FIX_TEMPLATES[selectedPattern];
-                  const hasEngineFix = !!selectedFb.fixed_snippet;
-                  const isPreview = !hasEngineFix && !!template;
-                  const copyTarget = selectedFb.fixed_snippet || template?.after || selectedFb.suggested_fix || "";
-                  const hasAny = selectedFb.suggested_fix || copyTarget;
-                  return hasAny && (
-                    <section className="run-inspector-section">
-                      <div className="run-inspector-label-row">
-                        <span className="run-inspector-label">
-                          Suggested fix
-                          {isPreview && <span className="preview-tag" title="Template preview — engine did not return a verbatim fix">Preview</span>}
-                        </span>
-                        {copyTarget && (
-                          <button
-                            className="copy-btn"
-                            onClick={() => navigator.clipboard?.writeText(copyTarget)}
-                            title={selectedFb.fixed_snippet ? "Copy code" : isPreview ? "Copy template" : "Copy description"}
-                          >
-                            Copy
-                          </button>
-                        )}
-                      </div>
-                      {selectedFb.suggested_fix && (
-                        <p className="run-inspector-text">{selectedFb.suggested_fix}</p>
-                      )}
-                      <button
-                        className="run-inspector-show-diff"
-                        onClick={() => setStageMode("diff")}
-                      >
-                        View diff →
-                      </button>
-                    </section>
-                  );
-                })()}
-              </div>
-            )}
-          </>
-        ) : selectedFile ? (
-          <div className="run-inspector-empty">
-            <CheckCircle2 size={20} />
-            <div className="run-inspector-empty-title">No issues in this file</div>
-            <div className="run-inspector-empty-sub">
-              Select a different file from the list to inspect its findings.
-            </div>
-          </div>
-        ) : null}
-      </aside>
-      )}
     </div>
   );
 }
@@ -925,46 +922,52 @@ export default function RunDetail() {
           );
           const allIds = displayFindings.map(f => f.id);
           const allExpanded = allIds.length > 0 && allIds.every(id => expandedRows.has(id));
-          // Hide the filter/expand toolbar when there's nothing to filter or expand
-          // (single-file runs). The controls add noise without value at that scale.
           const showToolbar = findings.length > 1;
-          const toolbar = showToolbar ? (
-            <div className="table-toolbar">
-              <label className="issues-only-check">
-                <input
-                  type="checkbox"
-                  checked={issuesOnly}
-                  onChange={(e) => setIssuesOnly(e.target.checked)}
-                />
-                <span>Issues only</span>
-              </label>
-              <button
-                className="text-btn"
-                onClick={() => {
-                  if (allExpanded) setExpandedRows(new Set());
-                  else setExpandedRows(new Set(allIds));
-                }}
-              >
-                {allExpanded ? "Collapse all" : "Expand all"}
-              </button>
-            </div>
+          const issuesOnlyCheck = showToolbar ? (
+            <label className="issues-only-check">
+              <input
+                type="checkbox"
+                checked={issuesOnly}
+                onChange={(e) => setIssuesOnly(e.target.checked)}
+              />
+              <span>Issues only</span>
+            </label>
           ) : null;
+          // Unified top toolbar — identical layout across both views:
+          // Issues only on the left, view tabs on the right. View-specific
+          // controls (Expand all) live inside the card where they belong.
+          const viewToolbar = (
+            <div className="table-toolbar">
+              <div className="table-toolbar-left">
+                {issuesOnlyCheck}
+              </div>
+              {tabs}
+            </div>
+          );
+          const toggleExpandAll = () => {
+            if (allExpanded) setExpandedRows(new Set());
+            else setExpandedRows(new Set(allIds));
+          };
           return activeView === "table" ? (
             <>
-              {toolbar}
+              {viewToolbar}
               <TableView
                 findings={displayFindings}
                 expandedRows={expandedRows}
                 onToggleRow={toggleRow}
-                headerSlot={tabs}
+                totalFiles={findings.length}
+                issuesOnly={issuesOnly}
+                onToggleExpandAll={showToolbar ? toggleExpandAll : undefined}
               />
             </>
           ) : (
             <>
-              <div className="section-header-row section-header-row-end">
-                {tabs}
-              </div>
-              <InspectorView findings={displayFindings} />
+              {viewToolbar}
+              <InspectorView
+                findings={displayFindings}
+                totalFiles={findings.length}
+                issuesOnly={issuesOnly}
+              />
             </>
           );
         })()}

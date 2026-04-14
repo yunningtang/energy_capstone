@@ -35,7 +35,29 @@ export interface Finding {
   has: string;
   iod: string;
   nlmr: string;
-  feedback: Record<string, string> | null;
+  feedback: Record<string, PatternFeedback | string> | null;
+}
+
+/**
+ * Per-pattern feedback entry. Older runs may have only `reason` (or a raw
+ * string); newer runs include the structured diagnosis/fix card fields.
+ */
+export interface PatternFeedback {
+  reason?: string;
+  line_range?: string;
+  suggested_fix?: string;
+  // Legacy diff fields (kept for back-compat; no longer surfaced by default)
+  original_snippet?: string;
+  fixed_snippet?: string;
+  // Structured finding-card fields (new)
+  diagnosis_summary?: string;
+  location_hint?: string;
+  anchor_line?: number;
+  operation?: "insert" | "replace" | "wrap";
+  example_code?: string;
+  fix_explanation?: string;
+  severity?: "minor" | "major" | "critical";
+  confidence?: "high" | "medium" | "low";
 }
 
 export interface HealthInfo {

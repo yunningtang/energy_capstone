@@ -316,7 +316,14 @@ async def create_task_upload_legacy(
 @app.get("/api/tasks", response_model=list[RunResponse])
 def list_tasks(status: str | None = None):
     tasks = task_manager.list_tasks(status_filter=status)
-    return [_run_dict(t) for t in tasks]
+    out = []
+    for t in tasks:
+        d = _run_dict(t)
+        fc, ic = task_manager.get_run_counts(t.id)
+        d["file_count"] = fc
+        d["issue_count"] = ic
+        out.append(d)
+    return out
 
 
 @app.get("/api/tasks/{task_id}", response_model=RunResponse)

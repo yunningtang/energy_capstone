@@ -45,6 +45,12 @@ export async function getProject(projectId: number): Promise<Project> {
   return data;
 }
 
+/** List all runs across every project — powers the Dashboard "Recent runs". */
+export async function listAllRuns(limit?: number): Promise<Run[]> {
+  const { data } = await API.get<Run[]>(`/api/tasks`);
+  return typeof limit === "number" ? data.slice(0, limit) : data;
+}
+
 export async function getProjectRuns(projectId: number): Promise<Run[]> {
   const { data } = await API.get(`/api/projects/${projectId}/runs`);
   return data;

@@ -215,34 +215,55 @@ PATTERNS_ALL = ["DW", "HMU", "HAS", "IOD", "NLMR"]
 
 
 # ═══════════════════════════════════════════════════════════
-# Batch prompt — check all patterns in one LLM call
+# Batch prompt — check all patterns in one LLM call.
+# Emits a richer schema (diagnosis + structured fix card) so the UI can
+# render a descriptive finding card instead of a synthetic before/after diff.
 # ═══════════════════════════════════════════════════════════
 def build_batch_prompt(code: str, patterns: list[str]) -> str:
-    """One prompt, all patterns, structured JSON response with diff-ready snippets."""
+    """One prompt, all patterns, structured JSON response for finding-card UI."""
     descriptions = "\n".join(
         f"- {p}: {PATTERN_DESCRIPTIONS.get(p, p)}" for p in patterns
     )
     schema_lines = ",\n    ".join(
-        f'"{p}": {{"answer": "Yes" or "No", "reason": "brief", '
-        f'"line_range": "e.g. 42-47 or null", '
-        f'"suggested_fix": "one-sentence explanation, or null if clean", '
-        f'"original_snippet": "EXACT code excerpt that has the issue (verbatim, ~3-8 lines), or null", '
-        f'"fixed_snippet": "the same excerpt rewritten to fix the issue (valid Java, same indent), or null"}}'
+        f'"{p}": {{\n'
+        f'      "answer": "Yes" or "No",\n'
+        f'      "reason": "1-3 sentence diagnosis explaining WHY this is a problem (null if No)",\n'
+        f'      "diagnosis_summary": "≤100 char one-sentence headline (null if No)",\n'
+        f'      "severity": "minor" | "major" | "critical" (null if No),\n'
+        f'      "confidence": "high" | "medium" | "low" (null if No),\n'
+        f'      "line_range": "e.g. 42-47, or single line like 42, or null",\n'
+        f'      "anchor_line": integer line number where the fix should be placed, or null,\n'
+        f'      "operation": "insert" | "replace" | "wrap" (null if No),\n'
+        f'      "location_hint": "where to make the change — cite SPECIFIC class/method names or line numbers from the file",\n'
+        f'      "suggested_fix": "≤150 char sentence describing the fix action",\n'
+        f'      "fix_explanation": "≤150 char sentence describing what example_code does",\n'
+        f'      "example_code": "COMPLETE compilable {patterns and ("Java" or "Java")} snippet the user can copy-paste verbatim — no ellipsis, no TODOs, no placeholders",\n'
+        f'      "original_snippet": "EXACT verbatim excerpt from the source (~3-8 lines) showing the violation, or null",\n'
+        f'      "fixed_snippet": "the same excerpt rewritten to fix it (kept for legacy diff UI), or null"\n'
+        f'    }}'
         for p in patterns
     )
     return (
-        f"You are an Android code expert. Analyze the following Java file for these "
-        f"energy anti-patterns:\n\n{descriptions}\n\n"
-        f"For EACH pattern, decide Yes (pattern is present = bug) or No (pattern is absent = clean).\n"
-        f"If Yes, provide:\n"
-        f"  - reason: a short explanation,\n"
-        f"  - line_range: the range where the issue occurs (e.g. '42-47'),\n"
-        f"  - suggested_fix: one sentence describing the fix,\n"
-        f"  - original_snippet: the EXACT code lines (~3-8) containing the issue, verbatim from the source,\n"
-        f"  - fixed_snippet: the same block rewritten to fix the issue, preserving indentation and keeping the diff minimal.\n"
-        f"If No, leave line_range/suggested_fix/original_snippet/fixed_snippet as null.\n\n"
+        f"You are a static code analyzer for Android energy/performance anti-patterns. "
+        f"Analyze ONE Java file against each of these patterns:\n\n{descriptions}\n\n"
+        f"HARD RULES:\n"
+        f"1. NEVER hallucinate code from outside the file. Only reference classes, methods, "
+        f"and variables that actually exist in the source below.\n"
+        f"2. example_code MUST be COMPLETE and compilable — no placeholders, no '...', "
+        f"no '/* implement here */'. User must be able to copy-paste with zero edits.\n"
+        f"3. location_hint MUST cite SPECIFIC class/method names or line numbers. "
+        f"Forbidden vague phrases: 'the relevant component', 'your service', 'where applicable'.\n"
+        f"4. If a pattern does not apply to this file (e.g. NLMR on a non-Activity/Service), "
+        f"set answer='No' and briefly say why in reason. Do NOT force-find an issue.\n"
+        f"5. Match the file's existing style: same indentation width, same brace placement.\n"
+        f"6. severity scale: 'critical'=data loss/crash/security, 'major'=noticeable perf or "
+        f"battery drain, 'minor'=best-practice violation.\n"
+        f"7. confidence: 'high'=clear violation + straightforward fix; 'medium'=violation but "
+        f"fix may need adaptation; 'low'=ambiguous, user should review.\n\n"
+        f"For each pattern return answer='Yes' if the pattern IS present (= bug), 'No' otherwise.\n"
+        f"If 'No', all other fields may be null.\n\n"
         f"Source code:\n```java\n{code}\n```\n\n"
-        f"Respond with JSON only, no prose:\n"
+        f"Respond with JSON only, no prose, no markdown fences:\n"
         f"{{\n    {schema_lines}\n}}"
     )
 
@@ -274,8 +295,21 @@ def _parse_batch_response(content: str, patterns: list[str]) -> dict[str, dict]:
             entry = {"answer": str(entry), "reason": ""}
         ans = _normalize_answer(entry.get("answer"))
         out: dict[str, Any] = {"answer": ans, "reason": str(entry.get("reason", ""))[:300]}
-        for field, max_len in (("line_range", 40), ("suggested_fix", 500),
-                                ("original_snippet", 2000), ("fixed_snippet", 2000)):
+        # String fields: clip length, drop "null"/"none" strings.
+        string_fields = (
+            ("line_range", 40),
+            ("suggested_fix", 500),
+            ("original_snippet", 2000),
+            ("fixed_snippet", 2000),
+            ("diagnosis_summary", 120),
+            ("location_hint", 300),
+            ("operation", 20),
+            ("example_code", 2000),
+            ("fix_explanation", 200),
+            ("severity", 20),
+            ("confidence", 20),
+        )
+        for field, max_len in string_fields:
             val = entry.get(field)
             if val is None:
                 continue
@@ -283,6 +317,22 @@ def _parse_batch_response(content: str, patterns: list[str]) -> dict[str, dict]:
             if sv.lower() in ("null", "none", "n/a", ""):
                 continue
             out[field] = sv[:max_len]
+        # Integer fields
+        if "anchor_line" in entry and entry["anchor_line"] is not None:
+            try:
+                out["anchor_line"] = int(entry["anchor_line"])
+            except (TypeError, ValueError):
+                pass
+        # Normalise enums
+        if "severity" in out:
+            sv = out["severity"].lower()
+            out["severity"] = sv if sv in ("minor", "major", "critical") else "minor"
+        if "confidence" in out:
+            cv = out["confidence"].lower()
+            out["confidence"] = cv if cv in ("high", "medium", "low") else "medium"
+        if "operation" in out:
+            op = out["operation"].lower()
+            out["operation"] = op if op in ("insert", "replace", "wrap") else "insert"
         result[p] = out
     return result
 

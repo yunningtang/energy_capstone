@@ -15,9 +15,9 @@ const JAVA_KEYWORDS = new Set([
   "transient", "try", "void", "volatile", "while", "true", "false",
 ]);
 
-type Token = { type: string; value: string };
+export type Token = { type: string; value: string };
 
-function tokenizeLine(line: string): Token[] {
+export function tokenizeLine(line: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
   const len = line.length;
@@ -109,7 +109,7 @@ function tokenizeLine(line: string): Token[] {
   return tokens;
 }
 
-function renderTokens(tokens: Token[], keyPrefix: string): React.ReactNode {
+export function renderTokens(tokens: Token[], keyPrefix: string): React.ReactNode {
   return tokens.map((t, idx) => {
     if (t.type === "plain") return <span key={`${keyPrefix}-${idx}`}>{t.value}</span>;
     return (
@@ -133,9 +133,27 @@ interface Props {
   focusLine?: number;             // scroll into view
   /** Map from 1-indexed line number to annotation(s). Adds a spell-checker-style wavy underline. */
   annotations?: Map<number, LineAnnotation[]>;
+  /** Map from 1-indexed line number to severity — drives row tint + gutter dot color. */
+  lineSeverities?: Map<number, "critical" | "major" | "minor">;
+  /** Transient line number to pulse a "flash" animation on (cleared by parent). */
+  flashLine?: number;
+  /** Click handler for the severity gutter dot on the line-number column. */
+  onGutterClick?: (line: number) => void;
+  /** Optional render function that returns a React node to insert AFTER the given line.
+      Used to stream inline finding cards (GitHub PR review / Copilot style) into the code flow. */
+  renderLineSlot?: (line: number) => React.ReactNode;
 }
 
-export default function CodeBlock({ code, highlightLines, focusLine, annotations }: Props) {
+export default function CodeBlock({
+  code,
+  highlightLines,
+  focusLine,
+  annotations,
+  lineSeverities,
+  flashLine,
+  onGutterClick,
+  renderLineSlot,
+}: Props) {
   const lines = code.split("\n");
   const preRef = React.useRef<HTMLPreElement>(null);
 
@@ -208,13 +226,35 @@ export default function CodeBlock({ code, highlightLines, focusLine, annotations
 
           const hasAnn = !!lineAnns && lineAnns.length > 0;
           const severity = lineAnns?.[0]?.severity ?? "error";
+          const rowSev = lineSeverities?.get(lineNum);
+          const isFlash = flashLine === lineNum;
+
+          const slotNode = renderLineSlot?.(lineNum);
 
           return (
+            <React.Fragment key={lineNum}>
             <div
-              key={lineNum}
               data-line={lineNum}
-              className={`code-line ${isHighlighted ? "code-line-hl" : ""} ${isFocus ? "code-line-focus" : ""} ${hasAnn ? `code-line-ann code-line-ann-${severity}` : ""}`}
+              className={[
+                "code-line",
+                isHighlighted ? "code-line-hl" : "",
+                isFocus ? "code-line-focus" : "",
+                hasAnn ? `code-line-ann code-line-ann-${severity}` : "",
+                rowSev ? `code-line-sev code-line-sev-${rowSev}` : "",
+                isFlash ? "code-line-flash" : "",
+              ].filter(Boolean).join(" ")}
             >
+              {rowSev && onGutterClick ? (
+                <button
+                  type="button"
+                  className={`code-line-gutter-dot code-line-gutter-dot-${rowSev}`}
+                  onClick={(e) => { e.stopPropagation(); onGutterClick(lineNum); }}
+                  title={`Issue on line ${lineNum} — open in inspector`}
+                  aria-label={`Issue on line ${lineNum}`}
+                />
+              ) : rowSev ? (
+                <span className={`code-line-gutter-dot code-line-gutter-dot-${rowSev}`} aria-hidden />
+              ) : null}
               <span className="code-line-num">{lineNum}</span>
               <span className="code-line-content">
                 <span className="code-line-text">{rendered}</span>
@@ -235,6 +275,8 @@ export default function CodeBlock({ code, highlightLines, focusLine, annotations
                 )}
               </span>
             </div>
+            {slotNode && <div className="code-line-slot" data-slot-line={lineNum}>{slotNode}</div>}
+            </React.Fragment>
           );
         })}
       </pre>
