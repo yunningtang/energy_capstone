@@ -5150,14 +5150,21 @@ pre *, code * {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  align-items: stretch;  /* both columns match row height */
+  align-items: stretch;
 }
+/* Use grid (not flex) on the column wrapper so the `1fr` track makes the
+   code block stretch reliably regardless of content length — fixes the
+   bug where the "Anti-pattern" box was shorter than the "Fix" box when
+   their contents differed in length. */
 .rule-code-grid > div {
-  display: flex;
-  flex-direction: column;  /* label on top, code fills remaining space */
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
 }
 .rule-code-grid > div > .rule-code {
-  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
 }
 @media (max-width: 720px) {
   .rule-code-grid { grid-template-columns: 1fr; }
