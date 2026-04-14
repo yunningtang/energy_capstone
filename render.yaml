@@ -40,11 +40,10 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4.1-mini
+      # Deterministic Render service URL (avoids circular fromService ref).
+      # If you renamed the frontend service in this file, update this to match.
       - key: FRONTEND_URL
-        fromService:              # auto-wires CORS to the static site URL
-          type: web
-          name: ecocode-frontend
-          property: host
+        value: https://ecocode-frontend.onrender.com
       - key: PYTHON_VERSION
         value: "3.11.0"
 
@@ -60,11 +59,9 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: build
     envVars:
+      # Deterministic backend URL (avoids circular fromService ref).
       - key: REACT_APP_API_BASE_URL
-        fromService:
-          type: web
-          name: ecocode-api
-          property: host
+        value: https://ecocode-api.onrender.com
     routes:
       # SPA rewrite: every unknown path serves index.html so react-router
       # can take over.
