@@ -28,7 +28,12 @@ allowed_origins = [
     "http://localhost:5173",
 ]
 if settings.frontend_url:
-    allowed_origins.append(settings.frontend_url.rstrip("/"))
+    fe = settings.frontend_url.rstrip("/")
+    # Render's `fromService.property: host` gives bare hostname (no scheme).
+    # Prepend https:// so the value is a valid CORS origin.
+    if not fe.startswith("http://") and not fe.startswith("https://"):
+        fe = f"https://{fe}"
+    allowed_origins.append(fe)
 
 app.add_middleware(
     CORSMiddleware,

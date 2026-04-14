@@ -1,3 +1,14 @@
+# Render deploy spec — see https://render.com/docs/blueprint-spec
+#
+# What this provisions on Render:
+#   1. ecocode-db        Free Postgres (90-day expiry on free plan)
+#   2. ecocode-api       FastAPI backend (Python web service)
+#   3. ecocode-frontend  React static site (built once, served from CDN)
+#
+# After Render imports this Blueprint, you must MANUALLY set:
+#   - OPENAI_API_KEY (or GEMINI_API_KEY if you switch LLM_PROVIDER)
+# under ecocode-api → Environment, because secrets are not stored in git.
+
 databases:
   - name: ecocode-db
     plan: free
@@ -5,6 +16,7 @@ databases:
     user: ecocode_user
 
 services:
+  # ── Backend API ───────────────────────────────────────
   - type: web
     name: ecocode-api
     runtime: python
@@ -12,18 +24,58 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: ecocode-db
           property: connectionString
       - key: LLM_PROVIDER
-        value: openai
-      - key: OPENAI_API_KEY
+        value: gemini             # default to Gemini — free tier, fast. Switch to "openai" or "ollama" as needed.
+      - key: GEMINI_API_KEY
+        sync: false               # set MANUALLY in Render dashboard
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: OPENAI_API_KEY       # only used if LLM_PROVIDER=openai
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4.1-mini
       - key: FRONTEND_URL
-        value: https://your-frontend-host.example.com
+        fromService:              # auto-wires CORS to the static site URL
+          type: web
+          name: ecocode-frontend
+          property: host
       - key: PYTHON_VERSION
         value: "3.11.0"
+
+  # ── Frontend (React static site) ─────────────────────
+  # CRA bakes env vars at build time, so REACT_APP_API_BASE_URL must be
+  # known before `npm run build` runs. Render injects envVars during the
+  # build phase for static sites.
+  - type: web
+    name: ecocode-frontend
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        fromService:
+          type: web
+          name: ecocode-api
+          property: host
+    routes:
+      # SPA rewrite: every unknown path serves index.html so react-router
+      # can take over.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Lightweight security headers; safe for a public-read static site.
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

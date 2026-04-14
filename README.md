@@ -201,6 +201,16 @@ $env:REACT_APP_API_BASE_URL="http://example.com:8000"; npm start
 
 ---
 
+## Deploy to Render (hosted demo, free tier)
+
+Push to your fork → Render auto-provisions the backend, frontend, and a
+managed Postgres from the `render.yaml` blueprint at the repo root.
+The only manual step is pasting your LLM API key into the Render dashboard.
+
+Full instructions: [docs/deployment-guide.md](docs/deployment-guide.md#1--render-recommended-for-evaluators).
+
+---
+
 ## Docker Compose (optional, Postgres)
 
 ```powershell

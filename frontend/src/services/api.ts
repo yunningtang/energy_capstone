@@ -2,11 +2,17 @@ import axios from "axios";
 import { Finding, HealthInfo, Project, Run } from "../types";
 
 function getBaseUrl(): string {
-  return (
+  let url =
     localStorage.getItem("api_base_url") ||
     process.env.REACT_APP_API_BASE_URL ||
-    "http://localhost:8000"
-  );
+    "http://localhost:8000";
+  // Render's `fromService.property: host` (used in render.yaml) injects bare
+  // hostnames like "ecocode-api.onrender.com" — auto-prepend https:// so the
+  // browser treats it as a real URL.
+  if (url && !/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+  return url;
 }
 
 const API = axios.create({ timeout: 30000 });
