@@ -66,6 +66,46 @@ place them next to `backend/`, `frontend/` etc.
 
 A **single-binary FastAPI backend** (no separate worker process — the analysis loop runs inside `main.py`) plus a **React + TypeScript frontend**.
 
+```mermaid
+flowchart LR
+    User([👤 User])
+    User -->|HTTP| FE
+
+    subgraph Browser["Browser · http://localhost:3000"]
+      FE["React Frontend<br/>(CRA + TypeScript)<br/>Table / Code view + inline cards"]
+    end
+
+    subgraph Server["Backend host · http://localhost:8000"]
+      BE["FastAPI<br/>(uvicorn)"]
+      Worker["_background_worker<br/>async loop · polls every 2s"]
+      Pipe["Per-file pipeline<br/>1. keyword pre-filter<br/>2. AST slice<br/>3. batched LLM call"]
+      BE --> Worker
+      Worker --> Pipe
+    end
+
+    FE <-->|REST + 3s polling| BE
+
+    subgraph Storage["Persistence"]
+      DB[("SQLite<br/>(default)<br/>or Postgres")]
+    end
+
+    subgraph LLM["LLM provider · pick one"]
+      Gemini[Google Gemini]
+      OpenAI[OpenAI]
+      Ollama[Ollama · local]
+    end
+
+    BE <--> DB
+    Pipe -.->|httpx| Gemini
+    Pipe -.->|httpx| OpenAI
+    Pipe -.->|httpx| Ollama
+```
+
+**Reading the diagram**: the user only ever talks to the frontend; the frontend
+only ever talks to the backend over REST (poll every 3s while a run is
+in-progress). The backend owns the worker loop and the LLM HTTP calls — there
+is no separate worker process, no message broker, no queue service.
+
 ### Backend
 - **FastAPI** + **SQLAlchemy** + **SQLite** (default) or **PostgreSQL** (Docker)
 - Three pluggable LLM providers, all called via `httpx` (no SDK lock-in):
