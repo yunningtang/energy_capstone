@@ -34,15 +34,16 @@ services:
           name: ecocode-db
           property: connectionString
       - key: LLM_PROVIDER
-        value: gemini             # default to Gemini — free tier, fast. Switch to "openai" or "ollama" as needed.
-      - key: GEMINI_API_KEY
-        sync: false               # set MANUALLY in Render dashboard
-      - key: GEMINI_MODEL
-        value: gemini-2.5-flash
-      - key: OPENAI_API_KEY       # only used if LLM_PROVIDER=openai
-        sync: false
+        value: openai             # default to OpenAI. Set OPENAI_API_KEY below.
+                                  # Switch to "gemini" or "ollama" and set the matching key if needed.
+      - key: OPENAI_API_KEY
+        sync: false               # set MANUALLY in Render dashboard (or at the Blueprint review step)
       - key: OPENAI_MODEL
         value: gpt-4.1-mini
+      - key: GEMINI_API_KEY       # only used if LLM_PROVIDER=gemini
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
       # Deterministic Render service URL (avoids circular fromService ref).
       # If you renamed the frontend service in this file, update this to match.
       - key: FRONTEND_URL
