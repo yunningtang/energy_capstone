@@ -13,6 +13,7 @@ from models import (
     FindingResponse,
     HealthResponse,
     ProjectCreateRequest,
+    ProjectUpdateRequest,
     ProjectResponse,
     RunCreateRequest,
     RunResponse,
@@ -127,6 +128,23 @@ def get_project(project_id: int):
     raise HTTPException(status_code=404, detail="Project not found")
 
 
+@app.patch("/api/projects/{project_id}", response_model=ProjectResponse)
+def update_project(project_id: int, payload: ProjectUpdateRequest):
+    proj = task_manager.update_project(
+        project_id,
+        name=payload.name,
+        repo_url=payload.repo_url,
+    )
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {
+        "id": proj.id,
+        "name": proj.name,
+        "repo_url": proj.repo_url,
+        "created_at": proj.created_at,
+    }
+
+
 @app.delete("/api/projects/{project_id}")
 def delete_project(project_id: int):
     ok = task_manager.delete_project(project_id)
@@ -143,7 +161,14 @@ def get_pattern_stats(project_id: int):
 @app.get("/api/projects/{project_id}/runs", response_model=list[RunResponse])
 def get_project_runs(project_id: int):
     runs = task_manager.get_project_runs(project_id)
-    return [_run_dict(r) for r in runs]
+    out = []
+    for r in runs:
+        d = _run_dict(r)
+        fc, ic = task_manager.get_run_counts(r.id)
+        d["file_count"] = fc
+        d["issue_count"] = ic
+        out.append(d)
+    return out
 
 
 # --- Runs (Tasks) ---

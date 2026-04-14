@@ -58,9 +58,16 @@ export default function ProjectsList() {
           <div className="hero-banner-content">
             <h3 className="hero-banner-title">Detect energy anti-patterns in your Android code</h3>
             <div className="hero-banner-steps">
-              <span><strong>1.</strong> Create a project</span>
-              <span><strong>2.</strong> Upload .java files or paste a repo URL</span>
-              <span><strong>3.</strong> Review per-file results & explanations</span>
+              <span className={llmWarning ? "hero-step-pending" : "hero-step-done"}>
+                <strong>1.</strong> {llmWarning ? (
+                  <>Configure an LLM provider in <a href="/settings" className="hero-inline-link">Settings</a></>
+                ) : (
+                  <>LLM provider connected</>
+                )}
+              </span>
+              <span><strong>2.</strong> Create a project</span>
+              <span><strong>3.</strong> Upload .java files or paste a repo URL</span>
+              <span><strong>4.</strong> Review per-file results & explanations</span>
             </div>
           </div>
           <button className="hero-banner-close" onClick={dismissHero} aria-label="Dismiss">

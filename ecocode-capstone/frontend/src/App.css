@@ -3,20 +3,20 @@
    Clean + cool tones · spring interactions · no offset shadows
    ══════════════════════════════════════════════════════ */
 
-/* ── Design Tokens (ElevenLabs-inspired) ─────────────── */
+/* ── Design Tokens — GitHub Primer palette ─────────────── */
 :root {
-  --bg: #fafaf9;
-  --bg-elevated: #ffffff;
-  --bg-subtle: #f2f2f0;
-  --fg: #000000;
-  --fg-secondary: #525252;
-  --fg-tertiary: #949494;
-  --fg-disabled: #bdbdbd;
+  --bg: #ffffff;                /* page — GitHub canvas.default */
+  --bg-elevated: #ffffff;       /* cards */
+  --bg-subtle: #f6f8fa;         /* GitHub canvas.subtle — inputs, muted surfaces */
+  --fg: #1f2328;                /* fg.default */
+  --fg-secondary: #57606a;      /* fg.muted */
+  --fg-tertiary: #6e7781;       /* fg.subtle */
+  --fg-disabled: #8c959f;
   --card: #ffffff;
-  --border: #e5e5e5;
-  --border-light: #f2f2f2;
-  --muted: #6e6e6e;
-  --subtle: #949494;
+  --border: #d0d7de;            /* border.default */
+  --border-light: #eaeef2;      /* border.muted */
+  --muted: #57606a;
+  --subtle: #6e7781;
 
   --primary: #000000;
   --primary-hover: #1c1c1c;
@@ -26,15 +26,15 @@
   --accent: #5d79df;
   --accent-hover: #4056ce;
 
-  --danger: #d7332b;
-  --danger-hover: #b52720;
-  --danger-light: rgba(215,51,43,0.08);
-  --warning: #bc8f12;
-  --warning-light: rgba(188,143,18,0.10);
-  --info: #5d79df;
-  --info-light: rgba(93,121,223,0.10);
-  --success: #10b978;
-  --success-light: rgba(16,185,120,0.12);
+  --danger: #cf222e;              /* GitHub danger.fg */
+  --danger-hover: #a40e26;
+  --danger-light: #ffebe9;        /* GitHub danger.subtle */
+  --warning: #9a6700;             /* GitHub attention.fg */
+  --warning-light: #fff8c5;       /* GitHub attention.subtle */
+  --info: #0969da;                /* GitHub accent.fg */
+  --info-light: #ddf4ff;          /* GitHub accent.subtle */
+  --success: #1a7f37;             /* GitHub success.fg */
+  --success-light: #dafbe1;       /* GitHub success.subtle */
 
   --radius: 20px;
   --radius-sm: 12px;
@@ -56,6 +56,65 @@
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Canonical token system (see docs/design.md) ──────
+     Use these for any NEW work. Legacy tokens above are kept
+     for existing components; migrate opportunistically. */
+
+  /* Neutral surface + text — GitHub Primer palette (cool, slightly blue-tinted).
+     Keeps the project's "quiet analysis tool" feel but aligns with the
+     developer-tool convention readers already know. */
+  --c-bg-page:       #ffffff;
+  --c-bg-surface:    #ffffff;
+  --c-bg-muted:      #f6f8fa;   /* GitHub canvas.subtle */
+  --c-bg-sunken:     #eaeef2;
+
+  --c-border-subtle: #eaeef2;   /* GitHub border.muted */
+  --c-border-base:   #d0d7de;   /* GitHub border.default */
+  --c-border-strong: #afb8c1;
+
+  --c-text-primary:   #1f2328;   /* GitHub fg.default */
+  --c-text-secondary: #57606a;   /* GitHub fg.muted */
+  --c-text-tertiary:  #6e7781;   /* GitHub fg.subtle */
+  --c-text-disabled:  #8c959f;
+
+  /* Semantic — GitHub-aligned; three distinct hues so Major ≠ Minor. */
+  --c-red-fg:    #cf222e;        /* GitHub danger.fg */
+  --c-red-bg:    #ffebe9;        /* GitHub danger.subtle */
+  --c-red-dot:   #d1242f;
+
+  --c-amber-fg:  #9a6700;        /* GitHub attention.fg (orange-ish) */
+  --c-amber-bg:  #fff8c5;
+  --c-amber-dot: #bf8700;
+
+  --c-yellow-fg: #7d4e00;        /* deeper yellow-brown to separate from amber */
+  --c-yellow-bg: #fffbe6;
+  --c-yellow-dot:#d4a72c;
+
+  --c-green-fg:  #1a7f37;        /* GitHub success.fg */
+  --c-green-bg:  #dafbe1;        /* GitHub success.subtle */
+  --c-green-dot: #1f883d;
+
+  /* Type scale — see design.md §2.2 */
+  --t-display: 32px;
+  --t-h1:      24px;
+  --t-h2:      18px;
+  --t-h3:      15px;
+  --t-body:    14px;
+  --t-small:   13px;
+  --t-caption: 12px;
+  --t-mono:    13px;
+
+  /* Spacing scale — never invent 14/18/22 */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
 
   color-scheme: light;
 }
@@ -102,14 +161,47 @@
   --danger-border: rgba(235,82,75,0.15);
   --success-border: rgba(16,185,120,0.15);
 
+  /* Dark mode mapping for the canonical token system */
+  --c-bg-page:       #0a0a0a;
+  --c-bg-surface:    #161616;
+  --c-bg-muted:      #1f1f1f;
+  --c-bg-sunken:     #2a2a2a;
+
+  --c-border-subtle: rgba(255,255,255,0.06);
+  --c-border-base:   rgba(255,255,255,0.10);
+  --c-border-strong: rgba(255,255,255,0.18);
+
+  --c-text-primary:   #f2f2f2;
+  --c-text-secondary: #bdbdbd;
+  --c-text-tertiary:  #767676;
+  --c-text-disabled:  #464646;
+
+  --c-red-fg:    #f87171;
+  --c-red-bg:    rgba(248,113,113,0.10);
+  --c-red-dot:   #ef4444;
+
+  --c-amber-fg:  #fbbf24;
+  --c-amber-bg:  rgba(245,158,11,0.10);
+  --c-amber-dot: #f59e0b;
+
+  --c-yellow-fg: #facc15;
+  --c-yellow-bg: rgba(234,179,8,0.10);
+  --c-yellow-dot:#eab308;
+
+  --c-green-fg:  #4ade80;
+  --c-green-bg:  rgba(34,197,94,0.10);
+  --c-green-dot: #22c55e;
+
   color-scheme: dark;
 }
 
 /* ── Reset ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { scroll-behavior: smooth; }
+
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", "Inter var", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "PingFang SC", "Microsoft YaHei";
   font-feature-settings: "cv11", "ss01";
   background: var(--bg);
   color: var(--fg);
@@ -237,11 +329,12 @@ body {
 }
 
 .page h2 {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 0.8rem;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 0.6rem;
   color: var(--fg);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .page-header {
@@ -595,7 +688,7 @@ body {
 .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
 .badge.pending { background: var(--warning-light); color: var(--warning); }
 .badge.progress { background: var(--info-light); color: var(--info); }
-.badge.done { background: var(--success-light); color: var(--success); }
+.badge.done { background: var(--bg-subtle); color: var(--fg-secondary); border: 1px solid var(--border-light); }
 .badge.failed { background: var(--danger-light); color: var(--danger); }
 .badge.partial { background: var(--warning-light); color: var(--warning); }
 .badge.cancelled { background: var(--bg-subtle); color: var(--fg-tertiary); }
@@ -691,6 +784,8 @@ body {
 
 .stat-number { font-size: 28px; font-weight: 700; color: var(--fg); line-height: 1.2; font-variant-numeric: tabular-nums; }
 .stat-issue-count { color: var(--danger); }
+.stat-value { font-size: 30px; font-weight: 700; color: var(--c-text-primary); line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.stat-value-danger { color: var(--c-red-fg); }
 .stat-label { font-size: 11px; font-weight: 500; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
 .section-title { font-size: 15px; font-weight: 600; color: var(--fg); margin-bottom: 10px; }
 
@@ -723,6 +818,282 @@ body {
 .dialog-message { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
+/* ── Rename project modal ──────────────────────────── */
+.rename-dialog { max-width: 480px; width: 92%; }
+.rename-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.rename-dialog-head .dialog-title { margin: 0; }
+.rename-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fg-tertiary);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.rename-dialog-close:hover:not(:disabled) { background: var(--bg-subtle); color: var(--fg); }
+.rename-dialog-error { margin-top: 8px; }
+
+/* "Preview" tag — marks template-driven fix when LLM output was missing. */
+.preview-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-base);
+  color: var(--c-text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: help;
+}
+
+/* Stage mode toggle (Full code / Diff) — sits inline with the stage header.
+   Style matches the existing .view-tabs used for Table/Code switch. */
+.stage-mode-toggle {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  gap: 2px;
+}
+.stage-mode-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border: none;
+  background: transparent;
+  color: var(--c-text-secondary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.stage-mode-btn:hover { color: var(--c-text-primary); }
+.stage-mode-btn.active {
+  background: var(--c-bg-surface);
+  color: var(--c-text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-weight: 600;
+}
+.stage-mode-btn .preview-tag {
+  padding: 0 5px;
+  font-size: 9px;
+  margin-left: 2px;
+}
+
+/* Diff view inside the stage: keep the same layout, just clip to card
+   corners and let it scroll horizontally if lines overflow. */
+.run-stage-diff {
+  max-height: 640px;
+  overflow: auto;
+}
+
+/* Compact issue strip above the diff — replaces the hidden inspector. */
+.run-stage-diff-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--c-bg-muted);
+  flex-wrap: wrap;
+}
+.run-stage-diff-strip-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.run-stage-diff-pattern-chip {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+}
+.run-stage-diff-pattern-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+.run-stage-diff-strip-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Small link-style button in the inspector to jump to the diff on the stage. */
+.run-inspector-show-diff {
+  margin-top: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--info);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.run-inspector-show-diff:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ══════════════════════════════════════════════════════════
+   Settings page — v2 layout
+   ══════════════════════════════════════════════════════════ */
+.settings-page-sub {
+  font-size: 13px;
+  color: var(--c-text-secondary);
+  margin-top: -4px;
+  margin-bottom: 24px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.settings-section-header .section-title { margin: 0; font-size: 17px; font-weight: 600; }
+
+/* Backend form gets the same card shell as provider cards so the page
+   reads as two equally-weighted sections, not "cards above, bare fields below." */
+.settings-card {
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  background: var(--c-bg-surface);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+/* Increase breathing room between the two top-level sections so hierarchy
+   is (Section title) → (subgroup labels / cards) → (field labels inside) */
+.settings-section-block + .settings-section-block { margin-top: 40px; }
+
+/* Subgroup header (Local / Cloud) — must feel like its own section divider,
+   not like a tiny form label.  ALL-CAPS + subtitle that explains the why. */
+.settings-subgroup {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 4px 0 10px 0;
+}
+.settings-subgroup-cloud { margin-top: 36px; }   /* larger gap between Local and Cloud groups */
+.settings-subgroup-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--c-text-secondary);
+}
+.settings-subgroup-sub {
+  font-size: 12px;
+  color: var(--c-text-tertiary);
+  line-height: 1.5;
+}
+
+/* ── Status chip — two variants ─────────────────────────
+   Section variant (filled pill): summary status next to a section heading.
+   Card variant (dot + text only, no background): individual provider status.
+   Keeping them visually distinct prevents chip-spam at identical weight. */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Section-level: filled pill, slightly larger + 600 weight */
+.status-chip-section {
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-muted);
+  color: var(--c-text-secondary);
+}
+.status-chip-section .status-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-text-tertiary);
+}
+.status-chip-section.status-chip-ready {
+  background: var(--c-green-bg);
+  color: var(--c-green-fg);
+}
+.status-chip-section.status-chip-ready .status-chip-dot { background: var(--c-green-dot); }
+.status-chip-section.status-chip-untested {
+  background: var(--c-yellow-bg);
+  color: var(--c-yellow-fg);
+}
+.status-chip-section.status-chip-untested .status-chip-dot { background: var(--c-yellow-dot); }
+.status-chip-section.status-chip-not-configured {
+  background: var(--c-bg-muted);
+  color: var(--c-text-tertiary);
+}
+.status-chip-section.status-chip-not-configured .status-chip-dot {
+  background: var(--c-text-tertiary);
+  opacity: 0.6;
+}
+.status-chip-section.status-chip-error {
+  background: var(--c-red-bg);
+  color: var(--c-red-fg);
+}
+.status-chip-section.status-chip-error .status-chip-dot { background: var(--c-red-dot); }
+
+/* Card-level: NO background, just dot + muted text.  Step visually lighter
+   than section chip so the eye reads "region ok → detail follows." */
+.status-chip-card {
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--c-text-tertiary);
+}
+.status-chip-card .status-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-text-tertiary);
+}
+.status-chip-card.status-chip-ready { color: var(--c-green-fg); }
+.status-chip-card.status-chip-ready .status-chip-dot { background: var(--c-green-dot); }
+.status-chip-card.status-chip-untested { color: var(--c-yellow-fg); }
+.status-chip-card.status-chip-untested .status-chip-dot { background: var(--c-yellow-dot); }
+.status-chip-card.status-chip-not-configured { color: var(--c-text-tertiary); }
+.status-chip-card.status-chip-not-configured .status-chip-dot { opacity: 0.55; }
+.status-chip-card.status-chip-error { color: var(--c-red-fg); }
+.status-chip-card.status-chip-error .status-chip-dot { background: var(--c-red-dot); }
+.status-chip-card.status-chip-checking { color: var(--c-text-secondary); }
+
 /* ── Danger button ───────────────────────────────────── */
 .danger-btn { background: var(--danger) !important; border-color: var(--danger) !important; color: #ffffff !important; }
 .danger-btn:hover:not(:disabled) { background: var(--danger-hover) !important; transform: translateY(-1px); }
@@ -747,6 +1118,19 @@ body {
 
 .icon-btn-danger:hover { color: var(--danger); background: var(--danger-light); }
 .icon-btn-danger:active { transform: scale(0.9); }
+
+/* Balanced ghost-icon button — same height/border as .btn.outline.btn-sm
+   so Export + Delete read as a pair rather than weak-vs-strong. */
+.btn.btn-icon {
+  padding: 0;
+  width: 32px;
+}
+.btn.btn-icon-danger { color: var(--fg-secondary); }
+.btn.btn-icon-danger:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-light);
+}
 
 .delete-cell { width: 32px; text-align: center; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
@@ -1031,12 +1415,12 @@ body {
   align-items: center;
   gap: 0;
   font-size: 13px;
-  margin-bottom: 12px;
-  color: var(--muted);
+  margin-bottom: 8px;
+  color: var(--fg-secondary);
 }
 
 .breadcrumb a {
-  color: var(--muted);
+  color: var(--fg-secondary);
   text-decoration: none;
   transition: color 0.15s;
 }
@@ -1191,7 +1575,7 @@ body {
 
 .run-list-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 72px 90px 80px 32px;
+  grid-template-columns: auto minmax(0, 1fr) auto 72px 90px 80px 32px;
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
@@ -1199,6 +1583,21 @@ body {
   cursor: pointer;
   transition: background 0.12s;
 }
+
+.run-list-counts {
+  display: inline-flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.run-list-count-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.run-list-count-item.has-issues { color: var(--danger); font-weight: 500; }
 
 .run-list-item:last-child { border-bottom: none; }
 .run-list-item:hover { background: var(--bg-subtle); }
@@ -1242,7 +1641,7 @@ body {
 .run-list-item:hover .run-list-delete { opacity: 1; }
 
 @media (max-width: 768px) {
-  .run-list-item { grid-template-columns: auto minmax(0, 1fr) 90px; }
+  .run-list-item { grid-template-columns: auto minmax(0, 1fr) auto 90px; }
   .run-list-source, .run-list-time, .run-list-delete { display: none; }
 }
 
@@ -1366,10 +1765,10 @@ body {
   border-radius: 50%;
 }
 
-/* Clean: solid dark circle + white check. Confident, no hollow ring look. */
+/* Clean: solid green circle + white check — reinforces the "success" semantic. */
 .conclusion-banner.clean .conclusion-icon {
-  background: var(--fg);
-  color: var(--bg);
+  background: var(--success);
+  color: #fff;
 }
 
 /* Issues: solid red circle + white icon. */
@@ -1751,6 +2150,12 @@ body {
 .matrix-pattern-col {
   width: 72px;
   cursor: help;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--fg-secondary);
+  text-align: center;
 }
 
 .matrix-pattern-short {
@@ -1763,10 +2168,11 @@ body {
 }
 
 .matrix-status-col {
-  text-align: left !important;
-  min-width: 110px;
+  text-align: center !important;  /* match the row values (centered dot + text) */
+  min-width: 140px;
   padding-right: 20px !important;
 }
+.matrix-status-cell { text-align: center; }
 
 .matrix-row {
   transition: background 0.12s;
@@ -1792,35 +2198,20 @@ body {
   vertical-align: middle;
 }
 
+/* Naked symbols — no circle backgrounds. Less "kid-friendly app" look. */
 .matrix-cell-symbol {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1;
-}
-
-.matrix-cell-issue .matrix-cell-symbol {
-  background: var(--danger);
-  color: #fff;
-}
-
-.matrix-cell-passed .matrix-cell-symbol {
-  background: var(--success-light);
-  color: var(--success);
-}
-
-.matrix-cell-na .matrix-cell-symbol {
-  background: var(--bg-subtle);
   color: var(--fg-tertiary);
 }
 
+.matrix-cell-passed .matrix-cell-symbol { color: var(--fg-tertiary); }
+.matrix-cell-na     .matrix-cell-symbol { color: var(--fg-tertiary); opacity: 0.5; }
 .matrix-cell-pending .matrix-cell-symbol {
-  background: var(--bg-subtle);
   color: var(--fg-tertiary);
   animation: pendingPulse 1.6s ease-in-out infinite;
 }
@@ -1836,10 +2227,49 @@ body {
   white-space: nowrap;
 }
 
+/* Compact table: File / Checks / Status — replaces the 5-pattern matrix. */
+.matrix-table-compact .matrix-checks-col { width: auto; }
+.matrix-checks-cell {
+  padding: 14px 12px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+  vertical-align: middle;
+}
+.checks-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.checks-summary-all { color: var(--fg-secondary); font-weight: 500; }
+.checks-summary-pending { color: var(--fg-secondary); font-weight: 500; }
+.checks-summary-na { color: var(--fg-tertiary); font-size: 11px; }
+.checks-summary-issues {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.checks-issue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  border: 1px solid var(--border);
+}
+
 .matrix-status-issue {
-  color: var(--danger);
+  color: var(--fg-secondary);
   font-weight: 500;
 }
+.matrix-status-issue.sev-critical { color: var(--c-red-fg); }
+.matrix-status-issue.sev-major    { color: var(--c-amber-fg); }
+.matrix-status-issue.sev-minor    { color: var(--c-yellow-fg); }
 
 .matrix-status-clean {
   color: var(--success);
@@ -2114,8 +2544,12 @@ body {
 [data-theme="dark"] .diff-row-add .diff-cell-right { background: rgba(16,185,120,0.14); }
 
 /* Remove hover on issue rows — they're no longer clickable */
-.matrix-row.has-issues { cursor: default; }
-.matrix-row.has-issues:hover { background: transparent; }
+.matrix-row.clickable { cursor: pointer; }
+.matrix-row.clickable:hover { background: var(--bg-subtle); }
+.matrix-row.clickable:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
+}
 
 /* ── Right-side detail drawer (legacy, unused) ────────── */
 @keyframes drawerSlideIn {
@@ -2456,9 +2890,9 @@ body {
 .code-block::-webkit-scrollbar-track { background: transparent; }
 .code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* ── CodeBlock with line numbers + syntax highlighting ── */
+/* ── CodeBlock: dark terminal theme (always, regardless of app theme) ── */
 .code-block-wrapper {
-  background: var(--bg-subtle);
+  background: #0d1117;           /* GitHub Dark */
   border-radius: var(--radius-xs);
   overflow: hidden;
 }
@@ -2467,50 +2901,58 @@ body {
   margin: 0;
   padding: 12px 0;
   font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.65;
-  color: var(--fg);
-  max-height: 480px;
+  font-size: 13px;
+  line-height: 1.55;             /* tighter — no more "bloated" look */
+  color: #e6edf3;                /* GitHub Dark fg */
+  max-height: 640px;
   overflow: auto;
   tab-size: 4;
 }
 
 .code-block-pre::-webkit-scrollbar { width: 8px; height: 8px; }
 .code-block-pre::-webkit-scrollbar-track { background: transparent; }
-.code-block-pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.code-block-pre::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+.code-block-pre::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
+/* Single-line rows; long lines scroll horizontally via .code-block-pre.
+   No soft-wrap → line numbers always match visual rows 1:1. */
 .code-line {
-  display: grid;
-  grid-template-columns: 48px 1fr;
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 22px;
   padding: 0 16px 0 0;
   white-space: pre;
 }
 
 .code-line-num {
-  color: var(--fg-disabled);
+  flex-shrink: 0;
+  min-width: 56px;
+  color: #484f58;
   text-align: right;
   padding-right: 16px;
   user-select: none;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;  /* 1, 8, 88 all same width */
 }
 
 .code-line-content {
-  overflow: visible;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;         /* let the line push the pre's scrollable width */
+}
+.code-line-text {
+  white-space: pre;       /* never wrap */
 }
 
 .code-line-hl {
-  background: rgba(220,38,38,0.08);
-  border-left: 3px solid var(--danger);
-  padding-left: 0;
+  background: rgba(248,113,113,0.10);
+  /* No border-left — line-number color + pill tag carry the signal. */
 }
 
 .code-line-hl .code-line-num {
-  color: var(--danger);
-  font-weight: 600;
-}
-
-[data-theme="dark"] .code-line-hl {
-  background: rgba(244,63,94,0.10);
+  color: #f87171;
+  font-weight: 500;
 }
 
 .code-line-focus {
@@ -2521,18 +2963,452 @@ body {
   background: rgba(244,63,94,0.22) !important;
 }
 
-/* ── Spell-checker-style inline annotations ─────────────── */
-.code-line-content {
+/* ══════════════════════════════════════════════════════════
+   3-column InspectorView shell (RunDetail)
+   — left: file list, center: code stage, right: issue inspector
+   Neutral tokens only; no colored left-accent bars.
+   ══════════════════════════════════════════════════════════ */
+.run-shell {
+  display: grid;
+  /* Balanced for actual Java line lengths (~60–90 chars at 13px mono needs
+     ~650–720px).  Files narrow, code column takes the lion's share, inspector
+     shrinkable down to 300px when viewport is tight. */
+  grid-template-columns: 180px minmax(480px, 1fr) minmax(300px, 340px);
+  gap: 12px;
+  margin-top: 16px;
+  align-items: start;  /* all three columns start from the same top baseline */
+}
+
+/* Single-file runs: drop the Files column entirely and give the code panel
+   the extra ~180px.  Typical Java lines (60–90 chars @ 13px mono) now fit
+   without horizontal scroll. */
+.run-shell.run-shell-single {
+  grid-template-columns: minmax(480px, 1fr) minmax(300px, 340px);
+}
+
+/* Diff mode: stage takes full width. Diagnosis is condensed into a strip
+   above the diff grid, inside the stage itself. Matches Sentry/GitHub PR
+   resolution flow — the user has already read "why", now they're reviewing
+   the change. */
+.run-shell.run-shell-diff {
+  grid-template-columns: 1fr;
+}
+
+/* left: file list — intentionally NOT a card, to avoid nested cards. */
+.run-files {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;                     /* header + list manage their own padding */
+  align-self: start;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 40px);
+  overflow: hidden;               /* round-corner clipping like stage */
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+}
+.run-files-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  padding: 14px 16px;               /* matches stage header padding exactly */
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+.run-files-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;                     /* small breathing room so rows look like inner items, not another card */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+.run-file-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
   gap: 8px;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;                    /* rows are NOT cards — flat list items inside one card */
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.run-file-item:hover { background: var(--bg-subtle); color: var(--fg); }
+.run-file-item.active {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+  color: var(--fg);
+  font-weight: 500;
+}
+.run-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.run-file-count {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(220,38,38,0.10);
+  color: var(--danger);
+  flex-shrink: 0;
+}
+[data-theme="dark"] .run-file-count {
+  background: rgba(244,63,94,0.15);
+  color: #fda4af;
+}
+.run-file-check { color: var(--success); flex-shrink: 0; }
+.run-file-pending { color: var(--fg-tertiary); flex-shrink: 0; }
+
+/* center: stage */
+.run-stage {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.run-stage .code-block-wrapper { border-radius: 0; }  /* flush with run-stage card */
+/* ── Run detail: align all top-section text to X = 16 ─────
+   breadcrumb / H1 / meta-line / banner text / legend text all start
+   at the same left edge so there's no perceived left-border jag. */
+.run-detail-page .breadcrumb { padding-left: 16px; }
+.run-detail-page .page-header { padding-left: 16px; padding-right: 16px; }
+.run-detail-page .run-summary-line { padding-left: 16px; }
+/* banner + legend already use padding: _ 16px internally */
+
+/* Light header bar — matches surface color of Files / Inspector columns so
+   all three columns start from the same visual Y=0.  A strong border-bottom
+   provides the separator with the dark code well below. */
+.run-stage-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);   /* same as Files/Inspector surface */
+}
+.run-stage-lang {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg-tertiary);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.run-stage-file {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--fg);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   min-width: 0;
 }
-.code-line-text {
+.run-stage-spacer { flex: 1 1 auto; }
+.run-stage-meta {
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.run-stage-issues {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.run-stage-code {
+  padding: 0;
+  min-width: 0;       /* allow flex child to shrink below content width */
+  overflow: hidden;   /* clip here; actual scroll happens in code-block-pre */
   flex: 1 1 auto;
-  min-width: 0;
-  white-space: pre;
 }
+.run-stage-empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--fg-tertiary);
+  font-size: 13px;
+}
+
+/* right: inspector */
+.run-inspector {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;                       /* tabs header + body manage their own padding — parity with stage/files */
+  align-self: start;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.run-inspector-body { padding: 14px 16px 16px; overflow-y: auto; }
+.run-inspector-empty { padding: 32px 16px; }
+.run-inspector-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 9px 16px;                /* 9 + pill(4+1) = 14 → text aligns with Files/Stage */
+  border-bottom: 1px solid var(--border);
+  min-height: 48px;                 /* visual parity with stage header */
+  box-sizing: border-box;
+}
+.run-inspector-tab {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.run-inspector-tab:hover { background: var(--bg); }
+/* Active tab: light chip (like GitHub's selected segment), not heavy black fill. */
+.run-inspector-tab.active {
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border-color: var(--border-strong, var(--c-border-strong));
+  box-shadow: inset 0 0 0 1px var(--c-border-strong);
+  font-weight: 600;
+}
+.run-inspector-head { margin-bottom: 16px; }
+.run-inspector-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.run-inspector-pattern {
+  font-family: inherit;  /* sans — no serif inside cards per design.md */
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  color: var(--fg);
+}
+.run-inspector-loc-link {
+  font-size: 12px;
+  color: var(--info);                 /* GitHub accent.fg — clearly a link */
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+}
+.run-inspector-loc-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.run-inspector-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.run-inspector-rules-link {
+  font-size: 12px;
+  color: var(--info);
+  text-decoration: none;
+}
+.run-inspector-rules-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Run progress strip (shown while run is executing) ─── */
+.run-progress-strip {
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.run-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--c-text-primary);
+  margin-bottom: 10px;
+}
+.run-progress-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.run-progress-eta {
+  font-size: 12px;
+  color: var(--c-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+@keyframes progress-spin { to { transform: rotate(360deg); } }
+.run-progress-spin { animation: progress-spin 1s linear infinite; color: var(--info); }
+.run-progress-strip .progress-bar-wrapper { margin-bottom: 10px; }
+.run-progress-current {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+.run-progress-current-label {
+  color: var(--c-text-tertiary);
+}
+.run-progress-current-file {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  color: var(--c-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.run-inspector-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.copy-btn {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.copy-btn:hover { background: var(--bg-elevated); color: var(--fg); }
+.copy-btn:active { transform: scale(0.95); }
+
+/* Inline code block inside the inspector (Suggested fix) */
+.run-inspector-code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  background: #0d1117;
+  color: #e6edf3;
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 220px;
+  overflow: auto;
+}
+
+/* ── Export dropdown ─────────────────────────────────── */
+.export-menu { position: relative; display: inline-block; }
+.export-menu-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 220px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+.export-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--c-text-primary);
+  transition: background 0.1s;
+}
+.export-menu-item:hover { background: var(--c-bg-muted); }
+.export-menu-item-label { font-size: 13px; font-weight: 500; }
+.export-menu-item-hint  { font-size: 11px; color: var(--c-text-tertiary); }
+.run-inspector-section {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.run-inspector-section:first-of-type { border-top: none; padding-top: 0; }
+.run-inspector-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-tertiary);
+  margin-bottom: 6px;
+}
+.run-inspector-text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--fg-secondary);
+  margin: 0;
+}
+.run-inspector-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--fg-tertiary);
+}
+.run-inspector-empty svg { color: var(--success); }
+.run-inspector-empty-title {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  font-weight: 500;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.run-inspector-empty-sub { font-size: 11px; line-height: 1.5; }
+
+/* responsive collapse */
+@media (max-width: 1280px) {
+  .run-shell { grid-template-columns: 180px minmax(0, 1fr); }
+  .run-inspector { display: none; }
+}
+@media (max-width: 900px) {
+  .run-shell { grid-template-columns: 1fr; }
+  .run-files { position: static; max-height: 200px; }
+}
+
+/* ── Spell-checker-style inline annotations ─────────────── */
+/* Keep content inline + nowrap so lines stay single-row and scroll horizontally;
+   the tag pill sits to the right of the text, not below. */
 .code-line-ann .code-line-text {
   text-decoration: underline wavy var(--danger);
   text-decoration-skip-ink: none;
@@ -2549,11 +3425,17 @@ body {
 }
 
 .code-line-ann-tags {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
+  align-items: center;
   gap: 4px;
-  flex-shrink: 0;
-  padding-right: 4px;
   user-select: none;
+  pointer-events: auto;
+  background: linear-gradient(90deg, transparent, #0d1117 24px);
+  padding-left: 24px;               /* fade behind the pill so code doesn't touch */
 }
 .code-ann-tag {
   font-size: 10px;
@@ -2583,20 +3465,49 @@ body {
   border-color: rgba(251,191,36,0.35);
 }
 
-/* Java syntax tokens */
-.tok-keyword { color: #a0309d; font-weight: 500; }
-.tok-type { color: #2563eb; }
-.tok-string { color: #059669; }
-.tok-number { color: #b45309; }
-.tok-comment { color: var(--fg-tertiary); font-style: italic; }
-.tok-annotation { color: #7c3aed; }
-.tok-ident { color: var(--fg); }
+/* Java syntax tokens — tuned for the dark code-block background (GitHub Dark palette) */
+.tok-keyword    { color: #ff7b72; font-weight: 500; }
+.tok-type       { color: #79c0ff; }
+.tok-string     { color: #a5d6ff; }
+.tok-number     { color: #79c0ff; }
+.tok-comment    { color: #8b949e; font-style: normal; }
 
-[data-theme="dark"] .tok-keyword { color: #e879f9; }
-[data-theme="dark"] .tok-type { color: #60a5fa; }
-[data-theme="dark"] .tok-string { color: #34d399; }
-[data-theme="dark"] .tok-number { color: #fbbf24; }
-[data-theme="dark"] .tok-annotation { color: #c4b5fd; }
+/* ══════════════════════════════════════════════════════════
+   Hard override — every character inside a code block uses the
+   same mono font in upright style. Prevents third-party syntax
+   themes from sneaking italic / serif into comments.
+   ══════════════════════════════════════════════════════════ */
+pre, code,
+pre *, code * {
+  font-family: "JetBrains Mono", "SF Mono", "Fira Code", Consolas, Menlo, ui-monospace, monospace !important;
+  font-style: normal !important;
+}
+
+/* ── Hero banner onboarding step states ─────────────── */
+.hero-step-pending {
+  color: var(--c-amber-fg);
+}
+.hero-step-pending strong { color: var(--c-amber-fg); }
+.hero-step-done {
+  color: var(--c-green-fg);
+}
+.hero-step-done strong { color: var(--c-green-fg); }
+.hero-step-done::before {
+  content: "✓";
+  font-weight: 700;
+  margin-right: 4px;
+}
+.hero-inline-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+.hero-inline-link:hover { color: var(--c-text-primary); }
+.tok-annotation { color: #d2a8ff; }
+.tok-ident      { color: #e6edf3; }
+
+/* Code tokens are tuned once (for the always-dark code block); no theme override. */
 
 /* ── Feedback fix suggestion ─────────────────────────── */
 .feedback-line-ref {
@@ -2887,16 +3798,30 @@ body {
 
 /* ── Settings: provider card ─────────────────────────── */
 .settings-provider-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-elevated);
-  margin-bottom: 12px;
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  background: var(--c-bg-surface);
+  margin-bottom: 8px;                /* tighter intra-group spacing */
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition:
+    border-color 0.18s var(--ease-out),
+    box-shadow 0.18s var(--ease-out),
+    transform 0.18s var(--ease-out);
 }
 
-.settings-provider-card:hover {
-  border-color: var(--fg-tertiary);
+/* Subtle hover — "I'm clickable" without being loud. */
+.settings-provider-card:has(.provider-header:hover) {
+  border-color: var(--c-border-strong);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+/* Only lift when the card is not already expanded (avoid jittering when
+   the user is interacting with the body). */
+.settings-provider-card:has(.provider-header:hover:not([aria-expanded="true"])) {
+  transform: translateY(-1px);
+}
+.settings-provider-card .provider-header .chevron,
+.settings-provider-card:has(.provider-header:hover) svg:last-of-type {
+  color: var(--c-text-secondary);
 }
 
 .provider-header {
@@ -2906,7 +3831,15 @@ body {
   padding: 12px 16px;
   cursor: pointer;
   user-select: none;
+  /* Reset <button> defaults now that header is a real button element */
+  width: 100%;
+  background: transparent;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
 }
+.provider-header:hover { background: var(--c-bg-muted); }
 
 .provider-info {
   display: flex;
@@ -2931,6 +3864,50 @@ body {
   color: var(--fg-secondary);
   width: 16px;
   text-align: center;
+}
+
+/* Brand-logo slot — each provider gets its own tint so the card is
+   identifiable at a glance. Logos are inline SVGs (no icon-pack dependency). */
+.provider-icon-geom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--c-bg-muted);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text-primary);
+  flex-shrink: 0;
+}
+.provider-icon-geom svg { width: 14px; height: 14px; }
+
+/* Per-brand tints — subtle, not saturated, so the page stays calm. */
+.provider-icon-ollama {
+  background: #f5f5f4;
+  color: #1f2328;
+}
+.provider-icon-openai {
+  background: #e9f7f1;       /* OpenAI brand green, de-saturated */
+  color: #0a6848;
+  border-color: rgba(10,104,72,0.15);
+}
+.provider-icon-gemini {
+  background: #eef3ff;       /* Gemini blue-purple, de-saturated */
+  color: #1a73e8;
+  border-color: rgba(26,115,232,0.18);
+}
+
+/* Backend form — no card wrapper; give the footer a top separator so
+   buttons still feel grouped with the input above. */
+.settings-backend-form { margin-top: 8px; }
+.settings-backend-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 .provider-actions {
@@ -3007,4 +3984,733 @@ body {
 @media (max-width: 480px) {
   .meta-card { grid-template-columns: 1fr; }
   .pattern-legend { flex-direction: column; gap: 2px; }
+}
+
+/* ── Unified meta line (Upload · N files · 2h ago · desc) ── */
+.meta-line {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  margin-top: 4px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.5;
+}
+.meta-line .meta-sep {
+  color: var(--fg-tertiary);
+  user-select: none;
+}
+.meta-line .meta-desc {
+  color: var(--fg-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+  white-space: nowrap;
+}
+
+/* ── Run summary line (replaces the oversized MetricStrip) ── */
+.run-summary-line {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  margin: 8px 0 20px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.run-summary-line strong { color: var(--fg); font-weight: 600; }
+.run-summary-line .sev-dot { margin-right: 2px; }
+
+/* ══════════════════════════════════════════════════════════
+   Severity system — pills, dots, colored accents
+   Critical = red, Major = amber, Minor = mustard.
+   Used in MetricStrip, MatrixView, Rules page, inline tags.
+   ══════════════════════════════════════════════════════════ */
+.sev-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.sev-dot-critical { background: var(--c-red-dot); }
+.sev-dot-major    { background: var(--c-amber-dot); }  /* orange */
+.sev-dot-minor    { background: var(--c-yellow-dot); } /* yellow — distinct from major */
+
+.sev-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--fg-secondary);
+  white-space: nowrap;
+}
+.sev-pill-critical { color: var(--c-red-fg);    background: var(--c-red-bg);    border-color: var(--c-border-base); }
+.sev-pill-major    { color: var(--c-amber-fg);  background: var(--c-amber-bg);  border-color: var(--c-border-base); }
+.sev-pill-minor    { color: var(--c-yellow-fg); background: var(--c-yellow-bg); border-color: var(--c-border-base); }
+
+/* ── Energy Grade circle ─────────────────────────────── */
+.energy-grade { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+.energy-grade-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.08);
+}
+.energy-grade-sm .energy-grade-circle { width: 32px; height: 32px; font-size: 16px; }
+.energy-grade-md .energy-grade-circle { width: 56px; height: 56px; font-size: 28px; }
+.energy-grade-lg .energy-grade-circle { width: 80px; height: 80px; font-size: 40px; }
+.energy-grade-caption {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--fg-tertiary);
+}
+
+/* ── Metric strip (dashboard tiles) ──────────────────── */
+.metric-strip {
+  display: grid;
+  grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.metric-tile {
+  background: var(--bg-elevated);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+}
+.metric-tile-grade {
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+}
+.metric-tile-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-tertiary);
+  font-weight: 500;
+}
+.metric-tile-value {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.metric-tile-sub {
+  font-size: 11px;
+  color: var(--fg-tertiary);
+}
+.metric-tile-dim .metric-tile-value { color: var(--fg-tertiary); }
+
+@media (max-width: 820px) {
+  .metric-strip { grid-template-columns: 1fr 1fr; }
+  .metric-tile-grade { grid-column: span 2; }
+}
+
+/* ── View-tab switcher (Table | Code) ────────────────── */
+.view-tabs {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  gap: 2px;
+}
+.view-tab {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.view-tab:hover { color: var(--fg); }
+.view-tab.active {
+  background: var(--bg-elevated);
+  color: var(--fg);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.view-tabs-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.section-header-row-end { justify-content: flex-end; }
+.section-header-title {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  font-weight: 500;
+}
+
+/* ── Rules page ──────────────────────────────────────── */
+.rules-intro {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--fg-secondary);
+  max-width: 680px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+.rules-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 8px;
+  max-width: 960px;  /* readable line length for prose + code */
+}
+
+.rule-code-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;  /* both columns match row height */
+}
+.rule-code-grid > div {
+  display: flex;
+  flex-direction: column;  /* label on top, code fills remaining space */
+}
+.rule-code-grid > div > .rule-code {
+  flex: 1 1 auto;
+}
+@media (max-width: 720px) {
+  .rule-code-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Rules TOC (anchor nav) ─────────────────────────── */
+.rules-toc {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;          /* match rule-card padding */
+  margin-bottom: 24px;
+  max-width: 960px;             /* match rules-grid width */
+}
+.rules-toc-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  margin-bottom: 10px;
+}
+.rules-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px 20px;
+}
+.rules-toc li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+.rules-toc a {
+  font-size: 13px;
+  color: var(--fg);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+.rules-toc a:hover { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+.rules-toc-short {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  margin-left: 4px;
+}
+.rule-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;  /* vertical rhythm between sections */
+  scroll-margin-top: 80px;  /* clear the sticky top-bar when anchor-linked */
+  transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+@keyframes ruleTargetFlash {
+  0%   { border-color: var(--fg); box-shadow: 0 0 0 3px rgba(26,26,26,0.08); }
+  100% { border-color: var(--border); box-shadow: 0 0 0 0 transparent; }
+}
+.rule-card:target { animation: ruleTargetFlash 1.6s ease-out; }
+.rule-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: nowrap;
+}
+.rule-card-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.rule-card-title {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--fg);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rule-card-chip {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--fg-tertiary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+.rule-card-header > .sev-pill { flex-shrink: 0; }
+.rule-card-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-secondary);
+  margin: 0;
+}
+.rule-card-refs {
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+  letter-spacing: 0.01em;
+}
+.rules-caveat {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-secondary);
+  margin-top: 16px;
+}
+.rules-caveat strong { color: var(--fg); }
+.rules-caveat code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.rule-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  margin: 0 0 8px 0;
+}
+.rule-code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 12px 14px;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--fg-secondary);
+  margin: 0;
+}
+/* Anti-pattern vs. Fix differentiation — via background tint + label
+   icon only. No colored left-border accents anywhere in the product. */
+.rule-code-bad  {
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-red-bg);
+}
+.rule-code-good {
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-green-bg);
+}
+
+.rules-caveat {
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 16px 18px;
+  margin-top: 24px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Restored Run Detail pieces: banner, legend, filter toolbar,
+   full matrix table with Yes/No icons + expand-row details
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Issue banner (red/green hero strip) ─────────────── */
+.issue-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.issue-banner-critical {
+  background: var(--c-red-bg);
+  color: var(--c-red-fg);
+  border: 1px solid var(--c-border-subtle);
+}
+.issue-banner-major {
+  background: var(--c-amber-bg);
+  color: var(--c-amber-fg);
+  border: 1px solid var(--c-border-subtle);
+}
+.issue-banner-minor {
+  background: var(--c-yellow-bg);
+  color: var(--c-yellow-fg);
+  border: 1px solid var(--c-border-subtle);
+}
+.issue-banner-success {
+  background: var(--c-green-bg);
+  color: var(--c-green-fg);
+  border: 1px solid var(--c-border-subtle);
+}
+/* Legacy alias — keep so stale refs don't error; treats as critical */
+.issue-banner-danger { background: var(--c-red-bg); color: var(--c-red-fg); border: 1px solid var(--c-border-subtle); }
+.issue-banner strong { font-weight: 600; }
+.issue-banner-sev {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--c-text-secondary);
+}
+.issue-banner-sev .sev-dot { margin-right: 4px; vertical-align: middle; }
+
+/* ── Pattern legend ─────────────────────────────────── */
+/* Lightweight footnote-style legend — no card, no background,
+   just compact muted text so it doesn't compete with the banner above.
+   Each item is a link to the Rules anchor for that pattern. */
+.pattern-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: 12px;
+  color: var(--c-text-tertiary);
+  margin: 0 0 16px;
+  padding: 0 16px;
+}
+.pattern-legend-item {
+  color: var(--c-text-tertiary);
+  text-decoration: none;
+  border-radius: 3px;
+  padding: 1px 2px;
+  transition: color 0.12s, background 0.12s;
+}
+.pattern-legend-item:hover {
+  color: var(--c-text-primary);
+  background: var(--c-bg-muted);
+}
+.pattern-legend-item strong {
+  color: var(--c-text-secondary);
+  font-weight: 600;
+  margin-right: 6px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+}
+.pattern-legend-item:hover strong { color: var(--info); }
+
+/* ── Table toolbar (Issues only + Expand all) ───────── */
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.issues-only-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+.issues-only-check input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--fg);
+  cursor: pointer;
+}
+
+/* ── Full matrix table (restored) ───────────────────── */
+.matrix-idx-col { width: 44px; text-align: left; color: var(--c-text-tertiary); font-size: 11px; }
+.matrix-idx-cell {
+  padding: 14px 12px;
+  color: var(--c-text-tertiary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.matrix-chevron-col { width: 36px; }
+.matrix-chevron-cell {
+  text-align: center;
+  color: var(--c-text-tertiary);
+  padding: 14px 8px;
+  vertical-align: middle;
+}
+
+.cell-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.cell-verdict-yes { color: var(--c-text-primary); font-weight: 600; }
+.cell-verdict-no  { color: var(--c-text-disabled); opacity: 0.7; font-weight: 400; }
+.cell-verdict-no svg { color: var(--c-text-disabled); }
+.cell-verdict-na  { color: var(--c-text-tertiary); opacity: 0.5; }
+.cell-verdict-pending { color: var(--c-text-tertiary); }
+
+/* Inline detail row under a matrix row */
+.matrix-detail-row > td {
+  padding: 0 !important;
+  background: var(--c-bg-muted);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.matrix-detail {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.matrix-detail-issue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--c-bg-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-xs);
+}
+.matrix-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.matrix-detail-pattern {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+.matrix-detail-line {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--c-text-tertiary);
+  margin-left: auto;
+}
+.matrix-detail-reason {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--c-text-secondary);
+  margin: 0;
+}
+.matrix-detail-fix {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--c-text-primary);
+  margin: 0;
+}
+.matrix-detail-fix-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--c-text-tertiary);
+  margin-right: 6px;
+  font-weight: 600;
+}
+.matrix-detail-clean {
+  font-size: 12px;
+  color: var(--c-text-tertiary);
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Project page polish
+   — compact inline metrics, smaller H1, unified tab chips,
+     filter tabs inline with Run History heading.
+   ══════════════════════════════════════════════════════════ */
+.page-title-sm {
+  font-size: 22px;   /* now aligned with .page h2 default, kept as explicit opt-in */
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--c-text-primary);
+  margin: 0 !important;
+}
+
+/* Compact inline metrics row (replaces 3 huge stat cards) */
+.project-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 4px 0 24px;
+  font-size: 13px;
+  color: var(--c-text-secondary);
+}
+.project-metric { display: inline-flex; align-items: baseline; gap: 6px; }
+.project-metric dt {
+  font-size: 12px;
+  color: var(--c-text-tertiary);
+  font-weight: 500;
+}
+.project-metric dd {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+}
+.project-metric-sep { color: var(--c-text-tertiary); user-select: none; }
+.project-metric-sev-critical { color: var(--c-red-fg); }
+.project-metric-sev-major    { color: var(--c-amber-fg); }
+.project-metric-sev-minor    { color: var(--c-yellow-fg); }
+
+/* Run History heading + filter tabs on one row */
+.run-history-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.run-history-header-row .run-history-heading { margin: 0; }
+.run-history-header-row .run-filter-row { margin-bottom: 0; }
+
+/* Filter tab chips — make inactive chip readable but not shouty;
+   active chip uses primary fg fill. Prevents "looks like a bug" mismatch. */
+.run-filter-btn .run-filter-count {
+  background: var(--c-bg-muted);
+  color: var(--c-text-tertiary);
+  border: 1px solid var(--c-border-subtle);
+}
+.run-filter-btn.active .run-filter-count {
+  background: var(--c-text-primary);
+  color: var(--c-bg-surface);
+  border-color: var(--c-text-primary);
+}
+
+/* ── Project page — Run History table ───────────────── */
+.run-history-heading {
+  font-size: var(--t-h2, 18px);
+  font-weight: 600;
+  color: var(--c-text-primary);
+  margin: 8px 0 12px;
+}
+.run-history-wrapper {
+  border: 1px solid var(--c-border-base);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--c-bg-surface);
+}
+.run-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.run-history-table thead th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--c-text-tertiary);
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-page);
+}
+.run-history-row {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.run-history-row:hover { background: var(--c-bg-muted); }
+.run-history-row td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--c-border-subtle);
+  color: var(--c-text-primary);
+  vertical-align: middle;
+}
+.run-history-row:last-child td { border-bottom: none; }
+
+.rh-col-run, .rh-cell-run { width: 64px; font-family: "JetBrains Mono", monospace; color: var(--c-text-secondary); font-size: 12px; font-weight: 500; }
+.rh-col-desc { width: auto; }
+.rh-cell-desc { color: var(--c-text-primary); }
+.rh-cell-desc-empty { color: var(--c-text-tertiary); }
+.rh-col-source, .rh-cell-source { width: 120px; color: var(--c-text-secondary); }
+.rh-col-status, .rh-cell-status { width: 96px; }
+.rh-col-date, .rh-cell-date { width: 200px; color: var(--c-text-secondary); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.rh-col-actions, .rh-cell-actions { width: 96px; text-align: right; white-space: nowrap; }
+.rh-cell-actions .icon-btn-danger { opacity: 0; transition: opacity 0.15s; }
+.run-history-row:hover .rh-cell-actions .icon-btn-danger { opacity: 1; }
+.rh-cell-chevron {
+  color: var(--c-text-tertiary);
+  margin-left: 8px;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 400;
 }

@@ -19,6 +19,8 @@ export interface Run {
   status: string;
   created_at: string;
   updated_at: string;
+  file_count?: number | null;
+  issue_count?: number | null;
 }
 
 export interface Finding {

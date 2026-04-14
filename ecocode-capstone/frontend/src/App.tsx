@@ -7,6 +7,7 @@ import ProjectsList from "./pages/ProjectsList";
 import ProjectDetail from "./pages/ProjectDetail";
 import NewRun from "./pages/NewRun";
 import RunDetail from "./pages/RunDetail";
+import Rules from "./pages/Rules";
 import SettingsPage from "./pages/Settings";
 
 const Presence = AnimatePresence as any;
@@ -47,6 +48,7 @@ function AnimatedRoutes() {
           <Route path="/projects/:projectId" element={<ProjectDetail />} />
           <Route path="/projects/:projectId/new-run" element={<NewRun />} />
           <Route path="/runs/:runId" element={<RunDetail />} />
+          <Route path="/rules" element={<Rules />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -74,6 +76,7 @@ function AppShell() {
         <Link to="/" className="brand">Energy Analyzer</Link>
         <nav className="nav">
           <NavLink to="/" exact>Projects</NavLink>
+          <NavLink to="/rules">Rules</NavLink>
           <NavLink to="/settings">Settings</NavLink>
           <span className="nav-sep" aria-hidden="true" />
           <button

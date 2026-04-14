@@ -9,6 +9,11 @@ class ProjectCreateRequest(BaseModel):
     repo_url: str | None = None
 
 
+class ProjectUpdateRequest(BaseModel):
+    name: str | None = None
+    repo_url: str | None = None
+
+
 class ProjectResponse(BaseModel):
     id: int
     name: str
@@ -37,6 +42,8 @@ class RunResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    file_count: int | None = None
+    issue_count: int | None = None
 
 
 class FindingResponse(BaseModel):

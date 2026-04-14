@@ -89,6 +89,24 @@ class TaskManager:
                 })
             return result
 
+    def update_project(
+        self,
+        project_id: int,
+        name: str | None = None,
+        repo_url: str | None = None,
+    ) -> Project | None:
+        with get_db_session() as db:
+            proj = db.get(Project, project_id)
+            if not proj:
+                return None
+            if name is not None and name.strip():
+                proj.name = name.strip()
+            if repo_url is not None:
+                proj.repo_url = repo_url.strip() or None
+            db.commit()
+            db.refresh(proj)
+            return proj
+
     def get_project(self, project_id: int) -> Project | None:
         with get_db_session() as db:
             return db.get(Project, project_id)
@@ -139,6 +157,21 @@ class TaskManager:
             db.delete(run)
             db.commit()
             return True
+
+    def get_run_counts(self, task_id: int) -> tuple[int, int]:
+        """Return (file_count, issue_count) for a single run."""
+        file_count = 0
+        issue_count = 0
+        with get_db_session() as db:
+            findings = list(db.scalars(
+                select(ResultDetail).where(ResultDetail.task_id == task_id)
+            ))
+            file_count = len(findings)
+            for f in findings:
+                for p in ("dw", "hmu", "has", "iod", "nlmr"):
+                    if getattr(f, p, "") == "Yes":
+                        issue_count += 1
+        return file_count, issue_count
 
     def get_project_pattern_stats(self, project_id: int) -> dict[str, int]:
         stats = {p: 0 for p in PATTERNS}

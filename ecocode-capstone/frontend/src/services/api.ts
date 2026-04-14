@@ -54,6 +54,14 @@ export async function deleteProject(projectId: number): Promise<void> {
   await API.delete(`/api/projects/${projectId}`);
 }
 
+export async function updateProject(
+  projectId: number,
+  patch: { name?: string; repo_url?: string | null }
+): Promise<Project> {
+  const { data } = await API.patch<Project>(`/api/projects/${projectId}`, patch);
+  return data;
+}
+
 export async function getPatternStats(
   projectId: number
 ): Promise<Record<string, number>> {

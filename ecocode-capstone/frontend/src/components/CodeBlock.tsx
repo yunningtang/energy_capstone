@@ -146,6 +146,22 @@ export default function CodeBlock({ code, highlightLines, focusLine, annotations
     }
   }, [focusLine]);
 
+  // For each tag, find the first annotated line number so we can render
+  // the pill only there (the rest of the range keeps the underline but
+  // drops the repeated label — eliminates the "NLMR×10" visual noise).
+  const firstLineForTag = React.useMemo(() => {
+    const m = new Map<string, number>();
+    if (!annotations) return m;
+    const sorted = Array.from(annotations.keys()).sort((a, b) => a - b);
+    for (const ln of sorted) {
+      const anns = annotations.get(ln) ?? [];
+      for (const a of anns) {
+        if (!m.has(a.tag)) m.set(a.tag, ln);
+      }
+    }
+    return m;
+  }, [annotations]);
+
   // Track multi-line block comment state
   let inBlockComment = false;
 
@@ -204,15 +220,17 @@ export default function CodeBlock({ code, highlightLines, focusLine, annotations
                 <span className="code-line-text">{rendered}</span>
                 {hasAnn && lineAnns && (
                   <span className="code-line-ann-tags">
-                    {lineAnns.map((a, ai) => (
-                      <span
-                        key={ai}
-                        className={`code-ann-tag code-ann-${a.severity ?? "error"}`}
-                        title={a.message}
-                      >
-                        {a.tag}
-                      </span>
-                    ))}
+                    {lineAnns
+                      .filter((a) => firstLineForTag.get(a.tag) === lineNum)
+                      .map((a, ai) => (
+                        <span
+                          key={ai}
+                          className={`code-ann-tag code-ann-${a.severity ?? "error"}`}
+                          title={a.message}
+                        >
+                          {a.tag}
+                        </span>
+                      ))}
                   </span>
                 )}
               </span>
