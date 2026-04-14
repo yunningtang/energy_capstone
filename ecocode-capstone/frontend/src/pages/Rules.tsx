@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { FolderPlus, Upload, Search, FileText } from "lucide-react";
 import SeverityBadge from "../components/SeverityBadge";
 import { Severity, severityOf } from "../lib/severity";
 
@@ -101,12 +103,71 @@ public void onDraw(Canvas c) {
 export default function Rules() {
   return (
     <div className="page">
-      <h2>Rules</h2>
+      <h2>Guide &amp; Rules</h2>
       <p className="rules-intro">
         Five energy anti-patterns from the Android Test-Quality Research Group (TQRG) taxonomy.
         Each rule is classified into one of three severity tiers based on its typical impact on
         battery life and app responsiveness.
       </p>
+
+      {/* ── Getting Started — 4-step walkthrough ─── */}
+      <section id="getting-started" className="guide-getting-started">
+        <h3 className="guide-section-title">Getting started</h3>
+        <p className="guide-section-sub">
+          A typical end-to-end flow takes about a minute for a handful of files.
+        </p>
+        <ol className="guide-steps">
+          <li className="guide-step">
+            <span className="guide-step-icon"><FolderPlus size={16} /></span>
+            <div>
+              <div className="guide-step-title">1 · Create a project</div>
+              <p className="guide-step-body">
+                Go to <Link to="/" className="guide-inline-link">Projects</Link> →
+                <strong> New project</strong>. Projects group related runs so you can track
+                an app's energy profile over time.
+              </p>
+            </div>
+          </li>
+          <li className="guide-step">
+            <span className="guide-step-icon"><Upload size={16} /></span>
+            <div>
+              <div className="guide-step-title">2 · Start a run</div>
+              <p className="guide-step-body">
+                Click <strong>New Run</strong> inside your project. Either paste a public
+                GitHub / GitLab / Bitbucket URL, or upload <code>.java</code> files /
+                a <code>.zip</code> archive. We analyze Java sources only.
+              </p>
+            </div>
+          </li>
+          <li className="guide-step">
+            <span className="guide-step-icon"><Search size={16} /></span>
+            <div>
+              <div className="guide-step-title">3 · Wait for analysis</div>
+              <p className="guide-step-body">
+                Each file is checked against the five rules below via an LLM
+                (configured in <Link to="/settings" className="guide-inline-link">Settings</Link>).
+                Progress refreshes every few seconds. A typical 20-file run finishes in
+                under a minute.
+              </p>
+            </div>
+          </li>
+          <li className="guide-step">
+            <span className="guide-step-icon"><FileText size={16} /></span>
+            <div>
+              <div className="guide-step-title">4 · Review &amp; export</div>
+              <p className="guide-step-body">
+                Use <strong>Table view</strong> for a matrix of files × rules, or
+                <strong> Code view</strong> to see each finding inline with the source.
+                Every issue ships with a diagnosis, a suggested fix, and an
+                <strong> Export</strong> menu (CSV / JSON / Markdown) for sharing.
+              </p>
+            </div>
+          </li>
+        </ol>
+        <div className="guide-jump-to-rules">
+          <a href="#rule-DW" className="guide-jump-link">Jump to the rule reference ↓</a>
+        </div>
+      </section>
 
       <nav className="rules-toc" aria-label="On this page">
         <span className="rules-toc-label">On this page</span>

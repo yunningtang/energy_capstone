@@ -76,7 +76,7 @@ function AppShell() {
         <Link to="/" className="brand">Energy Analyzer</Link>
         <nav className="nav">
           <NavLink to="/" exact>Projects</NavLink>
-          <NavLink to="/rules">Rules</NavLink>
+          <NavLink to="/rules">Guide</NavLink>
           <NavLink to="/settings">Settings</NavLink>
           <span className="nav-sep" aria-hidden="true" />
           <button

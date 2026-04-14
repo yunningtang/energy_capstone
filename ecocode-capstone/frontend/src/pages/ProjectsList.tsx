@@ -112,6 +112,21 @@ export default function ProjectsList() {
               : recentRuns[0]?.created_at
                 ? `Last analysis ${relativeTime(recentRuns[0].created_at)} across ${projects.length} project${projects.length > 1 ? "s" : ""}`
                 : `${projects.length} project${projects.length > 1 ? "s" : ""} ready.`}
+            {heroDismissed && (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  className="text-btn inline-btn"
+                  onClick={() => {
+                    localStorage.removeItem("hero_dismissed");
+                    setHeroDismissed(false);
+                  }}
+                >
+                  Show getting started
+                </button>
+              </>
+            )}
           </p>
         </div>
       </div>
