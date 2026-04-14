@@ -47,7 +47,7 @@ services:
       # Deterministic Render service URL (avoids circular fromService ref).
       # If you renamed the frontend service in this file, update this to match.
       - key: FRONTEND_URL
-        value: https://ecocode-frontend.onrender.com
+        value: https://ecocode-frontend-ybgk.onrender.com
       - key: PYTHON_VERSION
         value: "3.11.0"
 
@@ -64,7 +64,7 @@ services:
     envVars:
       # Deterministic backend URL (avoids circular fromService ref).
       - key: REACT_APP_API_BASE_URL
-        value: https://ecocode-api.onrender.com
+        value: https://ecocode-api-ybgk.onrender.com
     routes:
       # SPA rewrite: every unknown path serves index.html so react-router
       # can take over.
