@@ -43,7 +43,7 @@ function StatusChip({ kind, variant = "section" }: { kind: StatusKind; variant?:
   return (
     <span className={`status-chip status-chip-${variant} status-chip-${kind}`}>
       {kind === "checking" ? (
-        <Loader2 size={11} className="spin" />
+        <Loader2 size={12} className="spin" />
       ) : (
         <span className="status-chip-dot" aria-hidden />
       )}
@@ -403,7 +403,7 @@ function CloudProviderCard({
         <div className="provider-body">
           <label className="field-label" htmlFor={`${id}-key`}>API key</label>
           <PasswordInput value={keyValue} onChange={setKey} placeholder={placeholder} />
-          <p className="field-helper"><Lock size={10} /> Stored in your browser. Never sent to our servers.</p>
+          <p className="field-helper"><Lock size={12} /> Stored in your browser. Never sent to our servers.</p>
           <div className="provider-footer">
             {keyValue && (
               <button className="btn danger-ghost btn-sm" onClick={onRemove}>

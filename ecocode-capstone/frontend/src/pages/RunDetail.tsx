@@ -839,7 +839,7 @@ export default function RunDetail() {
             />
           )}
           <button
-            className="btn outline btn-sm btn-icon btn-icon-danger"
+            className="icon-btn-danger icon-btn-danger-md"
             onClick={() => setConfirmDelete(true)}
             title="Delete run"
             aria-label="Delete run"

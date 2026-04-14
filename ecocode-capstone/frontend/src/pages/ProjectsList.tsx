@@ -205,11 +205,11 @@ export default function ProjectsList() {
                           <span className="dashboard-run-project">{project?.name}</span>
                           <span className={`dashboard-run-status ${issueCount > 0 ? "has-issues" : r.status === "Done" ? "clean" : "pending"}`}>
                             {r.status !== "Done" ? (
-                              <><Clock size={13} /> {r.status}</>
+                              <><Clock size={12} /> {r.status}</>
                             ) : issueCount > 0 ? (
-                              <><AlertTriangle size={13} /> {issueCount} issue{issueCount === 1 ? "" : "s"}</>
+                              <><AlertTriangle size={12} /> {issueCount} issue{issueCount === 1 ? "" : "s"}</>
                             ) : (
-                              <><CheckCircle2 size={13} /> Clean</>
+                              <><CheckCircle2 size={12} /> Clean</>
                             )}
                           </span>
                           <span className="dashboard-run-time">{relativeTime(r.created_at)}</span>

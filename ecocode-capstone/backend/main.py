@@ -4,7 +4,6 @@ from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from sqlalchemy import text
 
 from config import get_settings
@@ -184,21 +183,55 @@ def create_run(payload: RunCreateRequest):
     return _run_dict(task)
 
 
+async def _expand_uploaded_files(files: list[UploadFile]) -> list[tuple[str, str]]:
+    """Read uploaded files. .zip archives are expanded server-side and only
+    .java entries inside are kept; everything else is passed through.
+    Returns a list of (filename, content) pairs ready for save_uploaded_files."""
+    import io
+    import zipfile
+
+    pairs: list[tuple[str, str]] = []
+    for f in files:
+        raw = await f.read()
+        name = f.filename or "unknown"
+        if name.lower().endswith(".zip"):
+            try:
+                with zipfile.ZipFile(io.BytesIO(raw)) as zf:
+                    for entry in zf.infolist():
+                        if entry.is_dir():
+                            continue
+                        if not entry.filename.lower().endswith(".java"):
+                            continue
+                        # Reject path traversal — zip can contain "../etc/x"
+                        if entry.filename.startswith("/") or ".." in entry.filename.split("/"):
+                            continue
+                        try:
+                            content = zf.read(entry).decode("utf-8", errors="ignore")
+                        except Exception:
+                            continue
+                        pairs.append((entry.filename, content))
+            except zipfile.BadZipFile:
+                # Treat malformed zip as a regular file rather than crashing.
+                pairs.append((name, raw.decode("utf-8", errors="ignore")))
+        else:
+            pairs.append((name, raw.decode("utf-8", errors="ignore")))
+    return pairs
+
+
 @app.post("/api/runs/upload", response_model=RunResponse)
 async def create_run_upload(
     project_id: int = Form(...),
     description: str = Form(""),
     files: list[UploadFile] = File(...),
 ):
+    file_pairs = await _expand_uploaded_files(files)
+    if not file_pairs:
+        raise HTTPException(status_code=400, detail="No .java files found in upload (zip may be empty or contain no Java sources).")
     task = task_manager.create_task(
         description=description,
         source_type="uploaded",
         project_id=project_id,
     )
-    file_pairs: list[tuple[str, str]] = []
-    for f in files:
-        content = (await f.read()).decode("utf-8", errors="ignore")
-        file_pairs.append((f.filename or "unknown.java", content))
     task_manager.save_uploaded_files(task, file_pairs)
     return _run_dict(task)
 
@@ -239,45 +272,9 @@ def retry_run(run_id: int):
     return {"ok": True, "retrying": len(ids)}
 
 
-# --- SSE progress stream ---
-
-@app.get("/api/runs/{run_id}/progress")
-async def stream_progress(run_id: int):
-    """Server-Sent Events stream for real-time run progress."""
-    async def event_generator():
-        while True:
-            rows = task_manager.get_results(run_id)
-            if not rows:
-                yield f"data: {_json.dumps({'status': 'waiting', 'done': 0, 'total': 0})}\n\n"
-            else:
-                done = sum(1 for r in rows if r.status == "Done")
-                total = len(rows)
-                issues = sum(
-                    1 for r in rows
-                    for p in ("dw", "hmu", "has", "iod", "nlmr")
-                    if getattr(r, p, "") == "Yes"
-                )
-                current_file = next(
-                    (r.file_name for r in rows if r.status not in ("Done", "Pending")),
-                    None
-                )
-                payload = {
-                    "status": "done" if done == total else "running",
-                    "done": done,
-                    "total": total,
-                    "issues": issues,
-                    "current_file": current_file,
-                }
-                yield f"data: {_json.dumps(payload)}\n\n"
-                if done == total:
-                    break
-            await asyncio.sleep(1)
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+# Note: SSE progress stream removed — frontend uses 3s polling on
+# /api/runs/{id} + /api/runs/{id}/findings (RunDetail.tsx). Bring back
+# this endpoint if a long-running tab on a flaky network needs push updates.
 
 
 # --- Legacy task endpoints (backward compat) ---
@@ -300,15 +297,14 @@ async def create_task_upload_legacy(
     files: list[UploadFile] = File(...),
 ):
     pid = project_id if project_id > 0 else None
+    file_pairs = await _expand_uploaded_files(files)
+    if not file_pairs:
+        raise HTTPException(status_code=400, detail="No .java files found in upload.")
     task = task_manager.create_task(
         description=description,
         source_type="uploaded",
         project_id=pid,
     )
-    file_pairs: list[tuple[str, str]] = []
-    for f in files:
-        content = (await f.read()).decode("utf-8", errors="ignore")
-        file_pairs.append((f.filename or "unknown.java", content))
     task_manager.save_uploaded_files(task, file_pairs)
     return _run_dict(task)
 

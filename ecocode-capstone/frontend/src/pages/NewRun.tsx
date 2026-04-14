@@ -42,20 +42,23 @@ export default function NewRun() {
          : !isValidUrl(repoUrl) ? "That doesn't look like a valid URL"
          : !isValidRepoUrl(repoUrl) ? "Expected a GitHub, GitLab, or Bitbucket repo URL"
          : "")
-      : selectedFiles.length === 0 ? "Upload at least one .java file" : "";
+      : selectedFiles.length === 0 ? "Upload at least one .java or .zip file" : "";
 
   const addFiles = useCallback((incoming: FileList | null) => {
     if (!incoming) return;
     const all = Array.from(incoming);
-    const javaFiles = all.filter((f) => f.name.toLowerCase().endsWith(".java"));
-    const skipped = all.length - javaFiles.length;
+    const accepted = all.filter((f) => {
+      const n = f.name.toLowerCase();
+      return n.endsWith(".java") || n.endsWith(".zip");
+    });
+    const skipped = all.length - accepted.length;
     if (skipped > 0) {
-      setFileWarning(`${skipped} file${skipped > 1 ? "s" : ""} skipped — only .java files are supported.`);
+      setFileWarning(`${skipped} file${skipped > 1 ? "s" : ""} skipped — only .java and .zip files are supported.`);
       setTimeout(() => setFileWarning(""), 4000);
     }
     setSelectedFiles((prev) => {
       const existing = new Set(prev.map((f) => f.name));
-      return [...prev, ...javaFiles.filter((f) => !existing.has(f.name))];
+      return [...prev, ...accepted.filter((f) => !existing.has(f.name))];
     });
   }, []);
 
@@ -154,9 +157,9 @@ export default function NewRun() {
               onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}>
               <Upload size={24} strokeWidth={1.5} />
-              <p>Drag & drop <strong>.java</strong> files here, or click to browse</p>
+              <p>Drag & drop <strong>.java</strong> files or a <strong>.zip</strong> archive here, or click to browse</p>
             </div>
-            <input ref={fileRef} type="file" hidden multiple accept=".java" onChange={(e) => addFiles(e.target.files)} />
+            <input ref={fileRef} type="file" hidden multiple accept=".java,.zip" onChange={(e) => addFiles(e.target.files)} />
             {fileWarning && <p className="warning-text"><AlertCircle size={12} style={{ verticalAlign: -2 }} /> {fileWarning}</p>}
             {selectedFiles.length > 0 && (
               <>

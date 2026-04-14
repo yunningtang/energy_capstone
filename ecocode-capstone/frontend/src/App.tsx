@@ -84,7 +84,7 @@ function AppShell() {
             onClick={toggle}
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           >
-            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
         </nav>
       </header>

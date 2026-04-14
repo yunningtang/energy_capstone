@@ -150,7 +150,13 @@ export default function ProjectDetail() {
     );
 
   function statusBadge(status: string) {
-    const cls = status === "Done" ? "done" : status === "In-Progress" ? "progress" : status === "Failed" ? "failed" : "pending";
+    const cls =
+      status === "Done" ? "done"
+      : status === "In-Progress" ? "progress"
+      : status === "Failed" ? "failed"
+      : status === "Cancelled" ? "cancelled"
+      : status === "Partial" ? "partial"
+      : "pending";
     return <span className={`badge ${cls}`}>{status}</span>;
   }
 

@@ -700,7 +700,19 @@ body {
 .badge.progress { background: var(--info-light); color: var(--info); }
 .badge.done { background: var(--bg-subtle); color: var(--fg-secondary); border: 1px solid var(--border-light); }
 .badge.failed { background: var(--danger-light); color: var(--danger); }
-.badge.partial { background: var(--warning-light); color: var(--warning); }
+/* Partial = some files succeeded, some failed. Use a distinct amber tone
+   different from .pending (which is plain warning-yellow) so users can
+   tell the difference at a glance. */
+.badge.partial {
+  background: rgba(217, 119, 6, 0.12);
+  color: #9a6700;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+}
+[data-theme="dark"] .badge.partial {
+  background: rgba(210, 153, 34, 0.18);
+  color: #d29922;
+  border-color: rgba(210, 153, 34, 0.45);
+}
 .badge.cancelled { background: var(--bg-subtle); color: var(--fg-tertiary); }
 
 /* ── Empty state ─────────────────────────────────────── */
@@ -1150,6 +1162,9 @@ body {
 .danger-btn:hover:not(:disabled) { background: var(--danger-hover) !important; transform: translateY(-1px); }
 .danger-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
 
+/* Single icon-only destructive button — used in:
+   - row hover-reveal trash (default: opacity 0 until parent hovered)
+   - page header always-visible delete (use .icon-btn-danger-md)            */
 .icon-btn-danger {
   display: inline-flex;
   align-items: center;
@@ -1157,30 +1172,29 @@ body {
   width: 32px;
   height: 32px;
   background: none;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-xs);
   color: var(--subtle);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s, opacity 0.15s;
   opacity: 0;
 }
+.clickable-row:hover .icon-btn-danger,
+.run-list-item:hover .icon-btn-danger { opacity: 1; }
 
-.clickable-row:hover .icon-btn-danger { opacity: 1; }
-
-.icon-btn-danger:hover { color: var(--danger); background: var(--danger-light); }
-.icon-btn-danger:active { transform: scale(0.9); }
-
-/* Balanced ghost-icon button — same height/border as .btn.outline.btn-sm
-   so Export + Delete read as a pair rather than weak-vs-strong. */
-.btn.btn-icon {
-  padding: 0;
-  width: 32px;
-}
-.btn.btn-icon-danger { color: var(--fg-secondary); }
-.btn.btn-icon-danger:hover {
+.icon-btn-danger:hover {
   color: var(--danger);
-  border-color: var(--danger);
   background: var(--danger-light);
+  border-color: var(--danger);
+}
+.icon-btn-danger:active { transform: scale(0.92); }
+
+/* Variant: always visible (non-hover-reveal). Used for top-of-page delete
+   buttons that need to read at the same visual weight as Export / Cancel. */
+.icon-btn-danger-md {
+  opacity: 1;
+  border-color: var(--border);
+  color: var(--fg-secondary);
 }
 
 .delete-cell { width: 32px; text-align: center; }
@@ -4904,6 +4918,30 @@ pre *, code * {
   letter-spacing: 0.12em;
   color: var(--fg-tertiary);
 }
+
+/* Theme-aware grade colors — used by EnergyGrade and any badge that
+   wants to colour-code an A-F letter. Light values follow GitHub
+   Primer success/attention/danger, dark values use the brighter
+   counterparts so they read on canvas.subtle. */
+:root {
+  --grade-A: #1a7f37;   /* success.fg */
+  --grade-B: #2da44e;
+  --grade-C: #9a6700;   /* attention.fg */
+  --grade-D: #bc4c00;
+  --grade-F: #cf222e;   /* danger.fg */
+}
+[data-theme="dark"] {
+  --grade-A: #3fb950;
+  --grade-B: #56d364;
+  --grade-C: #d29922;
+  --grade-D: #db6d28;
+  --grade-F: #f85149;
+}
+.grade-color-A { background: var(--grade-A); }
+.grade-color-B { background: var(--grade-B); }
+.grade-color-C { background: var(--grade-C); }
+.grade-color-D { background: var(--grade-D); }
+.grade-color-F { background: var(--grade-F); }
 
 /* ── Metric strip (dashboard tiles) ──────────────────── */
 .metric-strip {

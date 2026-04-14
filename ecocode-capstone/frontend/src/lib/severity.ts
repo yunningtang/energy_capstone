@@ -116,10 +116,24 @@ export function computeGrade(
   return { grade, density, weighted, counts, kloc };
 }
 
+/**
+ * Map a grade letter to a CSS class. The class drives both light and dark
+ * mode colors via App.css, so the badge stays readable in either theme.
+ * Use `grade-color-{A|B|C|D|F}` on the element you want to colour.
+ */
+export const GRADE_CLASS: Record<Grade, string> = {
+  A: "grade-color-A",
+  B: "grade-color-B",
+  C: "grade-color-C",
+  D: "grade-color-D",
+  F: "grade-color-F",
+};
+
+/** @deprecated Use GRADE_CLASS + CSS instead — hex strings don't adapt to dark mode. */
 export const GRADE_COLOR: Record<Grade, string> = {
-  A: "#10b978",   // success-green
-  B: "#22c55e",
-  C: "#d97706",
-  D: "#ea580c",
-  F: "#dc2626",
+  A: "var(--grade-A)",
+  B: "var(--grade-B)",
+  C: "var(--grade-C)",
+  D: "var(--grade-D)",
+  F: "var(--grade-F)",
 };
