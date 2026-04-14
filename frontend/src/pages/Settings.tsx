@@ -77,22 +77,24 @@ export default function SettingsPage() {
   const [checking, setChecking] = useState(false);
   const [saved, setSaved] = useState<Record<string, boolean>>({});
 
-  const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem("openai_api_key") || "");
-  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
-  const [ollamaEndpoint, setOllamaEndpoint] = useState(() => {
-    // Migrate older split host+port → single endpoint URL.
-    const legacy = localStorage.getItem("ollama_endpoint");
-    if (legacy) return legacy;
-    const host = localStorage.getItem("ollama_host") || "http://localhost";
-    const port = localStorage.getItem("ollama_port") || "11434";
-    return `${host}:${port}`;
-  });
-  const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem("ollama_model") || "qwen2.5-coder:7b");
+  // Provider credentials are session-only: the user types them to test
+  // connectivity, but they're never written to localStorage. The backend
+  // owns the real keys via env vars; storing them in the browser would only
+  // be a leak vector with no operational benefit.
+  const [openaiKey, setOpenaiKey] = useState("");
+  const [geminiKey, setGeminiKey] = useState("");
+  const [ollamaEndpoint, setOllamaEndpoint] = useState("http://localhost:11434");
+  const [ollamaModel, setOllamaModel] = useState("qwen2.5-coder:7b");
   const [ollamaTestResult, setOllamaTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
   const [ollamaTesting, setOllamaTesting] = useState(false);
   const [expandedLlm, setExpandedLlm] = useState<string | null>(null);
 
-  useEffect(() => { checkConnection(); }, []);
+  useEffect(() => {
+    checkConnection();
+    // One-time cleanup of credentials previously persisted by older builds.
+    ["openai_api_key", "gemini_api_key", "ollama_endpoint", "ollama_model",
+     "ollama_host", "ollama_port"].forEach((k) => localStorage.removeItem(k));
+  }, []);
 
   async function checkConnection() {
     setChecking(true);
@@ -110,17 +112,6 @@ export default function SettingsPage() {
     localStorage.setItem("api_base_url", apiUrl.trim().replace(/\/+$/, ""));
     flashSaved("api");
     window.location.reload();
-  }
-
-  function saveLocal(key: string, value: string) {
-    localStorage.setItem(key, value);
-    flashSaved(key);
-  }
-
-  function removeKey(key: string, setter: (v: string) => void) {
-    localStorage.removeItem(key);
-    setter("");
-    flashSaved(key);
   }
 
   async function testOllama() {
@@ -204,9 +195,10 @@ export default function SettingsPage() {
             <strong>Backend is configured via environment variables.</strong> Set
             <code>LLM_PROVIDER</code>, <code>OPENAI_API_KEY</code>, <code>GEMINI_API_KEY</code>, or
             <code>OLLAMA_BASE_URL</code> in <code>backend/.env</code> and restart the server.
-            The fields below are saved locally in your browser for convenience and
-            do not change the active provider. The "Active" chip above reflects the
-            server's real choice via <code>/api/health</code>.
+            The fields below are <strong>session-only</strong>: anything you type
+            here is held in memory for one-off testing and is wiped on refresh —
+            nothing is written to your browser. The "Active" chip above reflects
+            the server's real choice via <code>/api/health</code>.
           </span>
         </div>
 
@@ -269,18 +261,7 @@ export default function SettingsPage() {
                   <span>Test connection</span>
                 </button>
                 <div style={{ flex: 1 }} />
-                <button
-                  className="btn primary btn-sm"
-                  onClick={() => {
-                    saveLocal("ollama_endpoint", ollamaEndpoint);
-                    saveLocal("ollama_model", ollamaModel);
-                    // clean up legacy keys
-                    localStorage.removeItem("ollama_host");
-                    localStorage.removeItem("ollama_port");
-                  }}
-                >
-                  <span>{saved["ollama_model"] || saved["ollama_endpoint"] ? "Saved!" : "Save"}</span>
-                </button>
+                <span className="field-helper" style={{ margin: 0 }}>Session-only · not stored</span>
               </div>
             </div>
           )}
@@ -303,9 +284,7 @@ export default function SettingsPage() {
           status={providerStatus("openai")}
           expanded={expandedLlm === "openai"}
           onToggle={() => setExpandedLlm(expandedLlm === "openai" ? null : "openai")}
-          onSave={() => saveLocal("openai_api_key", openaiKey)}
-          onRemove={() => removeKey("openai_api_key", setOpenaiKey)}
-          savedFlash={saved["openai_api_key"]}
+          onClear={() => setOpenaiKey("")}
         />
         <CloudProviderCard
           id="gemini"
@@ -319,9 +298,7 @@ export default function SettingsPage() {
           status={providerStatus("gemini")}
           expanded={expandedLlm === "gemini"}
           onToggle={() => setExpandedLlm(expandedLlm === "gemini" ? null : "gemini")}
-          onSave={() => saveLocal("gemini_api_key", geminiKey)}
-          onRemove={() => removeKey("gemini_api_key", setGeminiKey)}
-          savedFlash={saved["gemini_api_key"]}
+          onClear={() => setGeminiKey("")}
         />
       </section>
 
@@ -369,7 +346,7 @@ export default function SettingsPage() {
 /* ── Shared cloud-provider card (OpenAI / Gemini share the same shape) ── */
 function CloudProviderCard({
   id, name, iconNode, iconClass, desc, keyValue, setKey, placeholder, status,
-  expanded, onToggle, onSave, onRemove, savedFlash,
+  expanded, onToggle, onClear,
 }: {
   id: string;
   name: string;
@@ -382,9 +359,7 @@ function CloudProviderCard({
   status: StatusKind;
   expanded: boolean;
   onToggle: () => void;
-  onSave: () => void;
-  onRemove: () => void;
-  savedFlash: boolean;
+  onClear: () => void;
 }) {
   return (
     <div className="settings-provider-card">
@@ -403,17 +378,18 @@ function CloudProviderCard({
         <div className="provider-body">
           <label className="field-label" htmlFor={`${id}-key`}>API key</label>
           <PasswordInput value={keyValue} onChange={setKey} placeholder={placeholder} />
-          <p className="field-helper"><Lock size={12} /> Stored in your browser. Never sent to our servers.</p>
+          <p className="field-helper">
+            <Lock size={12} /> Session-only — held in memory for one-off testing,
+            cleared on refresh. Never stored or sent to our servers.
+          </p>
           <div className="provider-footer">
             {keyValue && (
-              <button className="btn danger-ghost btn-sm" onClick={onRemove}>
-                <Trash2 size={14} /><span>Remove</span>
+              <button className="btn danger-ghost btn-sm" onClick={onClear}>
+                <Trash2 size={14} /><span>Clear</span>
               </button>
             )}
             <div style={{ flex: 1 }} />
-            <button className="btn primary btn-sm" onClick={onSave} disabled={!keyValue.trim()}>
-              <span>{savedFlash ? "Saved!" : "Save"}</span>
-            </button>
+            <span className="field-helper" style={{ margin: 0 }}>Set the real key on the backend via env vars</span>
           </div>
         </div>
       )}
