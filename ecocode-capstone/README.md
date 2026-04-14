@@ -1,16 +1,21 @@
 # EcoCode (capstone app)
 
-Local-first web app: **FastAPI** backend + **React** UI. Analyzes uploaded or cloned Java for Android energy smells **DW, HMU, HAS, IOD, NLMR** using **Ollama**, **Google Gemini**, or **OpenAI**.
+Local-first web app: **FastAPI** backend + **React** frontend.
+Detects five Android energy anti-patterns — **DW · HMU · HAS · IOD · NLMR** — in Java source, using **Ollama**, **Google Gemini**, or **OpenAI**.
 
-The API runs a **background worker inside `main.py`** (no separate `worker.py` process).
+The analysis worker is an **async loop inside `main.py`** — no separate `worker.py` process to manage.
 
 ---
 
 ## Prerequisites
 
-- Python **3.11+** (3.12 OK)
+- Python **3.11+** (3.12 fine)
 - Node **18+**
-- An LLM: **Gemini API key** (recommended) or **Ollama** locally, or **OpenAI**
+- `git` CLI on PATH (used by repo-URL runs via `subprocess.run(["git", "clone", ...])`)
+- One LLM provider:
+  - **Gemini API key** (recommended for quickstart — fast, free tier)
+  - **Ollama** running locally on `http://localhost:11434`
+  - **OpenAI API key**
 
 ---
 
@@ -24,14 +29,19 @@ copy backend\.env.example backend\.env
 
 Edit `backend/.env`:
 
-| Variable | When |
-|----------|------|
-| `DATABASE_URL=sqlite:///ecocode.db` | Default local (no Postgres) |
-| `LLM_PROVIDER=gemini` + `GEMINI_API_KEY` | Google AI Studio |
-| `LLM_PROVIDER=ollama` | Local Ollama; set `OLLAMA_BASE_URL` / `OLLAMA_MODEL` |
-| `LLM_PROVIDER=openai` + `OPENAI_API_KEY` | OpenAI |
+| Variable                                    | When to set                                                       |
+|---------------------------------------------|-------------------------------------------------------------------|
+| `DATABASE_URL=sqlite:///ecocode.db`         | Default — local SQLite (no setup needed)                          |
+| `DATABASE_URL=postgresql://...`             | Postgres (Docker / production)                                    |
+| `LLM_PROVIDER=gemini` + `GEMINI_API_KEY`    | Google AI Studio key (free tier OK)                               |
+| `LLM_PROVIDER=ollama` + `OLLAMA_BASE_URL` + `OLLAMA_MODEL` | Local llama / qwen / etc.                          |
+| `LLM_PROVIDER=openai` + `OPENAI_API_KEY`    | OpenAI                                                            |
+| `FRONTEND_URL=http://example:3001`          | Only if frontend isn't on `http://localhost:3000` (CORS allow-list) |
 
-Optional: `FRONTEND_URL` if the UI is not on `http://localhost:3000` (CORS).
+> **Settings is read from env, not from the UI.** The Settings page in the
+> frontend lets users *test* connectivity and *store API keys in their
+> browser* for convenience, but the backend always uses `backend/.env`.
+> If you want to change provider, edit `.env` and restart `uvicorn`.
 
 ---
 
@@ -45,10 +55,11 @@ pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
 ```
 
-- API: **http://localhost:8000**
+- API:     **http://localhost:8000**
 - Swagger: **http://localhost:8000/docs**
+- Health:  **http://localhost:8000/api/health**
 
-Database file: `backend/ecocode.db` (created on first run).
+Database file is auto-created on first run at `backend/ecocode.db`.
 
 ---
 
@@ -57,58 +68,93 @@ Database file: `backend/ecocode.db` (created on first run).
 ```powershell
 cd frontend
 npm install
-npm run dev
+npm start
 ```
 
 Open **http://localhost:3000**.
 
-To point at another API host:
+To point at a different API host (e.g. backend on a remote server):
 
 ```powershell
-$env:REACT_APP_API_BASE_URL="http://localhost:8000"; npm run dev
+$env:REACT_APP_API_BASE_URL="http://example.com:8000"; npm start
 ```
+
+The Settings page also lets each browser override this at runtime — useful when
+demoing without rebuilding.
 
 ---
 
-## 4. Docker (optional)
-
-PostgreSQL + backend + frontend:
+## 4. Docker Compose (optional, Postgres)
 
 ```powershell
 copy .env.example .env
-# edit .env; ensure backend\.env exists for secrets
+copy backend\.env.example backend\.env
+# edit both .envs
 docker compose up --build
 ```
 
-`database/init.sql` is **PostgreSQL-only** (used by Docker init). Local SQLite uses SQLAlchemy `init_db()` instead.
+`database/init.sql` is **PostgreSQL-only** (used only by the Docker init hook).
+Local SQLite uses SQLAlchemy `init_db()` from `backend/database.py` — no SQL file.
 
 ---
 
-## 5. Scripts (from `ecocode-capstone` root)
+## 5. CLI scripts (run from `ecocode-capstone/`)
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/import_dyn_data.py` | Import `Dyn_*` CSVs into DB |
-| `scripts/run_dataset_eval.py` | Eval vs `dyn_validation` |
-| `scripts/evaluate_dyn.py` | LLM eval CLI |
-| `scripts/decompile_apks.py` | APK → Java (needs **jadx**) |
-| `scripts/migrate.py` | Run `init_db()` / bootstrap |
-| `scripts/check_env.py` | Quick env check |
+| Script                                | Purpose                                                                |
+|---------------------------------------|------------------------------------------------------------------------|
+| `scripts/import_dyn_data.py`          | Import `Dyn_Events` / `Dyn_Results` / `Dyn_Validation` CSVs into the DB |
+| `scripts/run_dataset_eval.py`         | Evaluate the LLM pipeline against `dyn_validation` ground truth         |
+| `scripts/evaluate.py`                 | Quick eval against `data/test-samples/` + `ground_truth.json`           |
+| `scripts/evaluate_dyn.py`             | Per-pattern eval CLI (P / R / F1 reporting)                             |
+| `scripts/compute_eval_metrics.py`     | Aggregate per-pattern metrics across runs                                |
+| `scripts/decompile_apks.py`           | APK → Java sources via [jadx](https://github.com/skylot/jadx)           |
+| `scripts/migrate.py`                  | Bootstrap / re-init the schema                                          |
+| `scripts/check_env.py`                | Sanity check (Python / .env / DB / LLM reachable)                       |
+| `scripts/query_dyn_data.py`           | Ad-hoc query helper for `dyn_*` tables                                  |
+| `scripts/setup.ps1` / `setup.sh`      | One-shot venv + npm install                                             |
 
-Dyn folders are expected at repo root: `../Dyn_Events`, `../Dyn_Results`, `../Dyn_Validation` (or pass `--dyn-root`).
+By default scripts look for `Dyn_*` folders at the repo root (`../Dyn_Events`, …).
+Pass `--dyn-root <path>` to override.
 
 ---
 
-## Project layout
+## 6. Project layout
 
 ```
 ecocode-capstone/
-  backend/          # FastAPI, SQLAlchemy, LLM
-  frontend/         # React + TypeScript
-  database/         # PostgreSQL bootstrap SQL (Docker)
-  docs/             # Guides
-  scripts/          # CLI tools
-  data/             # test-samples, few-shot (gitignored if large — see .gitignore)
+├── backend/                   FastAPI app
+│   ├── main.py                Routes + background worker
+│   ├── task_manager.py        Project / Run / file processing
+│   ├── llm_service.py         Ollama / Gemini / OpenAI HTTPX clients
+│   ├── ast_slicer.py          Java method-scope extraction (no javalang dep)
+│   ├── database.py            SQLAlchemy engine, models, init_db
+│   ├── models.py              Pydantic request/response models
+│   ├── config.py              pydantic-settings env loader
+│   ├── docs/DATABASE_GUIDE.md SQLite schema reference
+│   └── requirements.txt
+├── frontend/                  React + TypeScript (CRA)
+│   ├── src/pages/             ProjectsList · ProjectDetail · NewRun · RunDetail · Rules · Settings
+│   ├── src/components/        CodeBlock · InlineFindingCard · DiffView · SeverityBadge · …
+│   └── src/services/api.ts    Single fetch wrapper
+├── database/                  Postgres bootstrap (Docker only)
+├── docs/                      User-facing documentation
+├── scripts/                   CLI tools
+└── docker-compose.yml
 ```
 
-More: [docs/README.md](docs/README.md).
+For deeper docs see [docs/README.md](docs/README.md).
+
+---
+
+## 7. What runs where
+
+| Concern                  | Where                                                       |
+|--------------------------|-------------------------------------------------------------|
+| HTTP routes              | `backend/main.py`                                           |
+| Background worker        | `backend/main.py` `_background_worker()` — async task       |
+| Per-file analysis        | `backend/task_manager.py` `_process_file()`                  |
+| LLM call                 | `backend/llm_service.py` (provider classes)                  |
+| AST slicing              | `backend/ast_slicer.py`                                     |
+| Schema migrations        | `backend/database.py` (`init_db` + `_migrate_column`)         |
+
+For the request flow end-to-end, see [docs/architecture.md](docs/architecture.md).
