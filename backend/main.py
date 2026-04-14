@@ -38,6 +38,10 @@ if settings.frontend_url:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    # Render auto-appends a random suffix (e.g. -ybgk) when a service name is
+    # taken, so a hardcoded FRONTEND_URL can drift. Accept any *.onrender.com
+    # ecocode-frontend deployment as a safety net.
+    allow_origin_regex=r"https://ecocode-frontend(-[a-z0-9]+)?\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
